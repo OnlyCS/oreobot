@@ -1,6 +1,6 @@
 .bak 
 *.bak
-
+.env
 # Added by cargo
 
 /target
