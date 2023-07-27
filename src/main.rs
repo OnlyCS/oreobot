@@ -1,41 +1,49 @@
-#![allow(clippy::from_over_into)]
+#![feature(default_free_fn, let_chains, drain_filter)]
 
-extern crate chrono;
-extern crate dotenv;
+#[macro_use]
 extern crate dotenv_codegen;
+extern crate anyhow;
+extern crate dotenv;
+extern crate log;
 extern crate poise;
+extern crate serde;
+extern crate simple_logger;
 extern crate tokio;
 
 mod commands;
-mod embed;
+mod nci;
 mod prelude;
+mod prisma;
+mod startup;
 
-use commands::*;
-use prelude::*;
+use crate::prelude::*;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    dotenv::dotenv().ok();
-
-    println!("{}", dotenv!("DISCORD_TOKEN"));
+async fn main() {
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![ping()],
-            ..Default::default()
+            commands: vec![commands::ping::ping()],
+            ..default()
         })
-        .token(dotenv!("DISCORD_TOKEN"))
-        .intents(GatewayIntents::all())
+        .token(dotenv!("BOT_TOKEN"))
+        .intents(serenity::GatewayIntents::all())
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
+                let mut prisma_client = prisma::create().await?;
+
+                startup::syncdb(ctx, &mut prisma_client).await?;
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+
                 Ok(Data {
-                    bot_icon: ctx.cache.current_user().avatar_url().unwrap(),
+                    prisma: prisma_client,
                 })
             })
         });
 
-    framework.run().await?;
-
-    Ok(())
+    framework.run().await.unwrap();
 }
