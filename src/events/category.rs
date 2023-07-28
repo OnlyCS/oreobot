@@ -26,7 +26,10 @@ pub async fn update(category: serenity::ChannelCategory, prisma: &PrismaClient) 
 pub async fn delete(category: serenity::ChannelId, prisma: &PrismaClient) -> Result<()> {
     let category = prisma
         .channel_category()
-        .delete(channel_category::id::equals(category.to_string()))
+        .update(
+            channel_category::id::equals(category.to_string()),
+            vec![channel_category::deleted::set(true)],
+        )
         .with(channel_category::channels::fetch(vec![
             channel::category_id::equals(Some(category.to_string())),
         ]))
