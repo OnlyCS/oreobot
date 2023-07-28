@@ -87,6 +87,8 @@ model ChannelCategory {
     id       String    @id
     name     String
     channels Channel[]
+
+    deleted Boolean @default(false)
 }
 
 model CommandInteractionData {
