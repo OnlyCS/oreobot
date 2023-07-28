@@ -11,6 +11,7 @@ extern crate simple_logger;
 extern crate tokio;
 
 mod commands;
+mod events;
 mod nci;
 mod prelude;
 mod prisma;
@@ -25,6 +26,12 @@ async fn main() {
         .init()
         .unwrap();
 
+    let handler = poise::EventWrapper(|ctx, event| {
+        Box::pin(async move {
+            events::event_handler(ctx, event).await.unwrap();
+        })
+    });
+
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![commands::ping::ping()],
@@ -32,6 +39,7 @@ async fn main() {
         })
         .token(dotenv!("BOT_TOKEN"))
         .intents(serenity::GatewayIntents::all())
+        .client_settings(|client| client.event_handler(handler))
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 let mut prisma_client = prisma::create().await?;
