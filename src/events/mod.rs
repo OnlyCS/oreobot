@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 mod category;
 mod channel;
+mod interaction;
 mod message;
 
 pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> Result<()> {
@@ -90,6 +91,13 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             let prisma_client = prisma::create().await?;
 
             category::delete(category.id, &prisma_client).await?;
+        }
+
+        /*** INTERACTION EVENTS ***/
+        poise::Event::InteractionCreate { interaction } => {
+            let prisma_client = prisma::create().await?;
+
+            interaction::create(interaction, &prisma_client).await?;
         }
         _ => {}
     }
