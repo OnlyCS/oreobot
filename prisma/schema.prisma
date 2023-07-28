@@ -46,15 +46,28 @@ model UserRole {
     user  User?
 }
 
+model Attachment {
+    id         String  @id
+    filename   String
+    url        String  @unique
+    size_bytes BigInt
+    message    Message @relation(fields: [message_id], references: [id])
+    message_id String
+    deleted    Boolean @default(false)
+}
+
 model Message {
-    id         String   @id
-    content    String
-    author     User     @relation(fields: [author_id], references: [id])
-    author_id  String
-    channel    Channel  @relation(fields: [channel_id], references: [id])
-    channel_id String
-    created    DateTime @default(now())
-    updated    DateTime @updatedAt
+    id          String       @id
+    content     String
+    author      User         @relation(fields: [author_id], references: [id])
+    author_id   String
+    channel     Channel      @relation(fields: [channel_id], references: [id])
+    channel_id  String
+    attachments Attachment[]
+    created     DateTime     @default(now())
+    updated_at  DateTime     @updatedAt
+    deleted     Boolean      @default(false)
+    edited      Boolean      @default(false)
 }
 
 model Channel {
@@ -67,6 +80,7 @@ model Channel {
     interactions Interaction[]
     category     ChannelCategory? @relation(fields: [category_id], references: [id])
     category_id  String?
+    deleted      Boolean          @default(false)
 }
 
 model ChannelCategory {

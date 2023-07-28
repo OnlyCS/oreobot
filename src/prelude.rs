@@ -1,6 +1,7 @@
 pub(crate) use crate::nci; // needs pub(crate) but idk why
+pub(crate) use crate::prisma;
 pub use crate::prisma::prisma_client::{
-    channel, channel_category, message, user, user_role, ChannelType as PChannelType,
+    attachment, channel, channel_category, message, user, user_role, ChannelType as PChannelType,
 };
 pub use crate::prisma::PrismaClient;
 pub use anyhow::{bail, Context as ToAnyhowResult, Result};
@@ -14,3 +15,13 @@ pub struct Data {
 }
 
 pub type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
+
+pub trait IsThread {
+    fn is_thread(&self) -> bool;
+}
+
+impl IsThread for serenity::GuildChannel {
+    fn is_thread(&self) -> bool {
+        self.thread_metadata.is_some()
+    }
+}
