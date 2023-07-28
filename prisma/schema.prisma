@@ -17,14 +17,10 @@ enum ChannelType {
 
 enum InteractionType {
     Command
-    ModalSubmission
+    ModalSubmit
     Button
     TextInput
-    StringSelect
-    UserSelect
-    RoleSelect
-    MentionableSelect
-    ChannelSelect
+    Select
 }
 
 model User {
@@ -92,40 +88,23 @@ model ChannelCategory {
 }
 
 model CommandInteractionData {
-    id             String      @id
-    name           String
-    options        Json[]
+    id   String @id
+    name String
+
     interaction    Interaction @relation(fields: [interaction_id], references: [id])
     interaction_id String      @unique
 }
 
-model SelectOption {
-    db_id               String                 @id @default(cuid())
-    label               String
-    value               String
-    description         String?
-    default             Boolean                @default(false)
-    interaction_data    SelectInteractionData? @relation(fields: [interaction_data_id], references: [db_id])
-    interaction_data_id String?
-}
-
-model SelectInteractionData {
-    db_id            String         @id @default(cuid())
-    options          SelectOption[]
-    interaction      Interaction    @relation(fields: [interaction_dbid], references: [id])
-    interaction_dbid String         @unique
-}
-
 model Interaction {
     id         String          @id
-    type       InteractionType
+    kind       InteractionType
     channel    Channel         @relation(fields: [channel_id], references: [id])
     channel_id String
     invoker    User            @relation(fields: [invoker_id], references: [id])
     invoker_id String
     created    DateTime        @default(now())
 
+    // custom id for all except for commands, which has extra data
     command_data CommandInteractionData?
-    select_data  SelectInteractionData?
     custom_id    String?
 }

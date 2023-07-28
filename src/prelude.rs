@@ -1,7 +1,8 @@
 pub(crate) use crate::nci; // needs pub(crate) but idk why
 pub(crate) use crate::prisma;
 pub use crate::prisma::prisma_client::{
-    attachment, channel, channel_category, message, user, user_role, ChannelType as PChannelType,
+    attachment, channel, channel_category, interaction, message, user, user_role,
+    ChannelType as PChannelType, InteractionType,
 };
 pub use crate::prisma::PrismaClient;
 pub use anyhow::{bail, Context as ToAnyhowResult, Result};
