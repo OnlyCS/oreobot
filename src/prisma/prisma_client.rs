@@ -7351,50 +7351,54 @@ pub mod command_interaction_data {
     use super::_prisma::*;
     use super::*;
     pub const NAME: &str = "CommandInteractionData";
-    pub mod id {
+    pub mod command_id {
         use super::super::*;
         use super::_prisma::*;
         use super::{
             OrderByParam, SetParam, UncheckedSetParam, UniqueWhereParam, WhereParam, WithParam,
         };
-        pub const NAME: &str = "id";
+        pub const NAME: &str = "command_id";
         pub struct Set(pub String);
         impl From<Set> for SetParam {
             fn from(Set(v): Set) -> Self {
-                Self::SetId(v)
+                Self::SetCommandId(v)
             }
         }
         impl From<Set> for UncheckedSetParam {
             fn from(Set(v): Set) -> Self {
-                Self::Id(v)
+                Self::CommandId(v)
             }
         }
         pub fn set<T: From<Set>>(value: String) -> T {
             Set(value).into()
         }
         pub fn order(direction: ::prisma_client_rust::Direction) -> OrderByParam {
-            OrderByParam::Id(direction)
+            OrderByParam::CommandId(direction)
         }
-        pub fn equals<T: From<UniqueWhereParam>>(value: String) -> T {
-            UniqueWhereParam::IdEquals(value).into()
+        pub fn equals(value: String) -> WhereParam {
+            WhereParam::CommandId(_prisma::read_filters::StringFilter::Equals(value))
         }
-        ::prisma_client_rust::scalar_where_param_fns!(_prisma::read_filters::StringFilter, Id, {
-            fn in_vec(_: Vec<String>) -> InVec;
-            fn not_in_vec(_: Vec<String>) -> NotInVec;
-            fn lt(_: String) -> Lt;
-            fn lte(_: String) -> Lte;
-            fn gt(_: String) -> Gt;
-            fn gte(_: String) -> Gte;
-            fn contains(_: String) -> Contains;
-            fn starts_with(_: String) -> StartsWith;
-            fn ends_with(_: String) -> EndsWith;
-            fn mode(_: super::super::QueryMode) -> Mode;
-            fn not(_: String) -> Not;
-        });
+        ::prisma_client_rust::scalar_where_param_fns!(
+            _prisma::read_filters::StringFilter,
+            CommandId,
+            {
+                fn in_vec(_: Vec<String>) -> InVec;
+                fn not_in_vec(_: Vec<String>) -> NotInVec;
+                fn lt(_: String) -> Lt;
+                fn lte(_: String) -> Lte;
+                fn gt(_: String) -> Gt;
+                fn gte(_: String) -> Gte;
+                fn contains(_: String) -> Contains;
+                fn starts_with(_: String) -> StartsWith;
+                fn ends_with(_: String) -> EndsWith;
+                fn mode(_: super::super::QueryMode) -> Mode;
+                fn not(_: String) -> Not;
+            }
+        );
         pub struct Include;
         impl Into<super::IncludeParam> for Include {
             fn into(self) -> super::IncludeParam {
-                super::IncludeParam::Id(self)
+                super::IncludeParam::CommandId(self)
             }
         }
         impl Include {
@@ -7405,7 +7409,7 @@ pub mod command_interaction_data {
         pub struct Select;
         impl Into<super::SelectParam> for Select {
             fn into(self) -> super::SelectParam {
-                super::SelectParam::Id(self)
+                super::SelectParam::CommandId(self)
             }
         }
         impl Select {
@@ -7414,50 +7418,54 @@ pub mod command_interaction_data {
             }
         }
     }
-    pub mod name {
+    pub mod command_name {
         use super::super::*;
         use super::_prisma::*;
         use super::{
             OrderByParam, SetParam, UncheckedSetParam, UniqueWhereParam, WhereParam, WithParam,
         };
-        pub const NAME: &str = "name";
+        pub const NAME: &str = "command_name";
         pub struct Set(pub String);
         impl From<Set> for SetParam {
             fn from(Set(v): Set) -> Self {
-                Self::SetName(v)
+                Self::SetCommandName(v)
             }
         }
         impl From<Set> for UncheckedSetParam {
             fn from(Set(v): Set) -> Self {
-                Self::Name(v)
+                Self::CommandName(v)
             }
         }
         pub fn set<T: From<Set>>(value: String) -> T {
             Set(value).into()
         }
         pub fn order(direction: ::prisma_client_rust::Direction) -> OrderByParam {
-            OrderByParam::Name(direction)
+            OrderByParam::CommandName(direction)
         }
         pub fn equals(value: String) -> WhereParam {
-            WhereParam::Name(_prisma::read_filters::StringFilter::Equals(value))
+            WhereParam::CommandName(_prisma::read_filters::StringFilter::Equals(value))
         }
-        ::prisma_client_rust::scalar_where_param_fns!(_prisma::read_filters::StringFilter, Name, {
-            fn in_vec(_: Vec<String>) -> InVec;
-            fn not_in_vec(_: Vec<String>) -> NotInVec;
-            fn lt(_: String) -> Lt;
-            fn lte(_: String) -> Lte;
-            fn gt(_: String) -> Gt;
-            fn gte(_: String) -> Gte;
-            fn contains(_: String) -> Contains;
-            fn starts_with(_: String) -> StartsWith;
-            fn ends_with(_: String) -> EndsWith;
-            fn mode(_: super::super::QueryMode) -> Mode;
-            fn not(_: String) -> Not;
-        });
+        ::prisma_client_rust::scalar_where_param_fns!(
+            _prisma::read_filters::StringFilter,
+            CommandName,
+            {
+                fn in_vec(_: Vec<String>) -> InVec;
+                fn not_in_vec(_: Vec<String>) -> NotInVec;
+                fn lt(_: String) -> Lt;
+                fn lte(_: String) -> Lte;
+                fn gt(_: String) -> Gt;
+                fn gte(_: String) -> Gte;
+                fn contains(_: String) -> Contains;
+                fn starts_with(_: String) -> StartsWith;
+                fn ends_with(_: String) -> EndsWith;
+                fn mode(_: super::super::QueryMode) -> Mode;
+                fn not(_: String) -> Not;
+            }
+        );
         pub struct Include;
         impl Into<super::IncludeParam> for Include {
             fn into(self) -> super::IncludeParam {
-                super::IncludeParam::Name(self)
+                super::IncludeParam::CommandName(self)
             }
         }
         impl Include {
@@ -7468,7 +7476,7 @@ pub mod command_interaction_data {
         pub struct Select;
         impl Into<super::SelectParam> for Select {
             fn into(self) -> super::SelectParam {
-                super::SelectParam::Name(self)
+                super::SelectParam::CommandName(self)
             }
         }
         impl Select {
@@ -7653,8 +7661,8 @@ pub mod command_interaction_data {
         }
     }
     pub fn create(
-        id: String,
-        name: String,
+        command_id: String,
+        command_name: String,
         interaction: super::interaction::UniqueWhereParam,
         _params: Vec<SetParam>,
     ) -> (
@@ -7663,63 +7671,63 @@ pub mod command_interaction_data {
         super::interaction::UniqueWhereParam,
         Vec<SetParam>,
     ) {
-        (id, name, interaction, _params)
+        (command_id, command_name, interaction, _params)
     }
     pub fn create_unchecked(
-        id: String,
-        name: String,
+        command_id: String,
+        command_name: String,
         interaction_id: String,
         _params: Vec<SetParam>,
     ) -> (String, String, String, Vec<SetParam>) {
-        (id, name, interaction_id, _params)
+        (command_id, command_name, interaction_id, _params)
     }
     #[macro_export]
-    macro_rules ! _select_command_interaction_data { ($ (($ ($ func_arg : ident : $ func_arg_ty : ty) , +) =>) ? $ module_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { # [allow (warnings)] pub mod $ module_name { crate :: prisma :: command_interaction_data :: select ! (@ definitions ; $ module_name ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; use super :: * ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: SelectType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } pub fn select ($ ($ ($ func_arg : $ func_arg_ty) , +) ?) -> Selection { Selection ([crate :: prisma :: command_interaction_data :: select ! (@ selections_to_params ; : select { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () ,] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } } ; ({ $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { { crate :: prisma :: command_interaction_data :: select ! (@ definitions ; ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: SelectType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } Selection ([crate :: prisma :: command_interaction_data :: select ! (@ selections_to_params ; : select { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () ,] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } ; (@ definitions ; $ ($ module_name : ident) ? ; $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) +) => { # [allow (warnings)] enum Fields { id , name , interaction , interaction_id } # [allow (warnings)] impl Fields { fn selections () { $ (let _ = Fields :: $ field ;) + } } # [allow (warnings)] # [derive (std :: fmt :: Debug , Clone)] pub struct Data { $ (pub $ field : crate :: prisma :: command_interaction_data :: select ! (@ field_type ; $ field $ (: $ selection_mode { $ ($ selections) + }) ?) ,) + } impl :: serde :: Serialize for Data { fn serialize < S > (& self , serializer : S) -> Result < S :: Ok , S :: Error > where S : :: serde :: Serializer , { use :: serde :: ser :: SerializeStruct ; let mut state = serializer . serialize_struct ("Data" , [$ (stringify ! ($ field) ,) +] . len ()) ? ; $ (state . serialize_field (crate :: prisma :: command_interaction_data :: $ field :: NAME , & self . $ field) ? ;) * state . end () } } impl < 'de > :: serde :: Deserialize < 'de > for Data { fn deserialize < D > (deserializer : D) -> Result < Self , D :: Error > where D : :: serde :: Deserializer < 'de > , { # [allow (warnings)] enum Field { $ ($ field) , + , } impl < 'de > :: serde :: Deserialize < 'de > for Field { fn deserialize < D > (deserializer : D) -> Result < Field , D :: Error > where D : :: serde :: Deserializer < 'de > , { struct FieldVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for FieldVisitor { type Value = Field ; fn expecting (& self , formatter : & mut :: std :: fmt :: Formatter) -> :: std :: fmt :: Result { formatter . write_str (& [$ (crate :: prisma :: command_interaction_data :: $ field :: NAME) , + ,] . into_iter () . collect :: < Vec < _ >> () . join (", ")) } fn visit_str < E > (self , value : & str) -> Result < Field , E > where E : :: serde :: de :: Error , { match value { $ (crate :: prisma :: command_interaction_data :: $ field :: NAME => Ok (Field :: $ field)) , * , _ => Err (:: serde :: de :: Error :: unknown_field (value , FIELDS)) , } } } deserializer . deserialize_identifier (FieldVisitor) } } struct DataVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for DataVisitor { type Value = Data ; fn expecting (& self , formatter : & mut std :: fmt :: Formatter) -> std :: fmt :: Result { formatter . write_str ("struct Data") } fn visit_map < V > (self , mut map : V) -> Result < Data , V :: Error > where V : :: serde :: de :: MapAccess < 'de > , { $ (let mut $ field = None ;) * while let Some (key) = map . next_key () ? { match key { $ (Field :: $ field => { if $ field . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ; } $ field = Some (map . next_value () ?) ; }) * } } $ (let $ field = $ field . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ? ;) * Ok (Data { $ ($ field) , * }) } } const FIELDS : & 'static [& 'static str] = & ["id" , "name" , "interaction" , "interaction_id"] ; deserializer . deserialize_struct ("Data" , FIELDS , DataVisitor) } } $ ($ (pub mod $ field { crate :: prisma :: command_interaction_data :: $ selection_mode ! (@ field_module ; $ field : $ selection_mode { $ ($ selections) + }) ; }) ?) + } ; (@ field_type ; id) => { String } ; (@ field_type ; name) => { String } ; (@ field_type ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { interaction :: Data } ; (@ field_type ; interaction) => { crate :: prisma :: interaction :: Data } ; (@ field_type ; interaction_id) => { String } ; (@ field_type ; $ field : ident $ ($ tokens : tt) *) => { compile_error ! (stringify ! (Cannot include nonexistent relation $ field on model "CommandInteractionData" , available relations are "id, name, interaction, interaction_id")) } ; (@ field_module ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { crate :: prisma :: interaction :: select ! (@ definitions ; ; $ ($ selections) +) ; } ; (@ field_module ; $ ($ tokens : tt) *) => { } ; (@ selection_field_to_selection_param ; id) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: id :: Select) } ; (@ selection_field_to_selection_param ; name) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: name :: Select) } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? : $ selection_mode : ident { $ ($ selections : tt) + }) => { { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Select :: $ selection_mode (crate :: prisma :: interaction :: select ! (@ selections_to_params ; : $ selection_mode { $ ($ selections) + }) . into_iter () . collect ())) } } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ?) => { { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Select :: Fetch) } } ; (@ selection_field_to_selection_param ; interaction_id) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction_id :: Select) } ; (@ selection_field_to_selection_param ; $ ($ tokens : tt) *) => { compile_error ! (stringify ! ($ ($ tokens) *)) } ; (@ selections_to_params ; : $ macro_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { [$ (crate :: prisma :: command_interaction_data :: $ macro_name ! (@ selection_field_to_selection_param ; $ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) ,) +] } ; (@ filters_to_args ;) => { vec ! [] } ; (@ filters_to_args ; $ ($ t : tt) *) => { $ ($ t) * } ; (@ field_serde_name ; id) => { "id" } ; (@ field_serde_name ; name) => { "name" } ; (@ field_serde_name ; interaction) => { "interaction" } ; (@ field_serde_name ; interaction_id) => { "interaction_id" } ; }
+    macro_rules ! _select_command_interaction_data { ($ (($ ($ func_arg : ident : $ func_arg_ty : ty) , +) =>) ? $ module_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { # [allow (warnings)] pub mod $ module_name { crate :: prisma :: command_interaction_data :: select ! (@ definitions ; $ module_name ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; use super :: * ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: SelectType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } pub fn select ($ ($ ($ func_arg : $ func_arg_ty) , +) ?) -> Selection { Selection ([crate :: prisma :: command_interaction_data :: select ! (@ selections_to_params ; : select { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () ,] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } } ; ({ $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { { crate :: prisma :: command_interaction_data :: select ! (@ definitions ; ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: SelectType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } Selection ([crate :: prisma :: command_interaction_data :: select ! (@ selections_to_params ; : select { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () ,] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } ; (@ definitions ; $ ($ module_name : ident) ? ; $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) +) => { # [allow (warnings)] enum Fields { command_id , command_name , interaction , interaction_id } # [allow (warnings)] impl Fields { fn selections () { $ (let _ = Fields :: $ field ;) + } } # [allow (warnings)] # [derive (std :: fmt :: Debug , Clone)] pub struct Data { $ (pub $ field : crate :: prisma :: command_interaction_data :: select ! (@ field_type ; $ field $ (: $ selection_mode { $ ($ selections) + }) ?) ,) + } impl :: serde :: Serialize for Data { fn serialize < S > (& self , serializer : S) -> Result < S :: Ok , S :: Error > where S : :: serde :: Serializer , { use :: serde :: ser :: SerializeStruct ; let mut state = serializer . serialize_struct ("Data" , [$ (stringify ! ($ field) ,) +] . len ()) ? ; $ (state . serialize_field (crate :: prisma :: command_interaction_data :: $ field :: NAME , & self . $ field) ? ;) * state . end () } } impl < 'de > :: serde :: Deserialize < 'de > for Data { fn deserialize < D > (deserializer : D) -> Result < Self , D :: Error > where D : :: serde :: Deserializer < 'de > , { # [allow (warnings)] enum Field { $ ($ field) , + , } impl < 'de > :: serde :: Deserialize < 'de > for Field { fn deserialize < D > (deserializer : D) -> Result < Field , D :: Error > where D : :: serde :: Deserializer < 'de > , { struct FieldVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for FieldVisitor { type Value = Field ; fn expecting (& self , formatter : & mut :: std :: fmt :: Formatter) -> :: std :: fmt :: Result { formatter . write_str (& [$ (crate :: prisma :: command_interaction_data :: $ field :: NAME) , + ,] . into_iter () . collect :: < Vec < _ >> () . join (", ")) } fn visit_str < E > (self , value : & str) -> Result < Field , E > where E : :: serde :: de :: Error , { match value { $ (crate :: prisma :: command_interaction_data :: $ field :: NAME => Ok (Field :: $ field)) , * , _ => Err (:: serde :: de :: Error :: unknown_field (value , FIELDS)) , } } } deserializer . deserialize_identifier (FieldVisitor) } } struct DataVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for DataVisitor { type Value = Data ; fn expecting (& self , formatter : & mut std :: fmt :: Formatter) -> std :: fmt :: Result { formatter . write_str ("struct Data") } fn visit_map < V > (self , mut map : V) -> Result < Data , V :: Error > where V : :: serde :: de :: MapAccess < 'de > , { $ (let mut $ field = None ;) * while let Some (key) = map . next_key () ? { match key { $ (Field :: $ field => { if $ field . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ; } $ field = Some (map . next_value () ?) ; }) * } } $ (let $ field = $ field . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ? ;) * Ok (Data { $ ($ field) , * }) } } const FIELDS : & 'static [& 'static str] = & ["command_id" , "command_name" , "interaction" , "interaction_id"] ; deserializer . deserialize_struct ("Data" , FIELDS , DataVisitor) } } $ ($ (pub mod $ field { crate :: prisma :: command_interaction_data :: $ selection_mode ! (@ field_module ; $ field : $ selection_mode { $ ($ selections) + }) ; }) ?) + } ; (@ field_type ; command_id) => { String } ; (@ field_type ; command_name) => { String } ; (@ field_type ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { interaction :: Data } ; (@ field_type ; interaction) => { crate :: prisma :: interaction :: Data } ; (@ field_type ; interaction_id) => { String } ; (@ field_type ; $ field : ident $ ($ tokens : tt) *) => { compile_error ! (stringify ! (Cannot include nonexistent relation $ field on model "CommandInteractionData" , available relations are "command_id, command_name, interaction, interaction_id")) } ; (@ field_module ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { crate :: prisma :: interaction :: select ! (@ definitions ; ; $ ($ selections) +) ; } ; (@ field_module ; $ ($ tokens : tt) *) => { } ; (@ selection_field_to_selection_param ; command_id) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: command_id :: Select) } ; (@ selection_field_to_selection_param ; command_name) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: command_name :: Select) } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? : $ selection_mode : ident { $ ($ selections : tt) + }) => { { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Select :: $ selection_mode (crate :: prisma :: interaction :: select ! (@ selections_to_params ; : $ selection_mode { $ ($ selections) + }) . into_iter () . collect ())) } } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ?) => { { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Select :: Fetch) } } ; (@ selection_field_to_selection_param ; interaction_id) => { Into :: < crate :: prisma :: command_interaction_data :: SelectParam > :: into (crate :: prisma :: command_interaction_data :: interaction_id :: Select) } ; (@ selection_field_to_selection_param ; $ ($ tokens : tt) *) => { compile_error ! (stringify ! ($ ($ tokens) *)) } ; (@ selections_to_params ; : $ macro_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { [$ (crate :: prisma :: command_interaction_data :: $ macro_name ! (@ selection_field_to_selection_param ; $ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) ,) +] } ; (@ filters_to_args ;) => { vec ! [] } ; (@ filters_to_args ; $ ($ t : tt) *) => { $ ($ t) * } ; (@ field_serde_name ; command_id) => { "command_id" } ; (@ field_serde_name ; command_name) => { "command_name" } ; (@ field_serde_name ; interaction) => { "interaction" } ; (@ field_serde_name ; interaction_id) => { "interaction_id" } ; }
     pub use _select_command_interaction_data as select;
     pub enum SelectParam {
-        Id(id::Select),
-        Name(name::Select),
+        CommandId(command_id::Select),
+        CommandName(command_name::Select),
         Interaction(interaction::Select),
         InteractionId(interaction_id::Select),
     }
     impl SelectParam {
         pub fn to_selection(self) -> ::prisma_client_rust::Selection {
             match self {
-                Self::Id(data) => data.to_selection(),
-                Self::Name(data) => data.to_selection(),
+                Self::CommandId(data) => data.to_selection(),
+                Self::CommandName(data) => data.to_selection(),
                 Self::Interaction(data) => data.to_selection(),
                 Self::InteractionId(data) => data.to_selection(),
             }
         }
     }
     #[macro_export]
-    macro_rules ! _include_command_interaction_data { ($ (($ ($ func_arg : ident : $ func_arg_ty : ty) , +) =>) ? $ module_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { # [allow (warnings)] pub mod $ module_name { crate :: prisma :: command_interaction_data :: include ! (@ definitions ; $ module_name ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; use super :: * ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: IncludeType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } pub fn include ($ ($ ($ func_arg : $ func_arg_ty) , +) ?) -> Selection { Selection ([crate :: prisma :: command_interaction_data :: include ! (@ selections_to_params ; : include { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () , < crate :: prisma :: command_interaction_data :: Types as :: prisma_client_rust :: ModelTypes > :: scalar_selections ()] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } } ; ({ $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { { crate :: prisma :: command_interaction_data :: include ! (@ definitions ; ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: IncludeType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } Selection ([crate :: prisma :: command_interaction_data :: include ! (@ selections_to_params ; : include { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () , < crate :: prisma :: command_interaction_data :: Types as :: prisma_client_rust :: ModelTypes > :: scalar_selections ()] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } ; (@ definitions ; $ ($ module_name : ident) ? ; $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) +) => { # [allow (warnings)] enum Fields { interaction } # [allow (warnings)] impl Fields { fn selections () { $ (let _ = Fields :: $ field ;) + } } # [allow (warnings)] # [derive (std :: fmt :: Debug , Clone)] pub struct Data { pub id : String , pub name : String , pub interaction_id : String , $ (pub $ field : crate :: prisma :: command_interaction_data :: include ! (@ field_type ; $ field $ (: $ selection_mode { $ ($ selections) + }) ?) ,) + } impl :: serde :: Serialize for Data { fn serialize < S > (& self , serializer : S) -> Result < S :: Ok , S :: Error > where S : :: serde :: Serializer , { use :: serde :: ser :: SerializeStruct ; let mut state = serializer . serialize_struct ("Data" , [$ (stringify ! ($ field) ,) + stringify ! (id) , stringify ! (name) , stringify ! (interaction_id)] . len ()) ? ; $ (state . serialize_field (crate :: prisma :: command_interaction_data :: $ field :: NAME , & self . $ field) ? ;) * state . serialize_field (crate :: prisma :: command_interaction_data :: id :: NAME , & self . id) ? ; state . serialize_field (crate :: prisma :: command_interaction_data :: name :: NAME , & self . name) ? ; state . serialize_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME , & self . interaction_id) ? ; state . end () } } impl < 'de > :: serde :: Deserialize < 'de > for Data { fn deserialize < D > (deserializer : D) -> Result < Self , D :: Error > where D : :: serde :: Deserializer < 'de > , { # [allow (warnings)] enum Field { $ ($ field) , + , id , name , interaction_id } impl < 'de > :: serde :: Deserialize < 'de > for Field { fn deserialize < D > (deserializer : D) -> Result < Field , D :: Error > where D : :: serde :: Deserializer < 'de > , { struct FieldVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for FieldVisitor { type Value = Field ; fn expecting (& self , formatter : & mut :: std :: fmt :: Formatter) -> :: std :: fmt :: Result { formatter . write_str (& [$ (crate :: prisma :: command_interaction_data :: $ field :: NAME) , + , crate :: prisma :: command_interaction_data :: id :: NAME , crate :: prisma :: command_interaction_data :: name :: NAME , crate :: prisma :: command_interaction_data :: interaction_id :: NAME] . into_iter () . collect :: < Vec < _ >> () . join (", ")) } fn visit_str < E > (self , value : & str) -> Result < Field , E > where E : :: serde :: de :: Error , { match value { $ (crate :: prisma :: command_interaction_data :: $ field :: NAME => Ok (Field :: $ field)) , * , crate :: prisma :: command_interaction_data :: id :: NAME => Ok (Field :: id) , crate :: prisma :: command_interaction_data :: name :: NAME => Ok (Field :: name) , crate :: prisma :: command_interaction_data :: interaction_id :: NAME => Ok (Field :: interaction_id) , _ => Err (:: serde :: de :: Error :: unknown_field (value , FIELDS)) , } } } deserializer . deserialize_identifier (FieldVisitor) } } struct DataVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for DataVisitor { type Value = Data ; fn expecting (& self , formatter : & mut std :: fmt :: Formatter) -> std :: fmt :: Result { formatter . write_str ("struct Data") } fn visit_map < V > (self , mut map : V) -> Result < Data , V :: Error > where V : :: serde :: de :: MapAccess < 'de > , { $ (let mut $ field = None ;) * let mut id = None ; let mut name = None ; let mut interaction_id = None ; while let Some (key) = map . next_key () ? { match key { Field :: id => { if id . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: id :: NAME)) ; } id = Some (map . next_value () ?) ; } Field :: name => { if name . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: name :: NAME)) ; } name = Some (map . next_value () ?) ; } Field :: interaction_id => { if interaction_id . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME)) ; } interaction_id = Some (map . next_value () ?) ; } $ (Field :: $ field => { if $ field . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ; } $ field = Some (map . next_value () ?) ; }) * } } $ (let $ field = $ field . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ? ;) * let id = id . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: id :: NAME)) ? ; let name = name . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: name :: NAME)) ? ; let interaction_id = interaction_id . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME)) ? ; Ok (Data { id , name , interaction_id , $ ($ field) , * }) } } const FIELDS : & 'static [& 'static str] = & ["id" , "name" , "interaction" , "interaction_id"] ; deserializer . deserialize_struct ("Data" , FIELDS , DataVisitor) } } $ ($ (pub mod $ field { crate :: prisma :: command_interaction_data :: $ selection_mode ! (@ field_module ; $ field : $ selection_mode { $ ($ selections) + }) ; }) ?) + } ; (@ field_type ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { interaction :: Data } ; (@ field_type ; interaction) => { crate :: prisma :: interaction :: Data } ; (@ field_type ; $ field : ident $ ($ tokens : tt) *) => { compile_error ! (stringify ! (Cannot include nonexistent relation $ field on model "CommandInteractionData" , available relations are "interaction")) } ; (@ field_module ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { crate :: prisma :: interaction :: include ! (@ definitions ; ; $ ($ selections) +) ; } ; (@ field_module ; $ ($ tokens : tt) *) => { } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? : $ selection_mode : ident { $ ($ selections : tt) + }) => { { Into :: < crate :: prisma :: command_interaction_data :: IncludeParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Include :: $ selection_mode (crate :: prisma :: interaction :: select ! (@ selections_to_params ; : $ selection_mode { $ ($ selections) + }) . into_iter () . collect ())) } } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ?) => { { Into :: < crate :: prisma :: command_interaction_data :: IncludeParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Include :: Fetch) } } ; (@ selection_field_to_selection_param ; $ ($ tokens : tt) *) => { compile_error ! (stringify ! ($ ($ tokens) *)) } ; (@ selections_to_params ; : $ macro_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { [$ (crate :: prisma :: command_interaction_data :: $ macro_name ! (@ selection_field_to_selection_param ; $ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) ,) +] } ; (@ filters_to_args ;) => { vec ! [] } ; (@ filters_to_args ; $ ($ t : tt) *) => { $ ($ t) * } ; (@ field_serde_name ; id) => { "id" } ; (@ field_serde_name ; name) => { "name" } ; (@ field_serde_name ; interaction) => { "interaction" } ; (@ field_serde_name ; interaction_id) => { "interaction_id" } ; }
+    macro_rules ! _include_command_interaction_data { ($ (($ ($ func_arg : ident : $ func_arg_ty : ty) , +) =>) ? $ module_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { # [allow (warnings)] pub mod $ module_name { crate :: prisma :: command_interaction_data :: include ! (@ definitions ; $ module_name ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; use super :: * ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: IncludeType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } pub fn include ($ ($ ($ func_arg : $ func_arg_ty) , +) ?) -> Selection { Selection ([crate :: prisma :: command_interaction_data :: include ! (@ selections_to_params ; : include { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () , < crate :: prisma :: command_interaction_data :: Types as :: prisma_client_rust :: ModelTypes > :: scalar_selections ()] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } } ; ({ $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { { crate :: prisma :: command_interaction_data :: include ! (@ definitions ; ; $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) +) ; pub struct Selection (Vec < :: prisma_client_rust :: Selection >) ; impl :: prisma_client_rust :: IncludeType for Selection { type Data = Data ; type ModelData = crate :: prisma :: command_interaction_data :: Data ; fn to_selections (self) -> Vec < :: prisma_client_rust :: Selection > { self . 0 } } Selection ([crate :: prisma :: command_interaction_data :: include ! (@ selections_to_params ; : include { $ ($ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) + }) . into_iter () . map (| p | p . to_selection ()) . collect :: < Vec < _ >> () , < crate :: prisma :: command_interaction_data :: Types as :: prisma_client_rust :: ModelTypes > :: scalar_selections ()] . into_iter () . flatten () . collect :: < Vec < _ >> ()) } } ; (@ definitions ; $ ($ module_name : ident) ? ; $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) +) => { # [allow (warnings)] enum Fields { interaction } # [allow (warnings)] impl Fields { fn selections () { $ (let _ = Fields :: $ field ;) + } } # [allow (warnings)] # [derive (std :: fmt :: Debug , Clone)] pub struct Data { pub command_id : String , pub command_name : String , pub interaction_id : String , $ (pub $ field : crate :: prisma :: command_interaction_data :: include ! (@ field_type ; $ field $ (: $ selection_mode { $ ($ selections) + }) ?) ,) + } impl :: serde :: Serialize for Data { fn serialize < S > (& self , serializer : S) -> Result < S :: Ok , S :: Error > where S : :: serde :: Serializer , { use :: serde :: ser :: SerializeStruct ; let mut state = serializer . serialize_struct ("Data" , [$ (stringify ! ($ field) ,) + stringify ! (command_id) , stringify ! (command_name) , stringify ! (interaction_id)] . len ()) ? ; $ (state . serialize_field (crate :: prisma :: command_interaction_data :: $ field :: NAME , & self . $ field) ? ;) * state . serialize_field (crate :: prisma :: command_interaction_data :: command_id :: NAME , & self . command_id) ? ; state . serialize_field (crate :: prisma :: command_interaction_data :: command_name :: NAME , & self . command_name) ? ; state . serialize_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME , & self . interaction_id) ? ; state . end () } } impl < 'de > :: serde :: Deserialize < 'de > for Data { fn deserialize < D > (deserializer : D) -> Result < Self , D :: Error > where D : :: serde :: Deserializer < 'de > , { # [allow (warnings)] enum Field { $ ($ field) , + , command_id , command_name , interaction_id } impl < 'de > :: serde :: Deserialize < 'de > for Field { fn deserialize < D > (deserializer : D) -> Result < Field , D :: Error > where D : :: serde :: Deserializer < 'de > , { struct FieldVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for FieldVisitor { type Value = Field ; fn expecting (& self , formatter : & mut :: std :: fmt :: Formatter) -> :: std :: fmt :: Result { formatter . write_str (& [$ (crate :: prisma :: command_interaction_data :: $ field :: NAME) , + , crate :: prisma :: command_interaction_data :: command_id :: NAME , crate :: prisma :: command_interaction_data :: command_name :: NAME , crate :: prisma :: command_interaction_data :: interaction_id :: NAME] . into_iter () . collect :: < Vec < _ >> () . join (", ")) } fn visit_str < E > (self , value : & str) -> Result < Field , E > where E : :: serde :: de :: Error , { match value { $ (crate :: prisma :: command_interaction_data :: $ field :: NAME => Ok (Field :: $ field)) , * , crate :: prisma :: command_interaction_data :: command_id :: NAME => Ok (Field :: command_id) , crate :: prisma :: command_interaction_data :: command_name :: NAME => Ok (Field :: command_name) , crate :: prisma :: command_interaction_data :: interaction_id :: NAME => Ok (Field :: interaction_id) , _ => Err (:: serde :: de :: Error :: unknown_field (value , FIELDS)) , } } } deserializer . deserialize_identifier (FieldVisitor) } } struct DataVisitor ; impl < 'de > :: serde :: de :: Visitor < 'de > for DataVisitor { type Value = Data ; fn expecting (& self , formatter : & mut std :: fmt :: Formatter) -> std :: fmt :: Result { formatter . write_str ("struct Data") } fn visit_map < V > (self , mut map : V) -> Result < Data , V :: Error > where V : :: serde :: de :: MapAccess < 'de > , { $ (let mut $ field = None ;) * let mut command_id = None ; let mut command_name = None ; let mut interaction_id = None ; while let Some (key) = map . next_key () ? { match key { Field :: command_id => { if command_id . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: command_id :: NAME)) ; } command_id = Some (map . next_value () ?) ; } Field :: command_name => { if command_name . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: command_name :: NAME)) ; } command_name = Some (map . next_value () ?) ; } Field :: interaction_id => { if interaction_id . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME)) ; } interaction_id = Some (map . next_value () ?) ; } $ (Field :: $ field => { if $ field . is_some () { return Err (:: serde :: de :: Error :: duplicate_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ; } $ field = Some (map . next_value () ?) ; }) * } } $ (let $ field = $ field . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: $ field :: NAME)) ? ;) * let command_id = command_id . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: command_id :: NAME)) ? ; let command_name = command_name . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: command_name :: NAME)) ? ; let interaction_id = interaction_id . ok_or_else (|| serde :: de :: Error :: missing_field (crate :: prisma :: command_interaction_data :: interaction_id :: NAME)) ? ; Ok (Data { command_id , command_name , interaction_id , $ ($ field) , * }) } } const FIELDS : & 'static [& 'static str] = & ["command_id" , "command_name" , "interaction" , "interaction_id"] ; deserializer . deserialize_struct ("Data" , FIELDS , DataVisitor) } } $ ($ (pub mod $ field { crate :: prisma :: command_interaction_data :: $ selection_mode ! (@ field_module ; $ field : $ selection_mode { $ ($ selections) + }) ; }) ?) + } ; (@ field_type ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { interaction :: Data } ; (@ field_type ; interaction) => { crate :: prisma :: interaction :: Data } ; (@ field_type ; $ field : ident $ ($ tokens : tt) *) => { compile_error ! (stringify ! (Cannot include nonexistent relation $ field on model "CommandInteractionData" , available relations are "interaction")) } ; (@ field_module ; interaction : $ selection_mode : ident { $ ($ selections : tt) + }) => { crate :: prisma :: interaction :: include ! (@ definitions ; ; $ ($ selections) +) ; } ; (@ field_module ; $ ($ tokens : tt) *) => { } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? : $ selection_mode : ident { $ ($ selections : tt) + }) => { { Into :: < crate :: prisma :: command_interaction_data :: IncludeParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Include :: $ selection_mode (crate :: prisma :: interaction :: select ! (@ selections_to_params ; : $ selection_mode { $ ($ selections) + }) . into_iter () . collect ())) } } ; (@ selection_field_to_selection_param ; interaction $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ?) => { { Into :: < crate :: prisma :: command_interaction_data :: IncludeParam > :: into (crate :: prisma :: command_interaction_data :: interaction :: Include :: Fetch) } } ; (@ selection_field_to_selection_param ; $ ($ tokens : tt) *) => { compile_error ! (stringify ! ($ ($ tokens) *)) } ; (@ selections_to_params ; : $ macro_name : ident { $ ($ field : ident $ (($ ($ filters : tt) +) $ (. $ arg : ident ($ ($ arg_params : tt) *)) *) ? $ (: $ selection_mode : ident { $ ($ selections : tt) + }) ?) + }) => { [$ (crate :: prisma :: command_interaction_data :: $ macro_name ! (@ selection_field_to_selection_param ; $ field $ (($ ($ filters) +) $ (. $ arg ($ ($ arg_params) *)) *) ? $ (: $ selection_mode { $ ($ selections) + }) ?) ,) +] } ; (@ filters_to_args ;) => { vec ! [] } ; (@ filters_to_args ; $ ($ t : tt) *) => { $ ($ t) * } ; (@ field_serde_name ; command_id) => { "command_id" } ; (@ field_serde_name ; command_name) => { "command_name" } ; (@ field_serde_name ; interaction) => { "interaction" } ; (@ field_serde_name ; interaction_id) => { "interaction_id" } ; }
     pub use _include_command_interaction_data as include;
     pub enum IncludeParam {
-        Id(id::Include),
-        Name(name::Include),
+        CommandId(command_id::Include),
+        CommandName(command_name::Include),
         Interaction(interaction::Include),
         InteractionId(interaction_id::Include),
     }
     impl IncludeParam {
         pub fn to_selection(self) -> ::prisma_client_rust::Selection {
             match self {
-                Self::Id(data) => data.to_selection(),
-                Self::Name(data) => data.to_selection(),
+                Self::CommandId(data) => data.to_selection(),
+                Self::CommandName(data) => data.to_selection(),
                 Self::Interaction(data) => data.to_selection(),
                 Self::InteractionId(data) => data.to_selection(),
             }
         }
     }
     #[macro_export]
-    macro_rules ! _partial_unchecked_command_interaction_data { ($ struct_name : ident { $ ($ scalar_field : ident) + }) => { :: prisma_client_rust :: macros :: partial_unchecked ! { crate :: prisma :: command_interaction_data struct $ struct_name { # [serde (rename = "id")] pub id : String , # [serde (rename = "name")] pub name : String , # [serde (rename = "interaction_id")] pub interaction_id : String } [$ ($ scalar_field) , +] } } ; }
+    macro_rules ! _partial_unchecked_command_interaction_data { ($ struct_name : ident { $ ($ scalar_field : ident) + }) => { :: prisma_client_rust :: macros :: partial_unchecked ! { crate :: prisma :: command_interaction_data struct $ struct_name { # [serde (rename = "command_id")] pub command_id : String , # [serde (rename = "command_name")] pub command_name : String , # [serde (rename = "interaction_id")] pub interaction_id : String } [$ ($ scalar_field) , +] } } ; }
     pub use _partial_unchecked_command_interaction_data as partial_unchecked;
     #[derive(Debug, Clone, :: serde :: Serialize, :: serde :: Deserialize)]
     pub struct Data {
-        #[serde(rename = "id")]
-        pub id: String,
-        #[serde(rename = "name")]
-        pub name: String,
+        #[serde(rename = "command_id")]
+        pub command_id: String,
+        #[serde(rename = "command_name")]
+        pub command_name: String,
         #[serde(rename = "interaction")]
         pub interaction: Option<Box<super::interaction::Data>>,
         #[serde(rename = "interaction_id")]
@@ -7759,20 +7767,20 @@ pub mod command_interaction_data {
     }
     #[derive(Clone)]
     pub enum SetParam {
-        SetId(String),
-        SetName(String),
+        SetCommandId(String),
+        SetCommandName(String),
         ConnectInteraction(super::interaction::UniqueWhereParam),
         SetInteractionId(String),
     }
     impl From<SetParam> for (String, ::prisma_client_rust::PrismaValue) {
         fn from(param: SetParam) -> Self {
             match param {
-                SetParam::SetId(value) => (
-                    id::NAME.to_string(),
+                SetParam::SetCommandId(value) => (
+                    command_id::NAME.to_string(),
                     ::prisma_client_rust::PrismaValue::String(value),
                 ),
-                SetParam::SetName(value) => (
-                    name::NAME.to_string(),
+                SetParam::SetCommandName(value) => (
+                    command_name::NAME.to_string(),
                     ::prisma_client_rust::PrismaValue::String(value),
                 ),
                 SetParam::ConnectInteraction(where_param) => (
@@ -7798,34 +7806,34 @@ pub mod command_interaction_data {
     }
     #[derive(Clone)]
     pub enum UncheckedSetParam {
-        Id(String),
-        Name(String),
+        CommandId(String),
+        CommandName(String),
         InteractionId(String),
     }
     impl From<UncheckedSetParam> for SetParam {
         fn from(param: UncheckedSetParam) -> Self {
             match param {
-                UncheckedSetParam::Id(value) => Self::SetId(value),
-                UncheckedSetParam::Name(value) => Self::SetName(value),
+                UncheckedSetParam::CommandId(value) => Self::SetCommandId(value),
+                UncheckedSetParam::CommandName(value) => Self::SetCommandName(value),
                 UncheckedSetParam::InteractionId(value) => Self::SetInteractionId(value),
             }
         }
     }
     #[derive(Clone)]
     pub enum OrderByParam {
-        Id(::prisma_client_rust::Direction),
-        Name(::prisma_client_rust::Direction),
+        CommandId(::prisma_client_rust::Direction),
+        CommandName(::prisma_client_rust::Direction),
         InteractionId(::prisma_client_rust::Direction),
     }
     impl Into<(String, ::prisma_client_rust::PrismaValue)> for OrderByParam {
         fn into(self) -> (String, ::prisma_client_rust::PrismaValue) {
             match self {
-                Self::Id(direction) => (
-                    id::NAME.to_string(),
+                Self::CommandId(direction) => (
+                    command_id::NAME.to_string(),
                     ::prisma_client_rust::PrismaValue::String(direction.to_string()),
                 ),
-                Self::Name(direction) => (
-                    name::NAME.to_string(),
+                Self::CommandName(direction) => (
+                    command_name::NAME.to_string(),
                     ::prisma_client_rust::PrismaValue::String(direction.to_string()),
                 ),
                 Self::InteractionId(direction) => (
@@ -7840,8 +7848,8 @@ pub mod command_interaction_data {
         Not(Vec<WhereParam>),
         Or(Vec<WhereParam>),
         And(Vec<WhereParam>),
-        Id(_prisma::read_filters::StringFilter),
-        Name(_prisma::read_filters::StringFilter),
+        CommandId(_prisma::read_filters::StringFilter),
+        CommandName(_prisma::read_filters::StringFilter),
         InteractionIs(Vec<super::interaction::WhereParam>),
         InteractionIsNot(Vec<super::interaction::WhereParam>),
         InteractionId(_prisma::read_filters::StringFilter),
@@ -7885,8 +7893,8 @@ pub mod command_interaction_data {
                         ),
                     ),
                 ),
-                Self::Id(value) => (id::NAME, value.into()),
-                Self::Name(value) => (name::NAME, value.into()),
+                Self::CommandId(value) => (command_id::NAME, value.into()),
+                Self::CommandName(value) => (command_name::NAME, value.into()),
                 Self::InteractionIs(where_params) => (
                     interaction::NAME,
                     ::prisma_client_rust::SerializedWhereValue::Object(vec![(
@@ -7921,16 +7929,12 @@ pub mod command_interaction_data {
     #[derive(Clone)]
     pub enum UniqueWhereParam {
         InteractionIdEquals(String),
-        IdEquals(String),
     }
     impl From<UniqueWhereParam> for WhereParam {
         fn from(value: UniqueWhereParam) -> Self {
             match value {
                 UniqueWhereParam::InteractionIdEquals(value) => {
                     Self::InteractionId(_prisma::read_filters::StringFilter::Equals(value))
-                }
-                UniqueWhereParam::IdEquals(value) => {
-                    Self::Id(_prisma::read_filters::StringFilter::Equals(value))
                 }
             }
         }
@@ -7957,8 +7961,8 @@ pub mod command_interaction_data {
         const MODEL: &'static str = NAME;
         fn scalar_selections() -> Vec<::prisma_client_rust::Selection> {
             vec![
-                ::prisma_client_rust::sel(id::NAME),
-                ::prisma_client_rust::sel(name::NAME),
+                ::prisma_client_rust::sel(command_id::NAME),
+                ::prisma_client_rust::sel(command_name::NAME),
                 ::prisma_client_rust::sel(interaction_id::NAME),
             ]
         }
@@ -7992,28 +7996,28 @@ pub mod command_interaction_data {
         }
         pub fn create(
             self,
-            id: String,
-            name: String,
+            command_id: String,
+            command_name: String,
             interaction: super::interaction::UniqueWhereParam,
             mut _params: Vec<SetParam>,
         ) -> Create<'a> {
             _params.extend([
-                id::set(id),
-                name::set(name),
+                command_id::set(command_id),
+                command_name::set(command_name),
                 interaction::connect(interaction),
             ]);
             Create::new(self.client, _params)
         }
         pub fn create_unchecked(
             self,
-            id: String,
-            name: String,
+            command_id: String,
+            command_name: String,
             interaction_id: String,
             mut _params: Vec<UncheckedSetParam>,
         ) -> Create<'a> {
             _params.extend([
-                id::set(id),
-                name::set(name),
+                command_id::set(command_id),
+                command_name::set(command_name),
                 interaction_id::set(interaction_id),
             ]);
             Create::new(self.client, _params.into_iter().map(Into::into).collect())
@@ -8024,10 +8028,10 @@ pub mod command_interaction_data {
         ) -> CreateMany<'a> {
             let data = data
                 .into_iter()
-                .map(|(id, name, interaction_id, mut _params)| {
+                .map(|(command_id, command_name, interaction_id, mut _params)| {
                     _params.extend([
-                        id::set(id),
-                        name::set(name),
+                        command_id::set(command_id),
+                        command_name::set(command_name),
                         interaction_id::set(interaction_id),
                     ]);
                     _params
@@ -8060,7 +8064,7 @@ pub mod command_interaction_data {
         pub fn upsert(
             self,
             _where: UniqueWhereParam,
-            (id, name, interaction, mut _params): (
+            (command_id, command_name, interaction, mut _params): (
                 String,
                 String,
                 super::interaction::UniqueWhereParam,
@@ -8069,8 +8073,8 @@ pub mod command_interaction_data {
             _update: Vec<SetParam>,
         ) -> Upsert<'a> {
             _params.extend([
-                id::set(id),
-                name::set(name),
+                command_id::set(command_id),
+                command_name::set(command_name),
                 interaction::connect(interaction),
             ]);
             Upsert::new(self.client, _where.into(), _params, _update)
@@ -9699,18 +9703,18 @@ pub mod _prisma {
     }
     #[derive(Debug, Clone, Copy, :: serde :: Serialize, :: serde :: Deserialize, PartialEq, Eq)]
     pub enum CommandInteractionDataScalarFieldEnum {
-        #[serde(rename = "id")]
-        Id,
-        #[serde(rename = "name")]
-        Name,
+        #[serde(rename = "command_id")]
+        CommandId,
+        #[serde(rename = "command_name")]
+        CommandName,
         #[serde(rename = "interaction_id")]
         InteractionId,
     }
     impl ToString for CommandInteractionDataScalarFieldEnum {
         fn to_string(&self) -> String {
             match self {
-                Self::Id => "id".to_string(),
-                Self::Name => "name".to_string(),
+                Self::CommandId => "command_id".to_string(),
+                Self::CommandName => "command_name".to_string(),
                 Self::InteractionId => "interaction_id".to_string(),
             }
         }

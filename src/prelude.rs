@@ -1,18 +1,45 @@
-pub(crate) use crate::nci; // needs pub(crate) but idk why
-pub(crate) use crate::prisma;
-pub use crate::prisma::prisma_client::{
-    attachment, channel, channel_category, interaction, message, user, user_role,
-    ChannelType as PChannelType, InteractionType,
+pub(crate) use crate::{
+    events::{
+        emitter::{EventEmitter, EventEmitterTypeKey},
+        payloads::*,
+        EmitterEvent,
+    },
+    nci,
+    prisma::{
+        self,
+        prisma_client::{
+            attachment, channel, channel_category, interaction, message, user, user_role,
+            ChannelType as PChannelType, InteractionType, PrismaClient,
+        },
+        PrismaTypeKey,
+    },
+    util::{
+        colors as color, embed, latency,
+        message::{clone, emoji, mention},
+        share,
+    },
 };
-pub use crate::prisma::PrismaClient;
+
+pub use std::{
+    default::{self, default},
+    sync::Arc,
+    thread,
+};
+
 pub use anyhow::{bail, Context as ToAnyhowResult, Result};
 pub use log::{debug, error, info, trace, warn};
+pub use serde::{Deserialize, Serialize};
+
+pub use futures::lock::Mutex;
 pub use poise::serenity_prelude as serenity;
 pub use simple_logger::SimpleLogger;
-pub use std::default::default;
 
+pub type Shared<T> = Arc<Mutex<T>>;
+
+#[derive(Debug)]
 pub struct Data {
-    pub prisma: PrismaClient,
+    pub prisma: Shared<PrismaClient>,
+    pub emitter: Shared<EventEmitter<EmitterEvent>>,
 }
 
 pub type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
@@ -24,5 +51,23 @@ pub trait IsThread {
 impl IsThread for serenity::GuildChannel {
     fn is_thread(&self) -> bool {
         self.thread_metadata.is_some()
+    }
+}
+
+pub trait CapitalizeFirstLetter {
+    fn capitalize_first_letter(&self) -> String;
+}
+
+impl<T> CapitalizeFirstLetter for T
+where
+    T: ToString,
+{
+    fn capitalize_first_letter(&self) -> String {
+        let string = self.to_string();
+        let mut chars = string.chars();
+        match chars.next() {
+            None => String::new(),
+            Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
+        }
     }
 }

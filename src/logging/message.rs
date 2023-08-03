@@ -2,8 +2,21 @@ use std::collections::HashSet;
 
 use crate::prelude::*;
 
-pub async fn create(message: serenity::Message, prisma_client: &PrismaClient) -> Result<()> {
-    prisma_client
+pub async fn create(message: serenity::Message, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
+    if message.author.bot {
+        return Ok(());
+    }
+
+    prisma
         .message()
         .create(
             message.id.to_string(),
@@ -16,7 +29,7 @@ pub async fn create(message: serenity::Message, prisma_client: &PrismaClient) ->
         .await?;
 
     for attachment in message.attachments {
-        prisma_client
+        prisma
             .attachment()
             .create(
                 attachment.id.to_string(),
@@ -33,11 +46,21 @@ pub async fn create(message: serenity::Message, prisma_client: &PrismaClient) ->
     Ok(())
 }
 
-pub async fn update(
-    message: serenity::MessageUpdateEvent,
-    prisma_client: &PrismaClient,
-) -> Result<()> {
-    let prisma_message = prisma_client
+pub async fn update(message: serenity::MessageUpdateEvent, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
+    if message.author.map(|n| n.bot).unwrap_or(false) {
+        return Ok(());
+    }
+
+    let prisma_message = prisma
         .message()
         .update(
             message::id::equals(message.id.to_string()),
@@ -70,7 +93,7 @@ pub async fn update(
             where_params.push(attachment::id::equals(id));
         }
 
-        prisma_client
+        prisma
             .attachment()
             .update_many(where_params, vec![attachment::deleted::set(true)])
             .exec()
@@ -80,8 +103,17 @@ pub async fn update(
     Ok(())
 }
 
-pub async fn delete(message_id: serenity::MessageId, prisma_client: &PrismaClient) -> Result<()> {
-    prisma_client
+pub async fn delete(message_id: serenity::MessageId, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
+    prisma
         .message()
         .update(
             message::id::equals(message_id.to_string()),
@@ -90,7 +122,7 @@ pub async fn delete(message_id: serenity::MessageId, prisma_client: &PrismaClien
         .exec()
         .await?;
 
-    prisma_client
+    prisma
         .attachment()
         .update_many(
             vec![attachment::message_id::equals(message_id.to_string())],
