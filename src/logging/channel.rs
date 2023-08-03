@@ -1,6 +1,15 @@
 use crate::prelude::*;
 
-pub async fn create(channel: &serenity::GuildChannel, prisma: &PrismaClient) -> Result<()> {
+pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
     // to hell with all threads
     if channel.is_thread() {
         return Ok(());
@@ -39,7 +48,16 @@ pub async fn create(channel: &serenity::GuildChannel, prisma: &PrismaClient) -> 
     Ok(())
 }
 
-pub async fn update(channel: serenity::GuildChannel, prisma: &PrismaClient) -> Result<()> {
+pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
     prisma
         .channel()
         .update(
@@ -61,7 +79,16 @@ pub async fn update(channel: serenity::GuildChannel, prisma: &PrismaClient) -> R
     Ok(())
 }
 
-pub async fn delete(channel: serenity::ChannelId, prisma: &PrismaClient) -> Result<()> {
+pub async fn delete(channel: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
     prisma
         .channel()
         .update(

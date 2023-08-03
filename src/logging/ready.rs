@@ -1,21 +1,36 @@
 use crate::prelude::*;
 
-pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Result<()> {
+pub async fn ready(ctx: &serenity::Context) -> Result<()> {
     // find NCI server
     let nci_id = ctx
         .cache
         .guilds()
         .iter()
         .find(|g| g.to_string() == nci::ID.to_string())
-        .context("Could not find NCI")?
+        .context("Could not find NCI by id")
+        .unwrap()
         .clone();
 
-    let nci = ctx.cache.guild(nci_id).context("Could not find NCI")?;
+    let nci = ctx
+        .cache
+        .guild(nci_id)
+        .context("Could not find NCI server data")
+        .unwrap();
+
+    // setup prisma
+    let prisma_mutex = Arc::clone(
+        ctx.data
+            .read()
+            .await
+            .get::<prisma::PrismaTypeKey>()
+            .unwrap(),
+    );
+    let prisma = prisma_mutex.lock().await;
 
     // collect members and users/roles in database
     let members = nci.members.values().collect::<Vec<_>>();
-    let prisma_members = prisma.user().find_many(vec![]).exec().await?;
-    let prisma_roles = prisma.user_role().find_many(vec![]).exec().await?;
+    let prisma_members = prisma.user().find_many(vec![]).exec().await.unwrap();
+    let prisma_roles = prisma.user_role().find_many(vec![]).exec().await.unwrap();
 
     for member in members {
         // dont update db for bots
@@ -38,7 +53,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
             role = ctx
                 .cache
                 .role(nci_id, role_id)
-                .context("Could not find role")?;
+                .context("Could not find role")
+                .unwrap();
         } else {
             role = nci
                 .create_role(&ctx, |r| {
@@ -47,14 +63,17 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                         .position(5)
                         .mentionable(false)
                 })
-                .await?;
+                .await
+                .unwrap();
 
             ctx.cache
                 .member(nci_id, member.user.id)
                 .as_mut()
-                .context("Could not find member")?
+                .context("Could not find member")
+                .unwrap()
                 .add_role(&ctx, role.id)
-                .await?;
+                .await
+                .unwrap();
         }
 
         // if role not found in db, create
@@ -67,7 +86,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                 .user_role()
                 .create(role.id.to_string(), role.name, role.colour.hex(), vec![])
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
 
         if let Some(prisma_member) = prisma_member {
@@ -105,7 +125,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                     .user()
                     .update(user::id::equals(member.user.id.to_string()), updates_user)
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             // if not, create user in db
@@ -127,7 +148,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                     ],
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -138,14 +160,20 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
         .drain_filter(|c| c.clone().category().is_some())
         .collect::<Vec<_>>();
 
-    let prisma_channels = prisma.channel().find_many(vec![]).exec().await?;
-    let prisma_categories = prisma.channel_category().find_many(vec![]).exec().await?;
+    let prisma_channels = prisma.channel().find_many(vec![]).exec().await.unwrap();
+    let prisma_categories = prisma
+        .channel_category()
+        .find_many(vec![])
+        .exec()
+        .await
+        .unwrap();
 
     for category in categories {
         let category = category
             .clone()
             .category()
-            .context("Filtering was unsucesful")?;
+            .context("Filtering was unsucesful")
+            .unwrap();
 
         // find the category in the database, if it exists
         if let Some(prisma_category) = prisma_categories
@@ -160,7 +188,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                         vec![channel_category::name::set(category.name.clone())],
                     )
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             // if not, create category in db
@@ -169,7 +198,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                 .channel_category()
                 .create(category.id.to_string(), category.name.clone(), vec![])
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -222,7 +252,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                     .channel()
                     .update(channel::id::equals(channel.id.to_string()), channel_updates)
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             // else, create
@@ -249,7 +280,8 @@ pub async fn syncdb(ctx: &serenity::Context, prisma: &mut PrismaClient) -> Resul
                     },
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 

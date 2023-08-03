@@ -1,6 +1,15 @@
 use crate::prelude::*;
 
-pub async fn create(category: &serenity::ChannelCategory, prisma: &PrismaClient) -> Result<()> {
+pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
     prisma
         .channel_category()
         .create(category.id.to_string(), category.clone().name, vec![])
@@ -10,7 +19,17 @@ pub async fn create(category: &serenity::ChannelCategory, prisma: &PrismaClient)
     Ok(())
 }
 
-pub async fn update(category: serenity::ChannelCategory, prisma: &PrismaClient) -> Result<()> {
+pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+
+    let prisma = prisma_mutex.lock().await;
+
     prisma
         .channel_category()
         .update(
@@ -23,7 +42,16 @@ pub async fn update(category: serenity::ChannelCategory, prisma: &PrismaClient) 
     Ok(())
 }
 
-pub async fn delete(category: serenity::ChannelId, prisma: &PrismaClient) -> Result<()> {
+pub async fn delete(category: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
+    let data = &ctx.data;
+    let prisma_mutex = Arc::clone(
+        data.read()
+            .await
+            .get::<PrismaTypeKey>()
+            .context("Could not find prismaclient in data")?,
+    );
+    let prisma = prisma_mutex.lock().await;
+
     let category = prisma
         .channel_category()
         .update(
