@@ -21,7 +21,7 @@ pub(crate) use crate::{
 };
 
 pub use std::{
-    default::{self, default},
+    default::{self, Default},
     sync::Arc,
     thread,
 };

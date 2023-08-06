@@ -1,10 +1,4 @@
-#![feature(
-    default_free_fn,
-    let_chains,
-    drain_filter,
-    tuple_trait,
-    unboxed_closures
-)]
+#![feature(let_chains, tuple_trait, unboxed_closures)]
 
 #[macro_use]
 extern crate dotenv_codegen;
@@ -58,7 +52,7 @@ async fn main() -> Result<()> {
                 }
                 .boxed()
             },
-            ..default()
+            ..Default::default()
         })
         .token(dotenv!("BOT_TOKEN"))
         .intents(serenity::GatewayIntents::all())

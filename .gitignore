@@ -15,3 +15,5 @@ Cargo.lock
 
 .env
 *.bak
+
+src/prisma/prisma_client.rs
