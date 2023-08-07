@@ -1,6 +1,7 @@
 pub mod emitter;
 pub mod error;
-pub mod payloads;
+pub mod event;
+pub mod payload;
 
 use crate::prelude::*;
 
@@ -16,274 +17,143 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
     let mut event_emitter = emitter_mutex.lock().await;
 
     match event {
-        /*** MESSAGE EVENTS ***/
-        poise::Event::Message { new_message } => {
+        /*** INTERACTION EVENTS ***/
+        poise::Event::InteractionCreate { interaction } => match interaction {
+            serenity::Interaction::ApplicationCommand(interaction) => {
+                event_emitter
+                    .emit(event::CommandInteractionEvent, interaction, &ctx)
+                    .await?
+            }
+            serenity::Interaction::MessageComponent(interaction) => {
+                event_emitter
+                    .emit(event::ComponentInteractionEvent, interaction, &ctx)
+                    .await?
+            }
+            serenity::Interaction::ModalSubmit(interaction) => {
+                event_emitter
+                    .emit(event::ModalInteractionEvent, interaction, &ctx)
+                    .await?
+            }
+            _ => {}
+        },
+
+        /*** CATEGORY EVENTS ***/
+        poise::Event::CategoryCreate { category } => {
             event_emitter
-                .emit(
-                    &EmitterEvent::MessageCreate,
-                    MessageCreatePayload::from(new_message),
-                    &ctx,
-                )
-                .await?;
+                .emit(event::CategoryCreateEvent, category.clone(), &ctx)
+                .await?
+        }
+        poise::Event::CategoryDelete { category } => {
+            event_emitter
+                .emit(event::CategoryDeleteEvent, category.clone(), &ctx)
+                .await?
+        }
+
+        /*** CHANNEL EVENTS ***/
+        poise::Event::ChannelCreate { channel } => {
+            event_emitter
+                .emit(event::ChannelCreateEvent, channel.clone(), &ctx)
+                .await?
+        }
+        poise::Event::ChannelUpdate { new: channel, .. } => match channel {
+            serenity::Channel::Guild(channel) => {
+                event_emitter
+                    .emit(event::ChannelUpdateEvent, channel, &ctx)
+                    .await?
+            }
+            serenity::Channel::Category(channel) => {
+                event_emitter
+                    .emit(event::CategoryUpdateEvent, channel, &ctx)
+                    .await?
+            }
+            _ => {}
+        },
+        poise::Event::ChannelDelete { channel } => {
+            event_emitter
+                .emit(event::ChannelDeleteEvent, channel.clone(), &ctx)
+                .await?
+        }
+
+        /*** MESSAGE EVENTS ***/
+        poise::Event::Message {
+            new_message: message,
+        } => {
+            event_emitter
+                .emit(event::MessageCreateEvent, message, &ctx)
+                .await?
         }
         poise::Event::MessageUpdate { event, .. } => {
-            let payload = MessageUpdatePayload::from(event.clone());
-
             event_emitter
-                .emit(
-                    &EmitterEvent::MessageUpdate { id: event.id },
-                    payload.clone(),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(&EmitterEvent::AnyMessageUpdate, payload.clone(), &ctx)
-                .await?;
+                .emit(event::MessageUpdateEvent, event, &ctx)
+                .await?
         }
         poise::Event::MessageDelete {
             channel_id,
             deleted_message_id: message_id,
             guild_id,
         } => {
-            let payload = MessageDeletePayload::from((guild_id, channel_id, message_id));
+            let payload = payload::MessageDeletePayload {
+                channel_id,
+                message_id,
+                guild_id,
+            };
 
             event_emitter
-                .emit(
-                    &EmitterEvent::MessageDelete { id: message_id },
-                    payload.clone(),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(&EmitterEvent::AnyMessageDelete, payload.clone(), &ctx)
-                .await?;
+                .emit(event::MessageDeleteEvent, payload, &ctx)
+                .await?
         }
         poise::Event::MessageDeleteBulk {
             channel_id,
             multiple_deleted_messages_ids: message_ids,
             guild_id,
         } => {
-            for id in message_ids {
-                let payload = MessageDeletePayload::from((guild_id, channel_id, id));
+            for message_id in message_ids {
+                let payload = payload::MessageDeletePayload {
+                    channel_id,
+                    message_id,
+                    guild_id,
+                };
 
                 event_emitter
-                    .emit(&EmitterEvent::MessageDelete { id }, payload.clone(), &ctx)
-                    .await?;
-
-                event_emitter
-                    .emit(&EmitterEvent::AnyMessageDelete, payload.clone(), &ctx)
-                    .await?;
+                    .emit(event::MessageDeleteEvent, payload, &ctx)
+                    .await?
             }
-        }
-
-        /*** CHANNEL EVENTS ***/
-        poise::Event::ChannelCreate { channel } => {
-            event_emitter
-                .emit(
-                    &EmitterEvent::ChannelCreate,
-                    ChannelCreatePayload::from(channel.clone()),
-                    &ctx,
-                )
-                .await?;
-        }
-        poise::Event::ChannelUpdate { new, .. } => {
-            if let Some(channel) = new.clone().guild() {
-                event_emitter
-                    .emit(
-                        &EmitterEvent::ChannelUpdate { id: channel.id },
-                        ChannelUpdatePayload::from(channel.clone()),
-                        &ctx,
-                    )
-                    .await?;
-
-                event_emitter
-                    .emit(
-                        &EmitterEvent::AnyChannelUpdate,
-                        ChannelUpdatePayload::from(channel.clone()),
-                        &ctx,
-                    )
-                    .await?;
-            } else if let Some(category) = new.category() {
-                event_emitter
-                    .emit(
-                        &EmitterEvent::CategoryUpdate { id: category.id },
-                        CategoryUpdatePayload::from(category.clone()),
-                        &ctx,
-                    )
-                    .await?;
-
-                event_emitter
-                    .emit(
-                        &EmitterEvent::AnyCategoryUpdate,
-                        CategoryUpdatePayload::from(category.clone()),
-                        &ctx,
-                    )
-                    .await?;
-            }
-        }
-        poise::Event::ChannelDelete { channel } => {
-            let payload = ChannelDeletePayload::from(channel.clone());
-
-            event_emitter
-                .emit(
-                    &EmitterEvent::ChannelDelete { id: channel.id },
-                    payload.clone(),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(&EmitterEvent::AnyChannelDelete, payload, &ctx)
-                .await?;
-        }
-
-        /*** CATEGORY EVENTS ***/
-        poise::Event::CategoryCreate { category } => {
-            event_emitter
-                .emit(
-                    &EmitterEvent::CategoryCreate,
-                    CategoryCreatePayload::from(category.clone()),
-                    &ctx,
-                )
-                .await?;
-        }
-        poise::Event::CategoryDelete { category } => {
-            let payload = CategoryDeletePayload::from(category.clone());
-
-            event_emitter
-                .emit(
-                    &EmitterEvent::CategoryDelete { id: category.id },
-                    payload.clone(),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(&EmitterEvent::AnyCategoryDelete, payload, &ctx)
-                .await?;
-        }
-
-        /*** INTERACTION EVENTS ***/
-        poise::Event::InteractionCreate { interaction } => {
-            if let Some(interaction) = interaction.clone().message_component() {
-                let payload = ComponentInteractionPayload::from(interaction.clone());
-
-                event_emitter
-                    .emit(
-                        &EmitterEvent::ComponentInteraction {
-                            custom_id: interaction.data.custom_id.clone(),
-                        },
-                        payload.clone(),
-                        &ctx,
-                    )
-                    .await?;
-
-                event_emitter
-                    .emit(&EmitterEvent::AnyComponentInteraction, payload, &ctx)
-                    .await?;
-            }
-
-            let payload = AnyInteractionPayload::from(interaction.clone());
-
-            event_emitter
-                .emit(&EmitterEvent::AnyInteraction, payload, &ctx)
-                .await?;
         }
 
         /*** ROLE EVENTS ***/
         poise::Event::GuildRoleCreate { new: role } => {
             event_emitter
-                .emit(
-                    &EmitterEvent::RoleCreate,
-                    RoleCreatePayload::from(role),
-                    &ctx,
-                )
-                .await?;
+                .emit(event::RoleCreateEvent, role, &ctx)
+                .await?
         }
-
         poise::Event::GuildRoleUpdate { new: role, .. } => {
             event_emitter
-                .emit(
-                    &EmitterEvent::RoleUpdate { id: role.id },
-                    RoleUpdatePayload::from(role.clone()),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(
-                    &EmitterEvent::AnyRoleUpdate,
-                    RoleUpdatePayload::from(role),
-                    &ctx,
-                )
-                .await?;
+                .emit(event::RoleUpdateEvent, role, &ctx)
+                .await?
         }
-
         poise::Event::GuildRoleDelete {
-            removed_role_id: role_id,
             guild_id,
+            removed_role_id: role_id,
             ..
         } => {
-            let payload = RoleDeletePayload { guild_id, role_id };
+            let payload = payload::RoleDeletePayload { guild_id, role_id };
 
             event_emitter
-                .emit(
-                    &EmitterEvent::RoleDelete { id: role_id },
-                    payload.clone(),
-                    &ctx,
-                )
-                .await?;
-
-            event_emitter
-                .emit(&EmitterEvent::AnyRoleDelete, payload, &ctx)
-                .await?;
+                .emit(event::RoleDeleteEvent, payload, &ctx)
+                .await?
         }
 
-        /**** READY ****/
+        /*** READY EVENTS ***/
         poise::Event::Ready {
             data_about_bot: ready,
         } => {
             event_emitter
-                .emit(&EmitterEvent::Ready, ReadyEventPayload::from(ready), &ctx)
-                .await?;
+                .emit(event::BotReadyEvent, ready, &ctx)
+                .await?
         }
+
         _ => {}
     }
 
     Ok(())
-}
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub enum EmitterEvent {
-    ComponentInteraction { custom_id: String },
-    AnyComponentInteraction,
-    AnyInteraction,
-
-    CategoryCreate,
-    CategoryUpdate { id: serenity::ChannelId },
-    AnyCategoryUpdate,
-    CategoryDelete { id: serenity::ChannelId },
-    AnyCategoryDelete,
-
-    ChannelCreate,
-    ChannelUpdate { id: serenity::ChannelId },
-    AnyChannelUpdate,
-    ChannelDelete { id: serenity::ChannelId },
-    AnyChannelDelete,
-
-    MessageCreate,
-    MessageUpdate { id: serenity::MessageId },
-    AnyMessageUpdate,
-    MessageDelete { id: serenity::MessageId },
-    AnyMessageDelete,
-
-    RoleCreate,
-    RoleUpdate { id: serenity::RoleId },
-    AnyRoleUpdate,
-    RoleDelete { id: serenity::RoleId },
-    AnyRoleDelete,
-
-    Ready,
 }

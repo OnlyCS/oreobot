@@ -1,8 +1,7 @@
 pub(crate) use crate::{
     events::{
-        emitter::{EventEmitter, EventEmitterTypeKey},
-        payloads::*,
-        EmitterEvent,
+        emitter::{EmitterEvent, EventEmitter, EventEmitterTypeKey},
+        event, payload,
     },
     nci,
     prisma::{
@@ -39,7 +38,7 @@ pub type Shared<T> = Arc<Mutex<T>>;
 #[derive(Debug)]
 pub struct Data {
     pub prisma: Shared<PrismaClient>,
-    pub emitter: Shared<EventEmitter<EmitterEvent>>,
+    pub emitter: Shared<EventEmitter>,
 }
 
 pub type Context<'a> = poise::Context<'a, Data, anyhow::Error>;

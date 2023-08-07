@@ -146,9 +146,9 @@ pub mod clone {
             let wh_id = webhook.id.0;
             let wh_gid = webhook.guild_id.unwrap().0;
 
-            emitter.on_async(
-                &EmitterEvent::MessageUpdate { id: message.id },
-                move |payload: MessageUpdatePayload, ctx: serenity::Context| async move {
+            emitter.on_async_filter(
+                event::MessageUpdateEvent,
+                move |message, ctx: serenity::Context| async move {
                     ctx.cache
                         .guild(wh_gid)
                         .context("Could not find guild")?
@@ -158,7 +158,7 @@ pub mod clone {
                         .find(|n| n.id.0 == wh_id)
                         .context("Could not get webhook to edit message")?
                         .edit_message(&ctx, serenity::MessageId(wh_message_id), |msg| {
-                            if let Some(content) = payload.0.content {
+                            if let Some(content) = message.content {
                                 msg.content(content);
                             }
 
@@ -168,11 +168,12 @@ pub mod clone {
 
                     Ok(())
                 },
+                move |message| message.id == wh_message_id,
             );
 
-            emitter.on_async(
-                &EmitterEvent::MessageDelete { id: message.id },
-                move |_: MessageDeletePayload, ctx: serenity::Context| async move {
+            emitter.on_async_filter(
+                event::MessageDeleteEvent,
+                move |_, ctx: serenity::Context| async move {
                     ctx.cache
                         .guild(wh_gid)
                         .context("Could not find guild")?
@@ -186,6 +187,7 @@ pub mod clone {
 
                     Ok(())
                 },
+                move |payload| payload.message_id == wh_message_id,
             )
         }
 
