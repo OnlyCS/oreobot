@@ -3,7 +3,7 @@ pub use crate::prelude::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmbedStatus {
     Sucess,
-    Warn,
+    Warning,
     Error,
 }
 
@@ -12,7 +12,7 @@ pub fn default(ctx: &Context<'_>, status: EmbedStatus) -> serenity::CreateEmbed 
 
     embed.color(match status {
         EmbedStatus::Sucess => color::PRIMARY,
-        EmbedStatus::Warn => color::WARN,
+        EmbedStatus::Warning => color::WARN,
         EmbedStatus::Error => color::ERROR,
     });
 

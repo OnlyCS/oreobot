@@ -58,6 +58,9 @@ pub mod clone {
         destination: serenity::GuildChannel,
         options: CloneLinkData,
     ) -> Result<()> {
+        let emitter_mutex = Arc::clone(&ctx.data().emitter);
+        let mut emitter = emitter_mutex.lock().await;
+
         let webhooks = destination.webhooks(&ctx).await?;
         let webhook = match webhooks.first() {
             Some(n) => n.clone(),
@@ -106,9 +109,7 @@ pub mod clone {
             "".to_string()
         };
 
-        let button_cid = format!("message_link:{}", uuid::Uuid::new_v4());
-
-        webhook
+        let wh_message = webhook
             .execute(&ctx, false, |executer| {
                 executer.content(format!("{}{}", reply_text, content));
 
@@ -127,7 +128,6 @@ pub mod clone {
                         component_creator.create_action_row(|ar_creator| {
                             ar_creator.create_button(|btn_creator| {
                                 btn_creator
-                                    .custom_id(button_cid)
                                     .label(options.link_text)
                                     .url(url)
                                     .style(serenity::ButtonStyle::Link)
@@ -139,6 +139,55 @@ pub mod clone {
                 executer
             })
             .await?;
+
+        // todo: database this so we can always re-add event listeners
+        if let Some(wh_message) = wh_message {
+            let wh_message_id = wh_message.id.0; // u64 has copy!
+            let wh_id = webhook.id.0;
+            let wh_gid = webhook.guild_id.unwrap().0;
+
+            emitter.on_async(
+                &EmitterEvent::MessageUpdate { id: message.id },
+                move |payload: MessageUpdatePayload, ctx: serenity::Context| async move {
+                    ctx.cache
+                        .guild(wh_gid)
+                        .context("Could not find guild")?
+                        .webhooks(&ctx)
+                        .await?
+                        .iter()
+                        .find(|n| n.id.0 == wh_id)
+                        .context("Could not get webhook to edit message")?
+                        .edit_message(&ctx, serenity::MessageId(wh_message_id), |msg| {
+                            if let Some(content) = payload.0.content {
+                                msg.content(content);
+                            }
+
+                            msg
+                        })
+                        .await?;
+
+                    Ok(())
+                },
+            );
+
+            emitter.on_async(
+                &EmitterEvent::MessageDelete { id: message.id },
+                move |_: MessageDeletePayload, ctx: serenity::Context| async move {
+                    ctx.cache
+                        .guild(wh_gid)
+                        .context("Could not find guild")?
+                        .webhooks(&ctx)
+                        .await?
+                        .iter()
+                        .find(|n| n.id.0 == wh_id)
+                        .context("Could not get webhook to delete message")?
+                        .delete_message(&ctx, serenity::MessageId(wh_message_id))
+                        .await?;
+
+                    Ok(())
+                },
+            )
+        }
 
         Ok(())
     }

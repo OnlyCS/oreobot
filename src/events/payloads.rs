@@ -1,6 +1,24 @@
 use crate::prelude::{serenity::*, *};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ComponentInteractionPayload(pub MessageComponentInteraction);
+
+impl From<MessageComponentInteraction> for ComponentInteractionPayload {
+    fn from(value: MessageComponentInteraction) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AnyInteractionPayload(pub Interaction);
+
+impl From<Interaction> for AnyInteractionPayload {
+    fn from(value: Interaction) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MessageCreatePayload(pub Message);
 
 impl From<Message> for MessageCreatePayload {
@@ -90,28 +108,34 @@ impl From<ChannelCategory> for CategoryDeletePayload {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RoleCreatePayload(pub Role);
+
+impl From<Role> for RoleCreatePayload {
+    fn from(value: Role) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RoleUpdatePayload(pub Role);
+
+impl From<Role> for RoleUpdatePayload {
+    fn from(value: Role) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RoleDeletePayload {
+    pub guild_id: GuildId,
+    pub role_id: RoleId,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReadyEventPayload(pub Ready);
 
 impl From<Ready> for ReadyEventPayload {
     fn from(value: Ready) -> Self {
-        Self(value)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ComponentInteractionPayload(pub MessageComponentInteraction);
-
-impl From<MessageComponentInteraction> for ComponentInteractionPayload {
-    fn from(value: MessageComponentInteraction) -> Self {
-        Self(value)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AnyInteractionPayload(pub Interaction);
-
-impl From<Interaction> for AnyInteractionPayload {
-    fn from(value: Interaction) -> Self {
         Self(value)
     }
 }
