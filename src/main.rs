@@ -1,4 +1,4 @@
-#![feature(let_chains, tuple_trait, unboxed_closures)]
+#![feature(let_chains, tuple_trait, unboxed_closures, extract_if)]
 
 #[macro_use]
 extern crate dotenv_codegen;
@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping::ping()],
+            commands: vec![commands::ping::ping(), commands::role::role()],
             on_error: |error| {
                 async move {
                     events::error::handle(error).await.unwrap_or(()); // dont throw error to prevent loop

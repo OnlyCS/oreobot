@@ -2,6 +2,9 @@ mod category;
 mod channel;
 mod interaction;
 mod message;
+mod role;
+
+pub mod ready;
 
 use crate::prelude::*;
 
@@ -79,6 +82,31 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         &EmitterEvent::AnyMessageDelete,
         |payload: MessageDeletePayload, ctx: serenity::Context| {
             message::delete(payload.message_id, ctx)
+        },
+    );
+
+    emitter.on_async(
+        &EmitterEvent::AnyRoleUpdate,
+        |payload: RoleUpdatePayload, ctx: serenity::Context| role::update(payload.0, ctx),
+    );
+
+    emitter.on_async(
+        &EmitterEvent::AnyRoleDelete,
+        |payload: RoleDeletePayload, ctx: serenity::Context| role::delete(payload.role_id, ctx),
+    );
+
+    emitter.on_async(
+        &EmitterEvent::Ready,
+        |_: ReadyEventPayload, ctx: serenity::Context| async move {
+            ready::ready(ctx.clone()).await?;
+
+            ctx.set_presence(
+                Some(serenity::Activity::playing("with BOMBS")),
+                serenity::OnlineStatus::Online,
+            )
+            .await;
+
+            Ok(())
         },
     );
 

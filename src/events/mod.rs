@@ -26,11 +26,7 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
                 )
                 .await?;
         }
-        poise::Event::MessageUpdate {
-            event,
-            old_if_available: _,
-            new: _,
-        } => {
+        poise::Event::MessageUpdate { event, .. } => {
             let payload = MessageUpdatePayload::from(event.clone());
 
             event_emitter
@@ -92,7 +88,7 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
                 )
                 .await?;
         }
-        poise::Event::ChannelUpdate { old: _, new } => {
+        poise::Event::ChannelUpdate { new, .. } => {
             if let Some(channel) = new.clone().guild() {
                 event_emitter
                     .emit(
@@ -196,6 +192,55 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
                 .await?;
         }
 
+        /*** ROLE EVENTS ***/
+        poise::Event::GuildRoleCreate { new: role } => {
+            event_emitter
+                .emit(
+                    &EmitterEvent::RoleCreate,
+                    RoleCreatePayload::from(role),
+                    &ctx,
+                )
+                .await?;
+        }
+
+        poise::Event::GuildRoleUpdate { new: role, .. } => {
+            event_emitter
+                .emit(
+                    &EmitterEvent::RoleUpdate { id: role.id },
+                    RoleUpdatePayload::from(role.clone()),
+                    &ctx,
+                )
+                .await?;
+
+            event_emitter
+                .emit(
+                    &EmitterEvent::AnyRoleUpdate,
+                    RoleUpdatePayload::from(role),
+                    &ctx,
+                )
+                .await?;
+        }
+
+        poise::Event::GuildRoleDelete {
+            removed_role_id: role_id,
+            guild_id,
+            ..
+        } => {
+            let payload = RoleDeletePayload { guild_id, role_id };
+
+            event_emitter
+                .emit(
+                    &EmitterEvent::RoleDelete { id: role_id },
+                    payload.clone(),
+                    &ctx,
+                )
+                .await?;
+
+            event_emitter
+                .emit(&EmitterEvent::AnyRoleDelete, payload, &ctx)
+                .await?;
+        }
+
         /**** READY ****/
         poise::Event::Ready {
             data_about_bot: ready,
@@ -233,6 +278,12 @@ pub enum EmitterEvent {
     AnyMessageUpdate,
     MessageDelete { id: serenity::MessageId },
     AnyMessageDelete,
+
+    RoleCreate,
+    RoleUpdate { id: serenity::RoleId },
+    AnyRoleUpdate,
+    RoleDelete { id: serenity::RoleId },
+    AnyRoleDelete,
 
     Ready,
 }

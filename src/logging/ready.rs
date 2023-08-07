@@ -1,21 +1,19 @@
 use crate::prelude::*;
 
-pub async fn ready(ctx: &serenity::Context) -> Result<()> {
+pub async fn ready(ctx: serenity::Context) -> Result<()> {
     // find NCI server
     let nci_id = ctx
         .cache
         .guilds()
         .iter()
         .find(|g| g.to_string() == nci::ID.to_string())
-        .context("Could not find NCI by id")
-        .unwrap()
+        .context("Could not find NCI by id")?
         .clone();
 
     let nci = ctx
         .cache
         .guild(nci_id)
-        .context("Could not find NCI server data")
-        .unwrap();
+        .context("Could not find NCI server data")?;
 
     // setup prisma
     let prisma_mutex = Arc::clone(
@@ -23,14 +21,14 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
             .read()
             .await
             .get::<prisma::PrismaTypeKey>()
-            .unwrap(),
+            .context("Could not find prisma")?,
     );
     let prisma = prisma_mutex.lock().await;
 
     // collect members and users/roles in database
     let members = nci.members.values().collect::<Vec<_>>();
-    let prisma_members = prisma.user().find_many(vec![]).exec().await.unwrap();
-    let prisma_roles = prisma.user_role().find_many(vec![]).exec().await.unwrap();
+    let prisma_members = prisma.user().find_many(vec![]).exec().await?;
+    let prisma_roles = prisma.user_role().find_many(vec![]).exec().await?;
 
     for member in members {
         // dont update db for bots
@@ -53,8 +51,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
             role = ctx
                 .cache
                 .role(nci_id, role_id)
-                .context("Could not find role")
-                .unwrap();
+                .context("Could not find role")?;
         } else {
             role = nci
                 .create_role(&ctx, |r| {
@@ -63,17 +60,14 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                         .position(5)
                         .mentionable(false)
                 })
-                .await
-                .unwrap();
+                .await?;
 
             ctx.cache
                 .member(nci_id, member.user.id)
                 .as_mut()
-                .context("Could not find member")
-                .unwrap()
+                .context("Could not find member")?
                 .add_role(&ctx, role.id)
-                .await
-                .unwrap();
+                .await?;
         }
 
         // if role not found in db, create
@@ -86,8 +80,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                 .user_role()
                 .create(role.id.to_string(), role.name, role.colour.hex(), vec![])
                 .exec()
-                .await
-                .unwrap();
+                .await?;
         }
 
         if let Some(prisma_member) = prisma_member {
@@ -125,8 +118,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                     .user()
                     .update(user::id::equals(member.user.id.to_string()), updates_user)
                     .exec()
-                    .await
-                    .unwrap();
+                    .await?;
             }
         } else {
             // if not, create user in db
@@ -148,8 +140,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                     ],
                 )
                 .exec()
-                .await
-                .unwrap();
+                .await?;
         }
     }
 
@@ -157,23 +148,17 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
     let mut channels = nci.channels.values().collect::<Vec<_>>();
 
     let categories = channels
-        .drain_filter(|c| c.clone().category().is_some())
+        .extract_if(|c| c.clone().category().is_some())
         .collect::<Vec<_>>();
 
-    let prisma_channels = prisma.channel().find_many(vec![]).exec().await.unwrap();
-    let prisma_categories = prisma
-        .channel_category()
-        .find_many(vec![])
-        .exec()
-        .await
-        .unwrap();
+    let prisma_channels = prisma.channel().find_many(vec![]).exec().await?;
+    let prisma_categories = prisma.channel_category().find_many(vec![]).exec().await?;
 
     for category in categories {
         let category = category
             .clone()
             .category()
-            .context("Filtering was unsucesful")
-            .unwrap();
+            .context("Filtering was unsucesful")?;
 
         // find the category in the database, if it exists
         if let Some(prisma_category) = prisma_categories
@@ -188,8 +173,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                         vec![channel_category::name::set(category.name.clone())],
                     )
                     .exec()
-                    .await
-                    .unwrap();
+                    .await?;
             }
         } else {
             // if not, create category in db
@@ -198,13 +182,12 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                 .channel_category()
                 .create(category.id.to_string(), category.name.clone(), vec![])
                 .exec()
-                .await
-                .unwrap();
+                .await?;
         }
     }
 
     for channel in channels {
-        let channel = channel.clone().guild().unwrap();
+        let channel = channel.clone().guild().context("Could not find channel")?;
 
         // find the channel in the database, if it exists
         if let Some(prisma_channel) = prisma_channels
@@ -252,8 +235,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                     .channel()
                     .update(channel::id::equals(channel.id.to_string()), channel_updates)
                     .exec()
-                    .await
-                    .unwrap();
+                    .await?;
             }
         } else {
             // else, create
@@ -280,8 +262,7 @@ pub async fn ready(ctx: &serenity::Context) -> Result<()> {
                     },
                 )
                 .exec()
-                .await
-                .unwrap();
+                .await?;
         }
     }
 
