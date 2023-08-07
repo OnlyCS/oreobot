@@ -18,9 +18,7 @@ enum ChannelType {
 enum InteractionType {
     Command
     ModalSubmit
-    Button
-    TextInput
-    Select
+    MessageComponent
 }
 
 model User {

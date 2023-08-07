@@ -29,37 +29,35 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
     let mut emitter = emitter_mutex.lock().await;
 
     emitter.on_async(
-        &EmitterEvent::AnyInteraction,
-        |payload: AnyInteractionPayload, ctx: serenity::Context| async move {
-            if let Some(interaction) = payload.0.as_application_command() {
-                info!("Got command interaction");
+        event::CommandInteractionEvent,
+        |interaction, ctx| async move {
+            info!("Got command interaction");
 
-                let message = interaction.get_interaction_response(&ctx).await?;
+            let message = interaction.get_interaction_response(&ctx).await?;
 
-                let press = message
-                    .await_component_interaction(ctx.clone())
-                    .filter(|component| component.data.custom_id == "share".to_string())
-                    .await
-                    .context("Could not get interaction")?;
+            let press = message
+                .await_component_interaction(ctx.clone())
+                .filter(|component| component.data.custom_id == "share".to_string())
+                .await
+                .context("Could not get interaction")?;
 
-                press
-                    .create_interaction_response(&ctx, |resp| {
-                        resp.interaction_response_data(|data| {
-                            for embed in message.embeds {
-                                data.add_embed(embed.into());
-                            }
+            press
+                .create_interaction_response(&ctx, |resp| {
+                    resp.interaction_response_data(|data| {
+                        for embed in message.embeds {
+                            data.add_embed(embed.into());
+                        }
 
-                            data
-                        })
+                        data
                     })
-                    .await?;
+                })
+                .await?;
 
-                interaction
-                    .edit_original_interaction_response(&ctx, |resp| {
-                        resp.components(|comp| comp.set_action_row(row(true)))
-                    })
-                    .await?;
-            }
+            interaction
+                .edit_original_interaction_response(&ctx, |resp| {
+                    resp.components(|comp| comp.set_action_row(row(true)))
+                })
+                .await?;
 
             Ok(())
         },

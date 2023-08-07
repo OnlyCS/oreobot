@@ -1,33 +1,27 @@
 use crate::prelude::*;
 
-use std::collections::HashMap;
-
 use futures::{future::BoxFuture, Future, FutureExt};
-use serde_json;
+use std::{any::TypeId, collections::HashMap};
+
+type Output = Result<()>;
+type AsyncOutput = BoxFuture<'static, Output>;
 
 pub struct Listener {
-    callback: Arc<dyn Fn(Vec<u8>, serenity::Context) -> Result<()> + Send + Sync>,
-    limit: Option<u32>,
+    callback: Arc<dyn Fn(Vec<u8>, serenity::Context) -> Output + Send + Sync>,
+    filter: Option<Arc<dyn Fn(Vec<u8>) -> bool + Send + Sync + 'static>>,
 }
 
 pub struct AsyncListener {
-    callback:
-        Arc<dyn Fn(Vec<u8>, serenity::Context) -> BoxFuture<'static, Result<()>> + Send + Sync>,
-    limit: Option<u32>,
+    callback: Arc<dyn Fn(Vec<u8>, serenity::Context) -> AsyncOutput + Send + Sync>,
+    filter: Option<Arc<dyn Fn(Vec<u8>) -> bool + Send + Sync + 'static>>,
 }
 
-pub struct EventEmitter<Event>
-where
-    Event: Eq + Clone + std::hash::Hash + Send + Sync,
-{
-    listeners: HashMap<Event, Vec<Listener>>,
-    async_listeners: HashMap<Event, Vec<AsyncListener>>,
+pub struct EventEmitter {
+    listeners: HashMap<TypeId, Vec<Listener>>,
+    async_listeners: HashMap<TypeId, Vec<AsyncListener>>,
 }
 
-impl<Event> EventEmitter<Event>
-where
-    Event: Eq + Clone + std::hash::Hash + Send + Sync,
-{
+impl EventEmitter {
     pub fn new() -> Self {
         Self {
             listeners: HashMap::new(),
@@ -35,191 +29,186 @@ where
         }
     }
 
-    pub fn on<F, T>(&mut self, event: &Event, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        F: Fn(T, serenity::Context) -> Result<()> + Send + Sync + 'static,
-    {
-        self._on(event, None, callback)
-    }
-
-    pub fn on_once<F, T>(&mut self, event: &Event, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        F: Fn(T, serenity::Context) -> Result<()> + Send + Sync + 'static,
-    {
-        self.on_limited(event, 1, callback)
-    }
-
-    pub fn on_limited<F, T>(&mut self, event: &Event, limit: u32, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        F: Fn(T, serenity::Context) -> Result<()> + Send + Sync + 'static,
-    {
-        self._on(event, Some(limit), callback)
-    }
-
-    pub fn on_async<F, T, A>(&mut self, event: &Event, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        A: Future<Output = Result<()>> + Send + 'static,
-        F: Fn(T, serenity::Context) -> A + Send + Sync + 'static,
-    {
-        self._on_async(event, None, callback)
-    }
-
-    pub fn on_once_async<F, T, A>(&mut self, event: &Event, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        A: Future<Output = Result<()>> + Send + 'static,
-        F: Fn(T, serenity::Context) -> A + Send + Sync + 'static,
-    {
-        self.on_limited_async(event, 1, callback)
-    }
-
-    pub fn on_limited_async<F, T, A>(&mut self, event: &Event, limit: u32, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        A: Future<Output = Result<()>> + Send + 'static,
-        F: Fn(T, serenity::Context) -> A + Send + Sync + 'static,
-    {
-        self._on_async(event, Some(limit), callback)
-    }
-
-    pub async fn emit<T>(
+    pub async fn emit<Event>(
         &mut self,
-        event: &Event,
-        value: T,
+        _: Event, /* making the user specify generic argument for this looks ugly af */
+        argument: Event::Argument,
         context: &serenity::Context,
     ) -> Result<()>
     where
-        T: Serialize,
+        Event: EmitterEvent,
     {
-        if let Some(listeners) = self.listeners.get_mut(event) {
-            let bytes: Vec<u8> = serde_json::to_vec(&value)?;
+        if let Some(listeners) = self.listeners.get_mut(&TypeId::of::<Event>()) {
+            let bytes: Vec<u8> = serde_json::to_vec(&argument)?;
 
-            let mut listeners_to_remove: Vec<usize> = Vec::new();
-            for (index, listener) in listeners.iter_mut().enumerate() {
-                let cloned_bytes = bytes.clone();
+            for listener in listeners.iter_mut() {
+                let bytes = bytes.clone();
                 let callback = Arc::clone(&listener.callback);
                 let context = context.clone();
 
-                match listener.limit {
-                    None => {
-                        thread::spawn(move || {
-                            callback(cloned_bytes, context.clone()).unwrap();
-                        });
-                    }
-                    Some(limit) => {
-                        if limit != 0 {
-                            thread::spawn(move || {
-                                callback(cloned_bytes, context.clone()).unwrap();
-                            });
-                            listener.limit = Some(limit - 1);
-                        } else {
-                            listeners_to_remove.push(index);
-                        }
+                if let Some(filter) = &listener.filter {
+                    if !filter(bytes.clone()) {
+                        continue;
                     }
                 }
-            }
 
-            for index in listeners_to_remove.into_iter().rev() {
-                listeners.remove(index);
+                thread::spawn(move || {
+                    callback(bytes, context.clone()).unwrap();
+                });
             }
         }
 
-        if let Some(listeners) = self.async_listeners.get_mut(event) {
-            let bytes: Vec<u8> = serde_json::to_vec(&value)?;
+        if let Some(listeners) = self.async_listeners.get_mut(&TypeId::of::<Event>()) {
+            let bytes: Vec<u8> = serde_json::to_vec(&argument)?;
 
-            let mut listeners_to_remove = Vec::new();
-            for (index, listener) in listeners.iter_mut().enumerate() {
-                let cloned_bytes = bytes.clone();
+            for listener in listeners.iter_mut() {
+                let bytes = bytes.clone();
                 let callback = Arc::clone(&listener.callback);
                 let context = context.clone();
 
-                match listener.limit {
-                    None => {
-                        tokio::spawn(async move {
-                            callback(cloned_bytes, context.clone()).await.unwrap();
-                        })
-                        .await?;
-                    }
-                    Some(limit) => {
-                        if limit != 0 {
-                            tokio::spawn(async move {
-                                callback(cloned_bytes, context.clone()).await.unwrap();
-                            })
-                            .await?;
-                            listener.limit = Some(limit - 1);
-                        } else {
-                            listeners_to_remove.push(index);
-                        }
+                if let Some(filter) = &listener.filter {
+                    if !filter(bytes.clone()) {
+                        continue;
                     }
                 }
-            }
 
-            for index in listeners_to_remove.into_iter().rev() {
-                listeners.remove(index);
+                tokio::spawn(async move {
+                    callback(bytes, context.clone()).await.unwrap();
+                })
+                .await?;
             }
         }
 
         Ok(())
     }
 
-    fn _on<F, T>(&mut self, event: &Event, limit: Option<u32>, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        F: Fn(T, serenity::Context) -> Result<()> + Send + Sync + 'static + 'static,
+    pub fn on<Event, Callback>(
+        &mut self,
+        _: Event, /* making the user specify generic argument for this looks ugly af */
+        callback: Callback,
+    ) where
+        Event: EmitterEvent,
+        Callback:
+            Fn(Event::Argument, serenity::Context) -> Result<()> + Send + Sync + 'static + 'static,
     {
         let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {
-            let value: T = serde_json::from_slice(&bytes).unwrap();
-            callback(value, ctx)
+            callback(serde_json::from_slice(&bytes)?, ctx)
         };
 
         let listener = Listener {
-            limit,
             callback: Arc::new(parsed_callback),
+            filter: None,
         };
 
-        match self.listeners.get_mut(event) {
+        match self.listeners.get_mut(&TypeId::of::<Event>()) {
             Some(callbacks) => {
                 callbacks.push(listener);
             }
             None => {
-                self.listeners.insert(event.clone(), vec![listener]);
+                self.listeners.insert(TypeId::of::<Event>(), vec![listener]);
             }
         }
     }
 
-    fn _on_async<F, T, A>(&mut self, event: &Event, limit: Option<u32>, callback: F)
-    where
-        for<'de> T: Deserialize<'de>,
-        A: Future<Output = Result<()>> + Send + 'static,
-        F: Fn(T, serenity::Context) -> A + Send + Sync + 'static,
+    pub fn on_filter<Event, Callback, Filter>(
+        &mut self,
+        _: Event, /* making the user specify generic argument for this looks ugly af */
+        callback: Callback,
+        filter: Filter,
+    ) where
+        Event: EmitterEvent,
+        Callback: Fn(Event::Argument, serenity::Context) -> Result<()> + Send + Sync + 'static,
+        Filter: Fn(Event::Argument) -> bool + Send + Sync + 'static,
     {
         let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {
-            let value: T = serde_json::from_slice(&bytes).unwrap();
-            callback(value, ctx).boxed()
+            callback(serde_json::from_slice(&bytes)?, ctx)
+        };
+
+        let parsed_filter = move |bytes: Vec<u8>| filter(serde_json::from_slice(&bytes).unwrap());
+
+        let listener = Listener {
+            callback: Arc::new(parsed_callback),
+            filter: Some(Arc::new(parsed_filter)),
+        };
+
+        match self.listeners.get_mut(&TypeId::of::<Event>()) {
+            Some(callbacks) => {
+                callbacks.push(listener);
+            }
+            None => {
+                self.listeners.insert(TypeId::of::<Event>(), vec![listener]);
+            }
+        }
+    }
+
+    pub fn on_async<Event, Callback, Fut>(
+        &mut self,
+        _: Event, /* making the user specify generic argument for this looks ugly af */
+        callback: Callback,
+    ) where
+        Event: EmitterEvent,
+        Callback: Fn(Event::Argument, serenity::Context) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+    {
+        let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {
+            callback(serde_json::from_slice(&bytes).unwrap(), ctx).boxed()
         };
 
         let listener = AsyncListener {
-            limit,
             callback: Arc::new(parsed_callback),
+            filter: None,
         };
 
-        match self.async_listeners.get_mut(event) {
+        match self.async_listeners.get_mut(&TypeId::of::<Event>()) {
             Some(async_callbacks) => {
                 async_callbacks.push(listener);
             }
             None => {
-                self.async_listeners.insert(event.clone(), vec![listener]);
+                self.async_listeners
+                    .insert(TypeId::of::<Event>(), vec![listener]);
+            }
+        }
+    }
+
+    pub fn on_async_filter<Event, Callback, Fut, Filter>(
+        &mut self,
+        _: Event, /* making the user specify generic argument for this looks ugly af */
+        callback: Callback,
+        filter: Filter,
+    ) where
+        Event: EmitterEvent,
+        Callback: Fn(Event::Argument, serenity::Context) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<()>> + Send + 'static,
+        Filter: Fn(Event::Argument) -> bool + Send + Sync + 'static,
+    {
+        let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {
+            callback(serde_json::from_slice(&bytes).unwrap(), ctx).boxed()
+        };
+
+        let parsed_filter = move |bytes: Vec<u8>| filter(serde_json::from_slice(&bytes).unwrap());
+
+        let listener = AsyncListener {
+            callback: Arc::new(parsed_callback),
+            filter: Some(Arc::new(parsed_filter)),
+        };
+
+        match self.async_listeners.get_mut(&TypeId::of::<Event>()) {
+            Some(async_callbacks) => {
+                async_callbacks.push(listener);
+            }
+            None => {
+                self.async_listeners
+                    .insert(TypeId::of::<Event>(), vec![listener]);
             }
         }
     }
 }
 
-pub struct EventEmitterTypeKey;
+pub trait EmitterEvent: Send + Sync + 'static {
+    type Argument: Serialize + for<'a> Deserialize<'a>;
+}
 
+pub struct EventEmitterTypeKey;
 impl serenity::TypeMapKey for EventEmitterTypeKey {
-    type Value = Shared<EventEmitter<EmitterEvent>>;
+    type Value = Shared<EventEmitter>;
 }
