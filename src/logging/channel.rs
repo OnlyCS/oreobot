@@ -1,14 +1,7 @@
 use crate::prelude::*;
 
 pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     // to hell with all threads
     if channel.is_thread() {
@@ -34,10 +27,10 @@ pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
             channel.name.clone(),
             channel.is_nsfw(),
             match channel.kind {
-                serenity::ChannelType::News => PChannelType::News,
-                serenity::ChannelType::Text => PChannelType::Text,
-                serenity::ChannelType::Stage => PChannelType::Stage,
-                serenity::ChannelType::Voice => PChannelType::Voice,
+                serenity::ChannelType::News => ChannelType::News,
+                serenity::ChannelType::Text => ChannelType::Text,
+                serenity::ChannelType::Stage => ChannelType::Stage,
+                serenity::ChannelType::Voice => ChannelType::Voice,
                 _ => return Ok(()),
             },
             params,
@@ -49,14 +42,7 @@ pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
 }
 
 pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .channel()
@@ -80,14 +66,7 @@ pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
 }
 
 pub async fn delete(channel: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .channel()

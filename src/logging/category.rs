@@ -1,14 +1,7 @@
 use crate::prelude::*;
 
 pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .channel_category()
@@ -20,15 +13,7 @@ pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context)
 }
 
 pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .channel_category()
@@ -43,14 +28,7 @@ pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context)
 }
 
 pub async fn delete(category: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     let category = prisma
         .channel_category()

@@ -6,8 +6,7 @@ pub async fn role(_: Context<'_>) -> Result<()> {
 }
 
 async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Result<String> {
-    let prisma_mutex = Arc::clone(&ctx.data().prisma);
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_poise_context!(prisma, ctx);
 
     let member_id = if let Some(member) = member {
         if member.user.bot {
@@ -31,8 +30,11 @@ async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Res
     };
 
     let roles = prisma
-        .user_role()
-        .find_many(vec![user_role::user::is(vec![user::id::equals(member_id)])])
+        .role()
+        .find_many(vec![
+            role::is_color_role::equals(true),
+            role::users::some(vec![user::id::equals(member_id)]),
+        ])
         .exec()
         .await?;
 

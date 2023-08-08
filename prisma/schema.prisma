@@ -22,22 +22,29 @@ enum InteractionType {
 }
 
 model User {
-    id       String   @id
+    id       String  @id
     username String
     nickname String?
-    role     UserRole @relation(fields: [role_id], references: [id])
-    role_id  String   @unique
-    admin    Boolean  @default(false)
+
+    roles         Role[]
+    color_role_id String?
+
+    admin    Boolean @default(false)
+    verified Boolean @default(false)
+    bot      Boolean @default(false)
 
     messages     Message[]
     interactions Interaction[]
 }
 
-model UserRole {
-    id    String @id
-    name  String
-    color String
-    user  User?
+model Role {
+    id            String  @id
+    name          String
+    color         String
+    users         User[]
+    is_color_role Boolean @default(false)
+
+    deleted Boolean @default(false)
 }
 
 model Attachment {

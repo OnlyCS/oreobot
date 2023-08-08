@@ -4,14 +4,7 @@ pub async fn command(
     interaction: serenity::ApplicationCommandInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .interaction()
@@ -43,14 +36,7 @@ pub async fn message_component(
     interaction: serenity::MessageComponentInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .interaction()
@@ -73,14 +59,7 @@ pub async fn modal_submit(
     interaction: serenity::ModalSubmitInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .interaction()
