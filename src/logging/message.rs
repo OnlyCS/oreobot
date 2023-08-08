@@ -3,18 +3,7 @@ use std::collections::HashSet;
 use crate::prelude::*;
 
 pub async fn create(message: serenity::Message, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
-
-    if message.author.bot {
-        return Ok(());
-    }
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .message()
@@ -47,18 +36,7 @@ pub async fn create(message: serenity::Message, ctx: serenity::Context) -> Resul
 }
 
 pub async fn update(message: serenity::MessageUpdateEvent, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
-
-    if message.author.map(|n| n.bot).unwrap_or(false) {
-        return Ok(());
-    }
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     let prisma_message = prisma
         .message()
@@ -104,14 +82,7 @@ pub async fn update(message: serenity::MessageUpdateEvent, ctx: serenity::Contex
 }
 
 pub async fn delete(message_id: serenity::MessageId, ctx: serenity::Context) -> Result<()> {
-    let data = &ctx.data;
-    let prisma_mutex = Arc::clone(
-        data.read()
-            .await
-            .get::<PrismaTypeKey>()
-            .context("Could not find prismaclient in data")?,
-    );
-    let prisma = prisma_mutex.lock().await;
+    get_prisma::from_serenity_context!(prisma, ctx);
 
     prisma
         .message()

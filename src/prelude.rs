@@ -7,13 +7,13 @@ pub(crate) use crate::{
     prisma::{
         self,
         prisma_client::{
-            attachment, channel, channel_category, interaction, message, user, user_role,
-            ChannelType as PChannelType, InteractionType, PrismaClient,
+            attachment, channel, channel_category, interaction, message, role, user, ChannelType,
+            InteractionType, PrismaClient,
         },
         PrismaTypeKey,
     },
     util::{
-        colors as color, embed, latency,
+        colors as color, embed, get_prisma, latency,
         message::{clone, emoji, mention},
         share,
     },

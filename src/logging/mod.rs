@@ -67,8 +67,8 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         message::delete(payload.message_id, ctx)
     });
 
+    emitter.on_async(event::RoleCreateEvent, |role, ctx| role::create(role, ctx));
     emitter.on_async(event::RoleUpdateEvent, |role, ctx| role::update(role, ctx));
-
     emitter.on_async(event::RoleDeleteEvent, |payload, ctx| {
         role::delete(payload.role_id, ctx)
     });
