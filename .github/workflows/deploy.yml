@@ -14,5 +14,5 @@ jobs:
       - name: Run client
         run: |
           cd deploy
-          echo ${{ secrets.DOTENV }} >> .env
+          echo "${{ secrets.DOTENV }}" >> .env
           cargo run --bin client
