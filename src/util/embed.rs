@@ -11,9 +11,9 @@ pub fn default(ctx: &Context<'_>, status: EmbedStatus) -> serenity::CreateEmbed 
     let mut embed = serenity::CreateEmbed::default();
 
     embed.color(match status {
-        EmbedStatus::Sucess => color::PRIMARY,
-        EmbedStatus::Warning => color::WARN,
-        EmbedStatus::Error => color::ERROR,
+        EmbedStatus::Sucess => colors::PRIMARY,
+        EmbedStatus::Warning => colors::WARN,
+        EmbedStatus::Error => colors::ERROR,
     });
 
     embed.footer(|f| {

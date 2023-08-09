@@ -26,8 +26,9 @@ model User {
     username String
     nickname String?
 
-    roles         Role[]
-    color_role_id String?
+    roles         Role[] @relation(name: "all_roles")
+    color_role    Role   @relation(name: "color_role", fields: [color_role_id], references: [id])
+    color_role_id String @unique
 
     admin    Boolean @default(false)
     verified Boolean @default(false)
@@ -35,14 +36,18 @@ model User {
 
     messages     Message[]
     interactions Interaction[]
+
+    removed Boolean @default(false)
 }
 
 model Role {
-    id            String  @id
-    name          String
-    color         String
-    users         User[]
-    is_color_role Boolean @default(false)
+    id    String @id
+    name  String
+    color String
+    users User[] @relation(name: "all_roles")
+
+    color_role      Boolean @default(false)
+    color_role_user User?   @relation(name: "color_role")
 
     deleted Boolean @default(false)
 }
@@ -50,7 +55,7 @@ model Role {
 model Attachment {
     id         String  @id
     filename   String
-    url        String  @unique
+    url        String
     size_bytes BigInt
     message    Message @relation(fields: [message_id], references: [id])
     message_id String

@@ -31,7 +31,7 @@ impl EventEmitter {
 
     pub async fn emit<Event>(
         &mut self,
-        _: Event, /* making the user specify generic argument for this looks ugly af */
+        _event: Event, /* making the user specify generic argument for this looks ugly af */
         argument: Event::Argument,
         context: &serenity::Context,
     ) -> Result<()>
@@ -84,7 +84,7 @@ impl EventEmitter {
 
     pub fn on<Event, Callback>(
         &mut self,
-        _: Event, /* making the user specify generic argument for this looks ugly af */
+        _event: Event, /* making the user specify generic argument for this looks ugly af */
         callback: Callback,
     ) where
         Event: EmitterEvent,
@@ -112,7 +112,7 @@ impl EventEmitter {
 
     pub fn on_filter<Event, Callback, Filter>(
         &mut self,
-        _: Event, /* making the user specify generic argument for this looks ugly af */
+        _event: Event, /* making the user specify generic argument for this looks ugly af */
         callback: Callback,
         filter: Filter,
     ) where
@@ -143,7 +143,7 @@ impl EventEmitter {
 
     pub fn on_async<Event, Callback, Fut>(
         &mut self,
-        _: Event, /* making the user specify generic argument for this looks ugly af */
+        _event: Event, /* making the user specify generic argument for this looks ugly af */
         callback: Callback,
     ) where
         Event: EmitterEvent,
@@ -172,7 +172,7 @@ impl EventEmitter {
 
     pub fn on_async_filter<Event, Callback, Fut, Filter>(
         &mut self,
-        _: Event, /* making the user specify generic argument for this looks ugly af */
+        _event: Event, /* making the user specify generic argument for this looks ugly af */
         callback: Callback,
         filter: Filter,
     ) where

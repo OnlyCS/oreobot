@@ -9,10 +9,6 @@ async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Res
     get_prisma::from_poise_context!(prisma, ctx);
 
     let member_id = if let Some(member) = member {
-        if member.user.bot {
-            bail!("This bot cannot manage other bots");
-        }
-
         if !prisma
             .user()
             .find_unique(user::id::equals(member.user.id.to_string()))
@@ -21,7 +17,7 @@ async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Res
             .context("Could not find user")?
             .admin
         {
-            bail!("You must be an admin to manage other users");
+            bail!("You must be an admin to manage other users or bots");
         }
 
         member.user.id.to_string()
@@ -31,26 +27,24 @@ async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Res
 
     let roles = prisma
         .role()
-        .find_many(vec![
-            role::is_color_role::equals(true),
-            role::users::some(vec![user::id::equals(member_id)]),
+        .find_first(vec![
+            role::color_role::equals(true),
+            role::color_role_user::is(vec![user::id::equals(member_id)]),
         ])
         .exec()
         .await?;
 
-    if roles.is_empty() {
-        crate::logging::ready::ready(ctx.serenity_context().clone()).await?;
-        bail!("Warning: The user could not be found. The database is being reindexed. Please try again shortly.");
+    match roles {
+        Some(n) => Ok(n.id),
+        None => {
+            logging::ready::on_ready(ctx.serenity_context().clone()).await?;
+            bail!("Warning: The user or role could not be found. The database is being reindexed. Please try again shortly.");
+        }
     }
-
-    roles
-        .first()
-        .map(|n| n.id.clone())
-        .context("Could not find role")
 }
 
 #[poise::command(slash_command)]
-pub async fn name(
+async fn name(
     ctx: Context<'_>,
     #[description = "The name to change the role to"] name: String,
     #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
@@ -84,7 +78,7 @@ pub async fn name(
 }
 
 #[poise::command(slash_command)]
-pub async fn color(
+async fn color(
     ctx: Context<'_>,
     #[description = "The color to set. Accepts (r,g,b) and #hex. No words accepted"] color: String,
     #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
@@ -113,25 +107,7 @@ pub async fn color(
                 numbers[2].clone()?,
             ))
         } else if color.starts_with("#") {
-            let color = color.trim_start_matches("#");
-
-            let numbers = color
-                .chars()
-                .collect::<Vec<_>>()
-                .chunks(2)
-                .map(|n| n.iter().collect::<String>())
-                .map(|n| u8::from_str_radix(&n, 16))
-                .collect::<Vec<_>>();
-
-            if numbers.len() != 3 {
-                bail!("Invalid color format");
-            }
-
-            serenity::Color::from((
-                numbers[0].clone()?,
-                numbers[1].clone()?,
-                numbers[2].clone()?,
-            ))
+            colors::hex_to_color(color.trim_start_matches("#"))?
         } else {
             bail!("Invalid color format");
         }

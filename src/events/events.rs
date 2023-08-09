@@ -61,7 +61,7 @@ impl EmitterEvent for MessageUpdateEvent {
 
 pub struct MessageDeleteEvent;
 impl EmitterEvent for MessageDeleteEvent {
-    type Argument = payload::MessageDeletePayload;
+    type Argument = payloads::MessageDeletePayload;
 }
 
 /*** ROLE ***/
@@ -77,7 +77,23 @@ impl EmitterEvent for RoleUpdateEvent {
 
 pub struct RoleDeleteEvent;
 impl EmitterEvent for RoleDeleteEvent {
-    type Argument = payload::RoleDeletePayload;
+    type Argument = payloads::RoleDeletePayload;
+}
+
+/*** MEMBER ***/
+pub struct MemberJoinEvent;
+impl EmitterEvent for MemberJoinEvent {
+    type Argument = serenity::Member;
+}
+
+pub struct MemberUpdateEvent;
+impl EmitterEvent for MemberUpdateEvent {
+    type Argument = serenity::Member;
+}
+
+pub struct MemberLeaveEvent;
+impl EmitterEvent for MemberLeaveEvent {
+    type Argument = payloads::MemberLeavePayload;
 }
 
 /*** READY ***/
