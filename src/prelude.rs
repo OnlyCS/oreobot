@@ -1,11 +1,10 @@
 pub(crate) use crate::{
     events::{
         emitter::{EmitterEvent, EventEmitter, EventEmitterTypeKey},
-        event, payload,
+        events, payloads,
     },
-    nci,
+    logging, nci,
     prisma::{
-        self,
         prisma_client::{
             attachment, channel, channel_category, interaction, message, role, user, ChannelType,
             InteractionType, PrismaClient,
@@ -13,14 +12,16 @@ pub(crate) use crate::{
         PrismaTypeKey,
     },
     util::{
-        colors as color, embed, get_prisma, latency,
+        colors, embed, get_prisma, latency,
         message::{clone, emoji, mention},
+        role::default_role,
         share,
     },
 };
 
 pub use std::{
     default::{self, Default},
+    str::FromStr,
     sync::Arc,
     thread,
 };

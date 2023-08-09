@@ -12,3 +12,9 @@ pub struct RoleDeletePayload {
     pub guild_id: GuildId,
     pub role_id: RoleId,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MemberLeavePayload {
+    pub guild_id: GuildId,
+    pub user: User,
+}

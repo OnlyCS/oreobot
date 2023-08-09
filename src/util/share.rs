@@ -29,7 +29,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
     let mut emitter = emitter_mutex.lock().await;
 
     emitter.on_async(
-        event::CommandInteractionEvent,
+        events::CommandInteractionEvent,
         |interaction, ctx| async move {
             info!("Got command interaction");
 

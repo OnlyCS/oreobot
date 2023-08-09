@@ -1,11 +1,11 @@
 use crate::prelude::*;
 
-pub async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
     // fetch all roles from discord and the database
     let roles = nci.roles.values().collect::<Vec<_>>();
     let prisma_roles = prisma.role().find_many(vec![]).exec().await?;
 
-    for role in roles {
+    for role in &roles {
         if let Some(prisma_role) = prisma_roles.iter().find(|r| r.id == role.id.to_string()) {
             // update role if exists
             let mut updates = vec![];
@@ -43,85 +43,170 @@ pub async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
         }
     }
 
+    // check for roles in db that don't exist in discord
+    let mut remove = vec![];
+
+    for role in &prisma_roles {
+        if roles.iter().find(|n| n.id.to_string() == role.id).is_none() && !role.deleted {
+            remove.push(role::id::equals(role.id.clone()));
+        }
+    }
+
+    if !remove.is_empty() {
+        prisma
+            .role()
+            .update_many(remove, vec![role::deleted::set(true)])
+            .exec()
+            .await?;
+    }
+
     Ok(())
 }
 
-pub async fn users(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
-    let members = nci.members.values().collect::<Vec<_>>();
-    let prisma_members = prisma.user().find_many(vec![]).exec().await?;
+async fn users(
+    ctx: &serenity::Context,
+    nci: &serenity::Guild,
+    prisma: &PrismaClient,
+) -> Result<()> {
+    let mut users = nci.members.values().cloned().collect::<Vec<_>>();
+    let prisma_users = prisma.user().find_many(vec![]).exec().await?;
 
-    // to update for color roles
     let mut color_roles = vec![];
 
-    for member in members {
-        let mut updates = vec![];
-        let mut roles = vec![];
+    for member in &mut users {
+        let mut member_roles = vec![];
 
-        if let Some(prisma_member) = prisma_members
+        // get or create the user's color role
+        let color_role = match member.roles.iter().find(|r| {
+            *r != &nci::roles::MEMBERS && *r != &nci::roles::OVERRIDES && *r != &nci::roles::BOTS
+        }) {
+            Some(n) => nci.roles.get(n).cloned().unwrap(),
+            None => {
+                let role = nci
+                    .create_role(&ctx, |r| {
+                        r.clone_from(&default_role(member).unwrap());
+                        r
+                    })
+                    .await?;
+
+                member.add_role(&ctx, role.id).await?;
+
+                prisma
+                    .role()
+                    .create(
+                        role.id.to_string(),
+                        role.name.clone(),
+                        role.colour.hex(),
+                        vec![role::color_role::set(true)],
+                    )
+                    .exec()
+                    .await?;
+
+                role
+            }
+        };
+
+        for role in &member.roles {
+            member_roles.push(role::id::equals(role.to_string()));
+        }
+
+        // update or create the user in the database
+        if let Some(prisma_user) = prisma_users
             .iter()
-            .find(|m| m.id == member.user.id.to_string())
+            .find(|u| u.id == member.user.id.to_string())
         {
-            // update user if exists
-            if prisma_member.username != member.user.name {
+            let mut updates = vec![];
+
+            if member.user.name != prisma_user.username {
                 updates.push(user::username::set(member.user.name.clone()));
             }
 
-            if prisma_member.nickname != member.nick {
+            if member.nick != prisma_user.nickname {
                 updates.push(user::nickname::set(member.nick.clone()));
             }
+
+            if member.roles.contains(&nci::roles::OVERRIDES) != prisma_user.admin {
+                updates.push(user::admin::set(!prisma_user.admin));
+            }
+
+            if member.roles.contains(&nci::roles::MEMBERS) != prisma_user.verified {
+                updates.push(user::verified::set(!prisma_user.verified));
+            }
+
+            if prisma_user.removed {
+                updates.push(user::removed::set(false));
+            }
+
+            if prisma_user.color_role_id != color_role.id.to_string() {
+                updates.push(user::color_role_id::set(color_role.id.to_string()));
+            }
+
+            if !member_roles.is_empty() {
+                updates.push(user::roles::set(member_roles));
+            }
+
+            if !updates.is_empty() {
+                prisma
+                    .user()
+                    .update(user::id::equals(member.user.id.to_string()), updates)
+                    .exec()
+                    .await?;
+            }
         } else {
-            // otherwise create it
             prisma
                 .user()
                 .create(
                     member.user.id.to_string(),
                     member.user.name.clone(),
+                    role::id::equals(color_role.id.to_string()),
                     vec![
-                        user::nickname::set(member.nick.clone()),
+                        user::admin::set(member.roles.contains(&nci::roles::OVERRIDES)),
+                        user::verified::set(member.roles.contains(&nci::roles::MEMBERS)),
                         user::bot::set(member.user.bot),
+                        user::roles::set(member_roles),
                     ],
                 )
                 .exec()
                 .await?;
         }
 
-        // update user roles
-        let role_ids = &member.roles;
+        // update the list of color roles
+        color_roles.push(role::id::equals(color_role.id.to_string()));
+    }
 
-        for role_id in role_ids {
-            if role_id.to_string() == nci::roles::OVERRIDES {
-                updates.push(user::admin::set(true));
-            } else if role_id.to_string() == nci::roles::MEMBERS {
-                updates.push(user::verified::set(true));
-            } else if role_id.to_string() != nci::roles::BOTS {
-                updates.push(user::color_role_id::set(Some(role_id.to_string())));
-                color_roles.push(role::id::equals(role_id.to_string()));
-            }
+    // make sure all color roles are marked so
+    prisma
+        .role()
+        .update_many(color_roles, vec![role::color_role::set(true)])
+        .exec()
+        .await?;
 
-            roles.push(role::id::equals(role_id.to_string()));
+    // check for users in db that don't exist in discord
+    let mut remove = vec![];
+
+    for user in &prisma_users {
+        if users
+            .iter()
+            .find(|n| n.user.id.to_string() == user.id)
+            .is_none()
+            && !user.removed
+        {
+            remove.push(user::id::equals(user.id.clone()));
         }
+    }
 
-        updates.push(user::roles::connect(roles));
-
-        // push all updates
+    if !remove.is_empty() {
         prisma
             .user()
-            .update(user::id::equals(member.user.id.to_string()), updates)
+            .update_many(remove, vec![user::removed::set(true)])
             .exec()
             .await?;
     }
 
-    // push all color roles to db
-    prisma
-        .role()
-        .update_many(color_roles, vec![role::is_color_role::set(true)])
-        .exec()
-        .await?;
-
     Ok(())
 }
 
-pub async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
     let prisma_categories = prisma.channel_category().find_many(vec![]).exec().await?;
     let categories = nci
         .channels
@@ -129,7 +214,7 @@ pub async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<
         .filter_map(|c| c.clone().category())
         .collect::<Vec<_>>();
 
-    for category in categories {
+    for category in &categories {
         if let Some(prisma_category) = prisma_categories
             .iter()
             .find(|n| n.id == category.id.to_string())
@@ -159,10 +244,32 @@ pub async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<
         }
     }
 
+    // check for categories in db that don't exist in discord
+    let mut remove = vec![];
+
+    for category in &prisma_categories {
+        if categories
+            .iter()
+            .find(|n| n.id.to_string() == category.id)
+            .is_none()
+            && !category.deleted
+        {
+            remove.push(channel_category::id::equals(category.id.clone()));
+        }
+    }
+
+    if !remove.is_empty() {
+        prisma
+            .channel_category()
+            .update_many(remove, vec![channel_category::deleted::set(true)])
+            .exec()
+            .await?;
+    }
+
     Ok(())
 }
 
-pub async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
     let prisma_channels = prisma.channel().find_many(vec![]).exec().await?;
     let channels = nci
         .channels
@@ -170,7 +277,7 @@ pub async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()
         .filter_map(|v| v.clone().guild())
         .collect::<Vec<_>>();
 
-    for channel in channels {
+    for channel in &channels {
         if let Some(prisma_channel) = prisma_channels
             .iter()
             .find(|n| n.id == channel.id.to_string())
@@ -239,7 +346,7 @@ pub async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()
                     },
                     {
                         /* omg i love blocks */
-                        let mut params = vec![channel::topic::set(channel.topic)];
+                        let mut params = vec![channel::topic::set(channel.topic.clone())];
 
                         if let Some(parent_id) = channel.parent_id {
                             params.push(channel::category::connect(channel_category::id::equals(
@@ -255,10 +362,43 @@ pub async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()
         }
     }
 
+    // check for channels in db that don't exist in discord
+    let mut remove = vec![];
+
+    for channel in &prisma_channels {
+        if channels
+            .iter()
+            .find(|n| n.id.to_string() == channel.id)
+            .is_none()
+            && !channel.deleted
+        {
+            remove.push(channel::id::equals(channel.id.clone()));
+        }
+    }
+
+    if !remove.is_empty() {
+        prisma
+            .channel()
+            .update_many(remove.clone(), vec![channel::deleted::set(true)])
+            .exec()
+            .await?;
+
+        for channel in remove {
+            prisma
+                .message()
+                .update_many(
+                    vec![message::channel::is(vec![channel])],
+                    vec![message::deleted::set(true)],
+                )
+                .exec()
+                .await?;
+        }
+    }
+
     Ok(())
 }
 
-pub async fn ready(ctx: serenity::Context) -> Result<()> {
+pub async fn on_ready(ctx: serenity::Context) -> Result<()> {
     // find NCI server
     let nci_id = ctx
         .cache
@@ -275,8 +415,8 @@ pub async fn ready(ctx: serenity::Context) -> Result<()> {
 
     get_prisma::from_serenity_context!(prisma, ctx);
 
-    users(&nci, &prisma).await?;
     roles(&nci, &prisma).await?;
+    users(&ctx, &nci, &prisma).await?;
     categories(&nci, &prisma).await?;
     channels(&nci, &prisma).await?;
 

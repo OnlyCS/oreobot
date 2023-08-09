@@ -1,7 +1,7 @@
 pub mod emitter;
 pub mod error;
-pub mod event;
-pub mod payload;
+pub mod events;
+pub mod payloads;
 
 use crate::prelude::*;
 
@@ -21,17 +21,17 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
         poise::Event::InteractionCreate { interaction } => match interaction {
             serenity::Interaction::ApplicationCommand(interaction) => {
                 event_emitter
-                    .emit(event::CommandInteractionEvent, interaction, &ctx)
+                    .emit(events::CommandInteractionEvent, interaction, &ctx)
                     .await?
             }
             serenity::Interaction::MessageComponent(interaction) => {
                 event_emitter
-                    .emit(event::ComponentInteractionEvent, interaction, &ctx)
+                    .emit(events::ComponentInteractionEvent, interaction, &ctx)
                     .await?
             }
             serenity::Interaction::ModalSubmit(interaction) => {
                 event_emitter
-                    .emit(event::ModalInteractionEvent, interaction, &ctx)
+                    .emit(events::ModalInteractionEvent, interaction, &ctx)
                     .await?
             }
             _ => {}
@@ -40,37 +40,37 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
         /*** CATEGORY EVENTS ***/
         poise::Event::CategoryCreate { category } => {
             event_emitter
-                .emit(event::CategoryCreateEvent, category.clone(), &ctx)
+                .emit(events::CategoryCreateEvent, category.clone(), &ctx)
                 .await?
         }
         poise::Event::CategoryDelete { category } => {
             event_emitter
-                .emit(event::CategoryDeleteEvent, category.clone(), &ctx)
+                .emit(events::CategoryDeleteEvent, category.clone(), &ctx)
                 .await?
         }
 
         /*** CHANNEL EVENTS ***/
         poise::Event::ChannelCreate { channel } => {
             event_emitter
-                .emit(event::ChannelCreateEvent, channel.clone(), &ctx)
+                .emit(events::ChannelCreateEvent, channel.clone(), &ctx)
                 .await?
         }
         poise::Event::ChannelUpdate { new: channel, .. } => match channel {
             serenity::Channel::Guild(channel) => {
                 event_emitter
-                    .emit(event::ChannelUpdateEvent, channel, &ctx)
+                    .emit(events::ChannelUpdateEvent, channel, &ctx)
                     .await?
             }
             serenity::Channel::Category(channel) => {
                 event_emitter
-                    .emit(event::CategoryUpdateEvent, channel, &ctx)
+                    .emit(events::CategoryUpdateEvent, channel, &ctx)
                     .await?
             }
             _ => {}
         },
         poise::Event::ChannelDelete { channel } => {
             event_emitter
-                .emit(event::ChannelDeleteEvent, channel.clone(), &ctx)
+                .emit(events::ChannelDeleteEvent, channel.clone(), &ctx)
                 .await?
         }
 
@@ -79,12 +79,12 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             new_message: message,
         } => {
             event_emitter
-                .emit(event::MessageCreateEvent, message, &ctx)
+                .emit(events::MessageCreateEvent, message, &ctx)
                 .await?
         }
         poise::Event::MessageUpdate { event, .. } => {
             event_emitter
-                .emit(event::MessageUpdateEvent, event, &ctx)
+                .emit(events::MessageUpdateEvent, event, &ctx)
                 .await?
         }
         poise::Event::MessageDelete {
@@ -92,14 +92,14 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             deleted_message_id: message_id,
             guild_id,
         } => {
-            let payload = payload::MessageDeletePayload {
+            let payload = payloads::MessageDeletePayload {
                 channel_id,
                 message_id,
                 guild_id,
             };
 
             event_emitter
-                .emit(event::MessageDeleteEvent, payload, &ctx)
+                .emit(events::MessageDeleteEvent, payload, &ctx)
                 .await?
         }
         poise::Event::MessageDeleteBulk {
@@ -108,14 +108,14 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             guild_id,
         } => {
             for message_id in message_ids {
-                let payload = payload::MessageDeletePayload {
+                let payload = payloads::MessageDeletePayload {
                     channel_id,
                     message_id,
                     guild_id,
                 };
 
                 event_emitter
-                    .emit(event::MessageDeleteEvent, payload, &ctx)
+                    .emit(events::MessageDeleteEvent, payload, &ctx)
                     .await?
             }
         }
@@ -123,12 +123,12 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
         /*** ROLE EVENTS ***/
         poise::Event::GuildRoleCreate { new: role } => {
             event_emitter
-                .emit(event::RoleCreateEvent, role, &ctx)
+                .emit(events::RoleCreateEvent, role, &ctx)
                 .await?
         }
         poise::Event::GuildRoleUpdate { new: role, .. } => {
             event_emitter
-                .emit(event::RoleUpdateEvent, role, &ctx)
+                .emit(events::RoleUpdateEvent, role, &ctx)
                 .await?
         }
         poise::Event::GuildRoleDelete {
@@ -136,10 +136,29 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             removed_role_id: role_id,
             ..
         } => {
-            let payload = payload::RoleDeletePayload { guild_id, role_id };
+            let payload = payloads::RoleDeletePayload { guild_id, role_id };
 
             event_emitter
-                .emit(event::RoleDeleteEvent, payload, &ctx)
+                .emit(events::RoleDeleteEvent, payload, &ctx)
+                .await?
+        }
+
+        /*** MEMBER EVENTS ***/
+        poise::Event::GuildMemberAddition { new_member: member } => {
+            event_emitter
+                .emit(events::MemberJoinEvent, member, &ctx)
+                .await?
+        }
+        poise::Event::GuildMemberUpdate { new, .. } => {
+            event_emitter
+                .emit(events::MemberUpdateEvent, new, &ctx)
+                .await?
+        }
+        poise::Event::GuildMemberRemoval { guild_id, user, .. } => {
+            let payload = payloads::MemberLeavePayload { guild_id, user };
+
+            event_emitter
+                .emit(events::MemberLeaveEvent, payload, &ctx)
                 .await?
         }
 
@@ -148,7 +167,7 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             data_about_bot: ready,
         } => {
             event_emitter
-                .emit(event::BotReadyEvent, ready, &ctx)
+                .emit(events::BotReadyEvent, ready, &ctx)
                 .await?
         }
 

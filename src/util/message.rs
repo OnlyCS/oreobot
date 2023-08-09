@@ -147,7 +147,7 @@ pub mod clone {
             let wh_gid = webhook.guild_id.unwrap().0;
 
             emitter.on_async_filter(
-                event::MessageUpdateEvent,
+                events::MessageUpdateEvent,
                 move |message, ctx: serenity::Context| async move {
                     ctx.cache
                         .guild(wh_gid)
@@ -172,7 +172,7 @@ pub mod clone {
             );
 
             emitter.on_async_filter(
-                event::MessageDeleteEvent,
+                events::MessageDeleteEvent,
                 move |_, ctx: serenity::Context| async move {
                     ctx.cache
                         .guild(wh_gid)

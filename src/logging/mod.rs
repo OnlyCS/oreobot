@@ -1,6 +1,7 @@
 mod category;
 mod channel;
 mod interaction;
+mod member;
 mod message;
 mod role;
 
@@ -19,62 +20,81 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
 
     let mut emitter = emitter_mutex.lock().await;
 
-    emitter.on_async(event::CommandInteractionEvent, |interaction, ctx| {
+    // interaction events
+    emitter.on_async(events::CommandInteractionEvent, |interaction, ctx| {
         interaction::command(interaction, ctx)
     });
 
-    emitter.on_async(event::ComponentInteractionEvent, |interaction, ctx| {
+    emitter.on_async(events::ComponentInteractionEvent, |interaction, ctx| {
         interaction::message_component(interaction, ctx)
     });
 
-    emitter.on_async(event::ModalInteractionEvent, |interaction, ctx| {
+    emitter.on_async(events::ModalInteractionEvent, |interaction, ctx| {
         interaction::modal_submit(interaction, ctx)
     });
 
-    emitter.on_async(event::CategoryCreateEvent, |category, ctx| {
+    // category events
+    emitter.on_async(events::CategoryCreateEvent, |category, ctx| {
         category::create(category, ctx)
     });
 
-    emitter.on_async(event::CategoryUpdateEvent, |category, ctx| {
+    emitter.on_async(events::CategoryUpdateEvent, |category, ctx| {
         category::update(category, ctx)
     });
 
-    emitter.on_async(event::CategoryDeleteEvent, |category, ctx| {
+    emitter.on_async(events::CategoryDeleteEvent, |category, ctx| {
         category::delete(category.id, ctx)
     });
 
-    emitter.on_async(event::ChannelCreateEvent, |channel, ctx| {
+    // channel events
+    emitter.on_async(events::ChannelCreateEvent, |channel, ctx| {
         channel::create(channel, ctx)
     });
 
-    emitter.on_async(event::ChannelUpdateEvent, |channel, ctx| {
+    emitter.on_async(events::ChannelUpdateEvent, |channel, ctx| {
         channel::update(channel, ctx)
     });
 
-    emitter.on_async(event::ChannelDeleteEvent, |channel, ctx| {
+    emitter.on_async(events::ChannelDeleteEvent, |channel, ctx| {
         channel::delete(channel.id, ctx)
     });
 
-    emitter.on_async(event::MessageCreateEvent, |message, ctx| {
+    // message events
+    emitter.on_async(events::MessageCreateEvent, |message, ctx| {
         message::create(message, ctx)
     });
 
-    emitter.on_async(event::MessageUpdateEvent, |event, ctx| {
+    emitter.on_async(events::MessageUpdateEvent, |event, ctx| {
         message::update(event, ctx)
     });
 
-    emitter.on_async(event::MessageDeleteEvent, |payload, ctx| {
+    emitter.on_async(events::MessageDeleteEvent, |payload, ctx| {
         message::delete(payload.message_id, ctx)
     });
 
-    emitter.on_async(event::RoleCreateEvent, |role, ctx| role::create(role, ctx));
-    emitter.on_async(event::RoleUpdateEvent, |role, ctx| role::update(role, ctx));
-    emitter.on_async(event::RoleDeleteEvent, |payload, ctx| {
+    // role events
+    emitter.on_async(events::RoleCreateEvent, |role, ctx| role::create(role, ctx));
+    emitter.on_async(events::RoleUpdateEvent, |role, ctx| role::update(role, ctx));
+    emitter.on_async(events::RoleDeleteEvent, |payload, ctx| {
         role::delete(payload.role_id, ctx)
     });
 
-    emitter.on_async(event::BotReadyEvent, |_, ctx| async move {
-        ready::ready(ctx.clone()).await?;
+    // member events
+    emitter.on_async(events::MemberJoinEvent, |member, ctx| {
+        member::join(member, ctx)
+    });
+
+    emitter.on_async(events::MemberUpdateEvent, |member, ctx| {
+        member::update(member, ctx)
+    });
+
+    emitter.on_async(events::MemberLeaveEvent, |payload, ctx| {
+        member::leave(payload.user.id, ctx)
+    });
+
+    // ready event
+    emitter.on_async(events::BotReadyEvent, |_, ctx| async move {
+        ready::on_ready(ctx.clone()).await?;
 
         ctx.set_presence(
             Some(serenity::Activity::playing("with BOMBS")),
