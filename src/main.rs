@@ -37,9 +37,6 @@ async fn main() -> Result<()> {
         })
     });
 
-    let prisma_client = Arc::new(Mutex::new(prisma::create().await?));
-    let prisma_client_clone = Arc::clone(&prisma_client);
-
     let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
     let event_emitter_clone = Arc::clone(&event_emitter);
 
@@ -59,7 +56,6 @@ async fn main() -> Result<()> {
         .client_settings(|client| {
             client
                 .event_handler(handler)
-                .type_map_insert::<PrismaTypeKey>(prisma_client_clone)
                 .type_map_insert::<EventEmitterTypeKey>(event_emitter_clone)
         })
         .setup(|ctx, _ready, framework| {
@@ -70,7 +66,6 @@ async fn main() -> Result<()> {
                 share::register(ctx).await?;
 
                 Ok(Data {
-                    prisma: prisma_client,
                     emitter: event_emitter,
                 })
             })

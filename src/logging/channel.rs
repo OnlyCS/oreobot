@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     // to hell with all threads
     if channel.is_thread() {
@@ -42,7 +42,7 @@ pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
 }
 
 pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .channel()
@@ -66,7 +66,7 @@ pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
 }
 
 pub async fn delete(channel: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .channel()

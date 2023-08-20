@@ -4,7 +4,7 @@ pub async fn command(
     interaction: serenity::ApplicationCommandInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .interaction()
@@ -36,7 +36,7 @@ pub async fn message_component(
     interaction: serenity::MessageComponentInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .interaction()
@@ -59,7 +59,7 @@ pub async fn modal_submit(
     interaction: serenity::ModalSubmitInteraction,
     ctx: serenity::Context,
 ) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .interaction()

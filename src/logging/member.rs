@@ -1,14 +1,14 @@
 pub use crate::prelude::*;
 
 pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
     let prisma_user = prisma
         .user()
         .find_unique(user::id::equals(member.user.id.to_string()))
-        .with(user::color_role::fetch())
+        .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?;
 
@@ -22,7 +22,11 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
             .clone()
     } else {
         if let Some(prisma_user) = prisma_user.as_ref() {
-            let color_role = prisma_user.color_role()?;
+            let color_role = prisma_user
+                .roles()?
+                .first()
+                .context("User has no color roles")?;
+
             let color = colors::hex_to_color(color_role.color.clone())?;
 
             let role = nci
@@ -77,10 +81,6 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
     if let Some(prisma_user) = prisma_user {
         let mut updates = vec![];
 
-        updates.push(user::color_role::connect(role::id::equals(
-            color_role.id.to_string(),
-        )));
-
         updates.push(user::roles::connect(vec![role::id::equals(
             color_role.id.to_string(),
         )]));
@@ -124,7 +124,6 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
             .create(
                 member.user.id.to_string(),
                 member.user.name.clone(),
-                role::id::equals(color_role.id.to_string()),
                 vec![user::roles::connect(vec![role::id::equals(
                     color_role.id.to_string(),
                 )])],
@@ -137,7 +136,7 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
 }
 
 pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     let mut updates = vec![];
 
@@ -146,6 +145,7 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
     let prisma_member = prisma
         .user()
         .find_unique(user::id::equals(member.user.id.to_string()))
+        .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?
         .context("Could not find user in database")?;
@@ -155,11 +155,16 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
         .map(|n| role::id::equals(n.id.to_string()))
         .collect::<Vec<_>>();
 
+    let color_role = prisma_member
+        .roles()?
+        .first()
+        .context("User has no color roles")?;
+
     if !member_roles
         .iter()
-        .any(|n| n.id.to_string() == prisma_member.color_role_id)
+        .any(|n| n.id.to_string() == color_role.id.clone())
     {
-        let color_role = prisma_member.color_role_id;
+        let color_role = color_role.id.clone();
 
         nci.member(&ctx, member.user.id)
             .await?
@@ -189,20 +194,25 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
 }
 
 pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     let prisma_user = prisma
         .user()
         .find_unique(user::id::equals(id.to_string()))
+        .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?
         .context("Could not find user in database")?;
 
     let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
+    let color_role = prisma_user
+        .roles()?
+        .first()
+        .context("User has no color roles")?;
+
     // this will send a roledelete event, handled in logging/role.rs
-    nci.delete_role(&ctx, prisma_user.color_role_id.parse::<u64>()?)
-        .await?;
+    nci.delete_role(&ctx, color_role.id.parse::<u64>()?).await?;
 
     prisma
         .user()

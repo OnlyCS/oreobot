@@ -69,7 +69,12 @@ async fn users(
     prisma: &PrismaClient,
 ) -> Result<()> {
     let mut users = nci.members.values().cloned().collect::<Vec<_>>();
-    let prisma_users = prisma.user().find_many(vec![]).exec().await?;
+    let prisma_users = prisma
+        .user()
+        .find_many(vec![])
+        .with(user::roles::fetch(vec![]))
+        .exec()
+        .await?;
 
     let mut color_roles = vec![];
 
@@ -97,7 +102,7 @@ async fn users(
                         role.id.to_string(),
                         role.name.clone(),
                         role.colour.hex(),
-                        vec![role::color_role::set(true)],
+                        vec![role::color_role::set(true), role::users::set(vec![])],
                     )
                     .exec()
                     .await?;
@@ -107,7 +112,7 @@ async fn users(
         };
 
         for role in &member.roles {
-            member_roles.push(role::id::equals(role.to_string()));
+            member_roles.push(role.to_string());
         }
 
         // update or create the user in the database
@@ -137,12 +142,22 @@ async fn users(
                 updates.push(user::removed::set(false));
             }
 
-            if prisma_user.color_role_id != color_role.id.to_string() {
-                updates.push(user::color_role_id::set(color_role.id.to_string()));
-            }
-
-            if !member_roles.is_empty() {
-                updates.push(user::roles::set(member_roles));
+            if member_roles
+                != prisma_user
+                    .roles
+                    .clone()
+                    .unwrap_or(vec![])
+                    .iter()
+                    .map(|n| &n.id)
+                    .cloned()
+                    .collect::<Vec<_>>()
+            {
+                updates.push(user::roles::set(
+                    member_roles
+                        .iter()
+                        .map(|n| role::id::equals(n.clone()))
+                        .collect::<Vec<_>>(),
+                ));
             }
 
             if !updates.is_empty() {
@@ -158,12 +173,17 @@ async fn users(
                 .create(
                     member.user.id.to_string(),
                     member.user.name.clone(),
-                    role::id::equals(color_role.id.to_string()),
                     vec![
+                        user::nickname::set(member.nick.clone()),
                         user::admin::set(member.roles.contains(&nci::roles::OVERRIDES)),
                         user::verified::set(member.roles.contains(&nci::roles::MEMBERS)),
                         user::bot::set(member.user.bot),
-                        user::roles::set(member_roles),
+                        user::roles::connect(
+                            member_roles
+                                .iter()
+                                .map(|n| role::id::equals(n.clone()))
+                                .collect::<Vec<_>>(),
+                        ),
                     ],
                 )
                 .exec()
@@ -174,7 +194,6 @@ async fn users(
         color_roles.push(role::id::equals(color_role.id.to_string()));
     }
 
-    // make sure all color roles are marked so
     prisma
         .role()
         .update_many(color_roles, vec![role::color_role::set(true)])
@@ -278,6 +297,10 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
         .collect::<Vec<_>>();
 
     for channel in &channels {
+        if channel.is_thread() {
+            continue;
+        }
+
         if let Some(prisma_channel) = prisma_channels
             .iter()
             .find(|n| n.id == channel.id.to_string())
@@ -413,7 +436,7 @@ pub async fn on_ready(ctx: serenity::Context) -> Result<()> {
         .guild(nci_id)
         .context("Could not find NCI server data")?;
 
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     roles(&nci, &prisma).await?;
     users(&ctx, &nci, &prisma).await?;
