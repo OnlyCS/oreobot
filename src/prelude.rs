@@ -5,14 +5,17 @@ pub(crate) use crate::{
     },
     logging, nci,
     prisma::{
+        self,
         prisma_client::{
             attachment, channel, channel_category, interaction, message, role, user, ChannelType,
             InteractionType, PrismaClient,
         },
-        PrismaTypeKey,
     },
     util::{
-        colors, embed, get_prisma, latency,
+        colors,
+        embed::{self, EmbedStatus},
+        is_admin, latency,
+        loading::Loading,
         message::{clone, emoji, mention},
         role::default_role,
         share,
@@ -26,7 +29,7 @@ pub use std::{
     thread,
 };
 
-pub use anyhow::{bail, Context as ToAnyhowResult, Result};
+pub use anyhow::{anyhow, bail, Context as ToAnyhowResult, Result};
 pub use log::{debug, error, info, trace, warn};
 pub use serde::{Deserialize, Serialize};
 
@@ -38,7 +41,6 @@ pub type Shared<T> = Arc<Mutex<T>>;
 
 #[derive(Debug)]
 pub struct Data {
-    pub prisma: Shared<PrismaClient>,
     pub emitter: Shared<EventEmitter>,
 }
 

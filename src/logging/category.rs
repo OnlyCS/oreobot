@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .channel_category()
@@ -13,7 +13,7 @@ pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context)
 }
 
 pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .channel_category()
@@ -28,7 +28,7 @@ pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context)
 }
 
 pub async fn delete(category: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     let category = prisma
         .channel_category()

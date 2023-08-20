@@ -1,140 +1,141 @@
 use crate::prelude::*;
 
-#[poise::command(slash_command, subcommands("name", "color"))]
-pub async fn role(_: Context<'_>) -> Result<()> {
-    Ok(())
-}
+#[poise::command(slash_command)]
+pub async fn role(
+    ctx: Context<'_>,
+    #[description = "Change the role name"] name: Option<String>,
+    #[description = "Use (r,g,b) or #hex. Words (ie. \"red\") NOT accepted"] color: Option<String>,
+    #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
+) -> Result<()> {
+    let loading = Loading::new(&ctx, "Starting command...").await?;
 
-async fn get_role_id(ctx: &Context<'_>, member: Option<serenity::Member>) -> Result<String> {
-    get_prisma::from_poise_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
-    let member_id = if let Some(member) = member {
-        if !prisma
-            .user()
-            .find_unique(user::id::equals(member.user.id.to_string()))
-            .exec()
-            .await?
-            .context("Could not find user")?
-            .admin
-        {
-            bail!("You must be an admin to manage other users or bots");
-        }
+    if member.is_some() && !is_admin::user(&prisma, ctx.author()).await? {
+        loading
+            .last(&ctx, {
+                let mut embed = embed::default(&ctx, embed::EmbedStatus::Error);
 
-        member.user.id.to_string()
-    } else {
-        ctx.author().id.to_string()
-    };
+                embed.title("Error");
+                embed.description("You must be an admin to manage other user's roles");
+                embed
+            })
+            .await?;
 
-    let roles = prisma
-        .role()
-        .find_first(vec![
-            role::color_role::equals(true),
-            role::color_role_user::is(vec![user::id::equals(member_id)]),
-        ])
-        .exec()
-        .await?;
-
-    match roles {
-        Some(n) => Ok(n.id),
-        None => {
-            logging::ready::on_ready(ctx.serenity_context().clone()).await?;
-            bail!("Warning: The user or role could not be found. The database is being reindexed. Please try again shortly.");
-        }
+        return Ok(());
     }
-}
 
-#[poise::command(slash_command)]
-async fn name(
-    ctx: Context<'_>,
-    #[description = "The name to change the role to"] name: String,
-    #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
-) -> Result<()> {
-    let role_id = get_role_id(&ctx, member).await?;
+    let mut fields = vec![];
 
-    ctx.guild()
-        .context("This command can only be used in a guild")?
-        .edit_role(&ctx, role_id.parse::<u64>()?, |role| {
-            role.name(name.clone());
-            role
-        })
-        .await?;
+    let role_id = {
+        let member_id = if let Some(member) = member {
+            member.user.id.to_string()
+        } else {
+            ctx.author().id.to_string()
+        };
 
-    ctx.send(|reply| {
-        let mut embed = embed::default(&ctx, embed::EmbedStatus::Sucess);
+        let roles = prisma
+            .role()
+            .find_first(vec![
+                role::color_role::equals(true),
+                role::users::some(vec![user::id::equals(member_id)]),
+            ])
+            .exec()
+            .await?;
 
-        embed.title("Role - Name");
-        embed.description(format!("Role name sucessfully changed to `{}`", name));
+        match roles {
+            Some(n) => Ok(n.id),
+            None => {
+                let serenity = ctx.serenity_context().clone();
 
-        reply.embeds.push(embed);
-        reply.ephemeral(true);
+                // don't block the current thread
+                tokio::spawn(async move {
+                    logging::ready::on_ready(serenity).await.unwrap();
+                });
 
-        reply.components(|comp| comp.add_action_row(share::row(false)));
+                Err(anyhow!("Warning: The user or role could not be found. The database is being reindexed. Please try again shortly."))
+            }
+        }
+    }?;
 
-        reply
-    })
-    .await?;
+    if let Some(name) = name {
+        loading.update(&ctx, "Updating role name...").await?;
 
-    Ok(())
-}
+        ctx.guild()
+            .context("This command can only be used in a guild")?
+            .edit_role(&ctx, role_id.parse::<u64>()?, |role| {
+                role.name(name.clone());
+                role
+            })
+            .await?;
 
-#[poise::command(slash_command)]
-async fn color(
-    ctx: Context<'_>,
-    #[description = "The color to set. Accepts (r,g,b) and #hex. No words accepted"] color: String,
-    #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
-) -> Result<()> {
-    // attempt to parse the color
+        fields.push(("Name", name));
+    }
 
-    let role_id = get_role_id(&ctx, member).await?;
+    if let Some(color) = color {
+        loading.update(&ctx, "Updating role color...").await?;
 
-    let color_struct = {
-        if color.starts_with("(") {
-            let color = color.trim_start_matches("(").trim_end_matches(")");
-            let number_strs = color.split(",");
+        let color_struct = {
+            if color.starts_with("(") {
+                let color = color.trim_start_matches("(").trim_end_matches(")");
+                let number_strs = color.split(",");
 
-            let numbers = number_strs
-                .map(|n| n.trim())
-                .map(|n| n.parse::<u8>())
-                .collect::<Vec<_>>();
+                let numbers = number_strs
+                    .map(|n| n.trim())
+                    .map(|n| n.parse::<u8>())
+                    .collect::<Vec<_>>();
 
-            if numbers.len() != 3 {
+                if numbers.len() != 3 {
+                    bail!("Invalid color format");
+                }
+
+                serenity::Color::from((
+                    numbers[0].clone()?,
+                    numbers[1].clone()?,
+                    numbers[2].clone()?,
+                ))
+            } else if color.starts_with("#") {
+                colors::hex_to_color(color.trim_start_matches("#"))?
+            } else {
                 bail!("Invalid color format");
             }
+        };
 
-            serenity::Color::from((
-                numbers[0].clone()?,
-                numbers[1].clone()?,
-                numbers[2].clone()?,
-            ))
-        } else if color.starts_with("#") {
-            colors::hex_to_color(color.trim_start_matches("#"))?
-        } else {
-            bail!("Invalid color format");
-        }
-    };
+        ctx.guild()
+            .context("This command can only be used in a guild")?
+            .edit_role(&ctx, role_id.parse::<u64>()?, |role| {
+                role.colour(color_struct.0.into());
+                role
+            })
+            .await?;
 
-    ctx.guild()
-        .context("This command can only be used in a guild")?
-        .edit_role(&ctx, role_id.parse::<u64>()?, |role| {
-            role.colour(color_struct.0.into());
-            role
+        fields.push(("Color", color));
+    }
+
+    let mention = mention::create(role_id, mention::MentionType::Role);
+
+    loading
+        .last(&ctx, {
+            let mut embed = embed::default(&ctx, embed::EmbedStatus::Sucess);
+
+            embed.title("Role");
+
+            if fields.is_empty() {
+                embed.description(format!("No changes were made to role {}", mention));
+            } else {
+                embed.description(format!(
+                    "Updated role {} with the following values:\n",
+                    mention
+                ));
+
+                for (name, value) in fields {
+                    embed.field(name, value, true);
+                }
+            };
+
+            embed
         })
         .await?;
-
-    ctx.send(|reply| {
-        let mut embed = embed::default(&ctx, embed::EmbedStatus::Sucess);
-
-        embed.title("Role - Color");
-        embed.description(format!("Role color sucessfully changed to `{}`", color));
-
-        reply.embeds.push(embed);
-        reply.ephemeral(true);
-
-        reply.components(|comp| comp.add_action_row(share::row(false)));
-
-        reply
-    })
-    .await?;
 
     Ok(())
 }

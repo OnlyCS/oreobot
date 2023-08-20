@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .role()
@@ -18,7 +18,7 @@ pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<()> 
 }
 
 pub async fn update(role: serenity::Role, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     prisma
         .role()
@@ -36,19 +36,20 @@ pub async fn update(role: serenity::Role, ctx: serenity::Context) -> Result<()> 
 }
 
 pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()> {
-    get_prisma::from_serenity_context!(prisma, ctx);
+    let prisma = prisma::create().await?;
 
     let prisma_role = prisma
         .role()
         .find_unique(role::id::equals(role.to_string()))
-        .with(role::color_role_user::fetch())
+        .with(role::users::fetch(vec![] /* todo: check if this works and if not, replace */))
         .exec()
         .await?
         .unwrap();
 
     let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
-    if let Some(color_role_user_data) = prisma_role.color_role_user()? 
+    if prisma_role.color_role 
+		&& let Some(color_role_user_data) = prisma_role.users()?.first() 
 		&& let Ok(mut user) = nci.member(&ctx,color_role_user_data.id.parse::<u64>()?).await {
         let color = colors::hex_to_color(prisma_role.color.clone())?.0.into();
 

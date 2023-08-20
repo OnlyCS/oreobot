@@ -11,8 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run client
-        run: |
-          cd deploy
-          echo "${{ secrets.DOTENV }}" >> .env
-          cargo run --bin client
+      - name: Copy DotEnv to root
+        run: echo ${{ secrets.DOTENV }} > .env
+
+      - name: Build Dockerfile
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
+
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Dockerfile
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
+
+      - name: Kill and stop docker container
+        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker kill oreobot && docker rm oreobot
+
+      - name: Pull and run docker container
+        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest

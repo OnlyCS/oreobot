@@ -74,8 +74,7 @@ impl EventEmitter {
 
                 tokio::spawn(async move {
                     callback(bytes, context.clone()).await.unwrap();
-                })
-                .await?;
+                });
             }
         }
 
