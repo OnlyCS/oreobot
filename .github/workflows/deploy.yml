@@ -23,8 +23,13 @@ jobs:
       - name: Push Dockerfile
         run: docker push ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
 
+      - name: Save private key
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > ssh_key
+          chmod 600 ssh_key
+
       - name: Kill and stop docker container
-        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker kill oreobot && docker rm oreobot
+        run: ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker kill oreobot && docker rm oreobot
 
       - name: Pull and run docker container
-        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker pull -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} onlycs/oreobot:latest && docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
+        run: ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker pull -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} onlycs/oreobot:latest && docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
