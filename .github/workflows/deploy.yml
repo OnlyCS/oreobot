@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Copy DotEnv to root
-        run: echo ${{ secrets.DOTENV }} > .env
+        run: echo "${{ secrets.DOTENV }}" > .env
 
       - name: Build Dockerfile
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
@@ -27,4 +27,4 @@ jobs:
         run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker kill oreobot && docker rm oreobot
 
       - name: Pull and run docker container
-        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
+        run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker pull -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} onlycs/oreobot:latest && docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
