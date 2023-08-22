@@ -7,7 +7,7 @@ pub async fn role(
     #[description = "Use (r,g,b) or #hex. Words (ie. \"red\") NOT accepted"] color: Option<String>,
     #[description = "The user's role to change -- admin only!"] member: Option<serenity::Member>,
 ) -> Result<()> {
-    let loading = Loading::new(&ctx, "Starting command...").await?;
+    let loading = Loading::new(&ctx, "Connecting to the database...").await?;
 
     let prisma = prisma::create().await?;
 
