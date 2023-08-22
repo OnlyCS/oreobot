@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<()> {
+pub async fn create(role: serenity::Role) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -17,7 +17,7 @@ pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<()> 
     Ok(())
 }
 
-pub async fn update(role: serenity::Role, ctx: serenity::Context) -> Result<()> {
+pub async fn update(role: serenity::Role) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
+pub async fn create(category: serenity::ChannelCategory) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -12,7 +12,7 @@ pub async fn create(category: serenity::ChannelCategory, ctx: serenity::Context)
     Ok(())
 }
 
-pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context) -> Result<()> {
+pub async fn update(category: serenity::ChannelCategory) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -27,7 +27,7 @@ pub async fn update(category: serenity::ChannelCategory, ctx: serenity::Context)
     Ok(())
 }
 
-pub async fn delete(category: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
+pub async fn delete(category: serenity::ChannelId) -> Result<()> {
     let prisma = prisma::create().await?;
 
     let category = prisma
