@@ -174,6 +174,24 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
         role_connects.push(role::id::equals(color_role));
     }
 
+    if member_roles.iter().any(|r| r.id == nci::roles::OVERRIDES) {
+        updates.push(user::admin::set(true));
+    } else {
+        updates.push(user::admin::set(false));
+    }
+
+    if member_roles.iter().any(|r| r.id == nci::roles::MEMBERS) {
+        updates.push(user::verified::set(true));
+    } else {
+        updates.push(user::verified::set(false));
+    }
+
+    if member_roles.iter().any(|r| r.id == nci::roles::BOTS) {
+        updates.push(user::bot::set(true));
+    } else {
+        updates.push(user::bot::set(false));
+    }
+
     if member.user.name != prisma_member.username {
         updates.push(user::username::set(member.user.name.clone()));
     }

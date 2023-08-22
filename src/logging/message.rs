@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::prelude::*;
 
-pub async fn create(message: serenity::Message, ctx: serenity::Context) -> Result<()> {
+pub async fn create(message: serenity::Message) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -35,7 +35,7 @@ pub async fn create(message: serenity::Message, ctx: serenity::Context) -> Resul
     Ok(())
 }
 
-pub async fn update(message: serenity::MessageUpdateEvent, ctx: serenity::Context) -> Result<()> {
+pub async fn update(message: serenity::MessageUpdateEvent) -> Result<()> {
     let prisma = prisma::create().await?;
 
     let prisma_message = prisma
@@ -81,7 +81,7 @@ pub async fn update(message: serenity::MessageUpdateEvent, ctx: serenity::Contex
     Ok(())
 }
 
-pub async fn delete(message_id: serenity::MessageId, ctx: serenity::Context) -> Result<()> {
+pub async fn delete(message_id: serenity::MessageId) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma

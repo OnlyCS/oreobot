@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
+pub async fn create(channel: serenity::GuildChannel) -> Result<()> {
     let prisma = prisma::create().await?;
 
     // to hell with all threads
@@ -41,7 +41,7 @@ pub async fn create(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
     Ok(())
 }
 
-pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> Result<()> {
+pub async fn update(channel: serenity::GuildChannel) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -65,7 +65,7 @@ pub async fn update(channel: serenity::GuildChannel, ctx: serenity::Context) -> 
     Ok(())
 }
 
-pub async fn delete(channel: serenity::ChannelId, ctx: serenity::Context) -> Result<()> {
+pub async fn delete(channel: serenity::ChannelId) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma

@@ -1,9 +1,6 @@
 use crate::prelude::*;
 
-pub async fn command(
-    interaction: serenity::ApplicationCommandInteraction,
-    ctx: serenity::Context,
-) -> Result<()> {
+pub async fn command(interaction: serenity::ApplicationCommandInteraction) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -32,10 +29,7 @@ pub async fn command(
     Ok(())
 }
 
-pub async fn message_component(
-    interaction: serenity::MessageComponentInteraction,
-    ctx: serenity::Context,
-) -> Result<()> {
+pub async fn message_component(interaction: serenity::MessageComponentInteraction) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -55,10 +49,7 @@ pub async fn message_component(
     Ok(())
 }
 
-pub async fn modal_submit(
-    interaction: serenity::ModalSubmitInteraction,
-    ctx: serenity::Context,
-) -> Result<()> {
+pub async fn modal_submit(interaction: serenity::ModalSubmitInteraction) -> Result<()> {
     let prisma = prisma::create().await?;
 
     prisma
