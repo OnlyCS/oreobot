@@ -70,6 +70,17 @@ model Message {
     updated_at  DateTime     @updatedAt
     deleted     Boolean      @default(false)
     edited      Boolean      @default(false)
+
+    cloned_messages MessageClone[]
+}
+
+model MessageClone {
+    cloned_message_id String @id
+
+    cloned_from    Message @relation(fields: [cloned_from_id], references: [id])
+    cloned_from_id String
+
+    sync Boolean
 }
 
 model Channel {

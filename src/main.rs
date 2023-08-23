@@ -15,6 +15,7 @@ extern crate tokio;
 
 mod commands;
 mod events;
+mod features;
 mod logging;
 mod nci;
 mod prelude;
@@ -64,6 +65,8 @@ async fn main() -> Result<()> {
 
                 logging::register(ctx).await?;
                 share::register(ctx).await?;
+                starboard::register(ctx).await?;
+                clone::register(ctx).await?;
 
                 Ok(Data {
                     emitter: event_emitter,

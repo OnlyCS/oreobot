@@ -64,6 +64,11 @@ impl EmitterEvent for MessageDeleteEvent {
     type Argument = payloads::MessageDeletePayload;
 }
 
+pub struct MessageReactionAdd;
+impl EmitterEvent for MessageReactionAdd {
+    type Argument = serenity::Reaction;
+}
+
 /*** ROLE ***/
 pub struct RoleCreateEvent;
 impl EmitterEvent for RoleCreateEvent {

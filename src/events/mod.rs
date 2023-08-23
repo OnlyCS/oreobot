@@ -119,6 +119,11 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
                     .await?
             }
         }
+        poise::Event::ReactionAdd { add_reaction } => {
+            event_emitter
+                .emit(events::MessageReactionAdd, add_reaction, &ctx)
+                .await?
+        }
 
         /*** ROLE EVENTS ***/
         poise::Event::GuildRoleCreate { new: role } => {

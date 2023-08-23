@@ -3,6 +3,10 @@ use std::collections::HashSet;
 use crate::prelude::*;
 
 pub async fn create(message: serenity::Message) -> Result<()> {
+    if message.webhook_id.is_some() {
+        return Ok(()); //ignore webhooks, we manage them in this server
+    }
+
     let prisma = prisma::create().await?;
 
     prisma
