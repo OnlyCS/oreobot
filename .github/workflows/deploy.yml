@@ -25,12 +25,14 @@ jobs:
       - name: Generate Prisma
         uses: actions-rs/cargo@v1
         with:
-          command: run -p prisma-cli -- db push
+          command: prisma
+          args: db push
 
       - name: Build app
         uses: actions-rs/cargo@v1
         with:
           command: build
+          args: --release
 
       - name: Build Dockerfile
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
