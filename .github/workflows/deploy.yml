@@ -9,10 +9,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Copy DotEnv to root
         run: echo "${{ secrets.DOTENV }}" > .env
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+
+      - name: Generate Prisma
+        uses: actions-rs/cargo@v1
+        with:
+          command: prisma db push
+
+      - name: Build app
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
 
       - name: Build Dockerfile
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
