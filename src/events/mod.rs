@@ -120,8 +120,17 @@ pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> R
             }
         }
         poise::Event::ReactionAdd { add_reaction } => {
+            let message = add_reaction.message(&ctx).await.unwrap();
+
             event_emitter
-                .emit(events::MessageReactionAdd, add_reaction, &ctx)
+                .emit(
+                    events::MessageReactionAdd,
+                    payloads::MessageReactionAddPayload {
+                        reaction: add_reaction,
+                        message,
+                    },
+                    &ctx,
+                )
                 .await?
         }
 

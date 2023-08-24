@@ -34,6 +34,10 @@ jobs:
           command: build
           args: --release
 
+      - name: Aliasing
+        run: |
+          alias on-server=ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR
+
       - name: Build Dockerfile
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
 
@@ -49,7 +53,11 @@ jobs:
           chmod 600 ssh_key
 
       - name: Kill and stop docker container
-        run: ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker kill oreobot && docker rm oreobot
+        run: |
+          on-server docker kill oreobot 2> /dev/null
+          on-server docker rm oreobot 2> /dev/null
 
       - name: Pull and run docker container
-        run: ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR docker pull ${{ secrets.DOCKER_USERNAME }}/oreobot:latest && docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
+        run: |
+          on-server docker pull ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
+          on-server docker run -d --name oreobot ${{ secrets.DOCKER_USERNAME }}/oreobot:latest
