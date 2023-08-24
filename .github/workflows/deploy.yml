@@ -14,6 +14,10 @@ jobs:
       - name: Copy DotEnv to root
         run: echo "${{ secrets.DOTENV }}" > .env
 
+      - name: Aliasing
+        run: |
+          alias on-server="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "
+
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
 
@@ -33,10 +37,6 @@ jobs:
         with:
           command: build
           args: --release
-
-      - name: Aliasing
-        run: |
-          alias on-server=ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR
 
       - name: Build Dockerfile
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/oreobot:latest .
