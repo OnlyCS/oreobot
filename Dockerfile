@@ -1,8 +1,6 @@
-FROM rust:latest
+FROM alpine:latest
 
-COPY ./ ./
+COPY ./target/release/oreo-bot ./oreo-bot
+COPY ./.env ./.env
 
-RUN cargo prisma db push
-RUN cargo build --release
-
-CMD ["cargo", "run", "--release"]
+CMD ["./oreo-bot"]
