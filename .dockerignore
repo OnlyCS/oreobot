@@ -1,0 +1,4 @@
+*
+!./target/release/oreo-bot
+!./.env
+!./Dockerfile
