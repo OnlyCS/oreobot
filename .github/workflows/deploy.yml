@@ -25,7 +25,7 @@ jobs:
       - name: Generate Prisma
         uses: actions-rs/cargo@v1
         with:
-          command: prisma
+          command: prisma-release
           args: db push
 
       - name: Build app

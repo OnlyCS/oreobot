@@ -2120,7 +2120,6 @@ dependencies = [
  "json-rpc-api-build",
  "jsonrpc-core",
  "migration-connector",
- "mongodb-migration-connector",
  "psl",
  "serde",
  "serde_json",
@@ -2253,47 +2252,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mongodb-introspection-connector"
-version = "0.1.0"
-source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
-dependencies = [
- "async-trait",
- "convert_case 0.5.0",
- "datamodel-renderer",
- "enumflags2",
- "futures",
- "indoc",
- "introspection-connector",
- "mongodb",
- "mongodb-client",
- "mongodb-schema-describer",
- "once_cell",
- "psl",
- "regex",
- "serde_json",
- "thiserror",
- "user-facing-errors",
-]
-
-[[package]]
-name = "mongodb-migration-connector"
-version = "0.1.0"
-source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
-dependencies = [
- "enumflags2",
- "futures",
- "migration-connector",
- "mongodb",
- "mongodb-client",
- "mongodb-introspection-connector",
- "mongodb-schema-describer",
- "psl",
- "serde_json",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "mongodb-query-connector"
 version = "0.1.0"
 source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
@@ -2324,16 +2282,6 @@ dependencies = [
  "tracing-futures",
  "user-facing-errors",
  "uuid",
-]
-
-[[package]]
-name = "mongodb-schema-describer"
-version = "0.1.0"
-source = "git+https://github.com/Brendonovich/prisma-engines?tag=pcr-0.6.5#7cc20cc54a7ab0b5e38c81901826939a91a17ba0"
-dependencies = [
- "futures",
- "mongodb",
- "serde",
 ]
 
 [[package]]
