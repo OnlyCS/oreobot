@@ -53,6 +53,7 @@ jobs:
           chmod 600 ssh_key
 
       - name: Kill and stop docker container
+        continue-on-error: true
         run: |
           on-server docker kill oreobot 2> /dev/null
           on-server docker rm oreobot 2> /dev/null
