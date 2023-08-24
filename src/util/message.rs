@@ -108,7 +108,41 @@ pub mod clone {
             wh_message.avatar_url(av);
         }
 
-        wh_message.username(message.member(&ctx).await?.display_name());
+        let username = {
+            let attempt1 = message
+                .member
+                .as_ref()
+                .map(|n| n.nick.as_ref())
+                .flatten()
+                .cloned();
+
+            if let Some(name) = attempt1 {
+                name
+            } else {
+                let attempt2 = message.author_nick(&ctx).await;
+
+                if let Some(name) = attempt2 {
+                    name
+                } else {
+                    let prisma = prisma::create().await?;
+
+                    let user = prisma
+                        .user()
+                        .find_unique(user::id::equals(message.author.id.to_string()))
+                        .exec()
+                        .await?;
+
+                    if let Some(user) = user.as_ref() {
+                        user.nickname.as_ref().unwrap_or(&message.author.name)
+                    } else {
+                        &message.author.name
+                    }
+                    .clone()
+                }
+            }
+        };
+
+        wh_message.username(username);
 
         if link_to_prev {
             wh_row.create_button(|btn| {
@@ -180,17 +214,17 @@ pub mod clone {
                 return false;
             };
 
-            name == "NCI Internals"
+            name == "Oreo's Internals"
         });
 
         let webhook = if let Some(wh) = maybe_webhook {
             wh
         } else {
-            send_to.create_webhook(&ctx, "NCI Internals").await?
+            send_to.create_webhook(&ctx, "Oreo's Internals").await?
         };
 
         let cloned = webhook
-            .execute(&ctx, false, |exec| {
+            .execute(&ctx, true, |exec| {
                 exec.clone_from(&wh_message);
                 exec
             })

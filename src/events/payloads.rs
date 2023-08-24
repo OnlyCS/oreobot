@@ -18,3 +18,9 @@ pub struct MemberLeavePayload {
     pub guild_id: GuildId,
     pub user: User,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MessageReactionAddPayload {
+    pub reaction: Reaction,
+    pub message: Message,
+}

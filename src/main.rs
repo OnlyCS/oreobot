@@ -29,7 +29,7 @@ use crate::prelude::*;
 #[tokio::main]
 async fn main() -> Result<()> {
     SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
+        .with_level(log::LevelFilter::Info)
         .init()?;
 
     let handler = poise::EventWrapper(|ctx, event| {
