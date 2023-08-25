@@ -38,13 +38,17 @@ pub mod clone {
     use crate::prelude::*;
 
     pub async fn register(ctx: &serenity::Context) -> Result<()> {
-        let prisma = prisma::create().await?;
+        // todo: chat/news sync
 
-        let to_resync = prisma
-            .message_clone()
-            .find_many(vec![message_clone::sync::equals(true)])
-            .exec()
-            .await?;
+        // let prisma = prisma::create().await?;
+
+        // let to_resync = prisma
+        //     .message_clone()
+        //     .find_many(vec![message_clone::sync::equals(true)])
+        //     .exec()
+        //     .await?;
+
+        let to_resync: Vec<prisma::prisma_client::message_pin::Data> = vec![];
 
         let wh_id = ctx
             .cache
@@ -73,8 +77,8 @@ pub mod clone {
         for clone in to_resync {
             clone_listen(
                 Arc::clone(&emitter_arc),
-                clone.cloned_message_id.parse()?,
-                clone.cloned_from_id.parse()?,
+                clone.pinned_message_id.parse()?,
+                clone.original_id.parse()?,
                 wh_id.id.0,
             )
             .await?;
@@ -238,19 +242,6 @@ pub mod clone {
 
             clone_listen(emitter_arc, cloned_id, from_id, wh_id).await?;
         }
-
-        let prisma = prisma::create().await?;
-
-        prisma
-            .message_clone()
-            .create(
-                cloned.id.to_string(),
-                message::id::equals(message.id.to_string()),
-                sync,
-                vec![],
-            )
-            .exec()
-            .await?;
 
         Ok(cloned)
     }
