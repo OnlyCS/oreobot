@@ -15,7 +15,10 @@ jobs:
         run: echo "${{ secrets.DOTENV }}" > .env
 
       - name: Setup Rust Cache
-        uses: Swatinem/rust-cache@v2
+        uses: onlycs/rust-cache@master
+        with:
+          prefix-key: "v0-rust"
+          shared-key: "build-fb41acb8-b19632d7"
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
