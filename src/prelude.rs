@@ -8,7 +8,7 @@ pub(crate) use crate::{
     prisma::{
         self,
         prisma_client::{
-            attachment, channel, channel_category, interaction, message, message_clone, role, user,
+            attachment, channel, channel_category, interaction, message, message_pin, role, user,
             ChannelType, InteractionType, PrismaClient,
         },
     },
