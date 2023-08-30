@@ -4,7 +4,7 @@ async fn _star(
     no_interaction: Option<&serenity::Context>,
     interaction: Option<&Context<'_>>,
     message: &serenity::Message,
-) -> Result<serenity::Message> {
+) -> Result<()> {
     let prisma = prisma::create().await?;
     let message_data = prisma
         .message()
@@ -61,6 +61,8 @@ async fn _star(
             })
             .await?;
         }
+
+        return Ok(());
     } else {
         prisma
             .message()
@@ -164,20 +166,17 @@ async fn _star(
         .await?;
     }
 
-    Ok(cloned)
+    Ok(())
 }
 
 pub async fn star_no_interaction(
     ctx: &serenity::Context,
     message: &serenity::Message,
-) -> Result<serenity::Message> {
+) -> Result<()> {
     _star(Some(ctx), None, message).await
 }
 
-pub async fn star_interaction(
-    ctx: &Context<'_>,
-    message: &serenity::Message,
-) -> Result<serenity::Message> {
+pub async fn star_interaction(ctx: &Context<'_>, message: &serenity::Message) -> Result<()> {
     _star(None, Some(ctx), message).await
 }
 
