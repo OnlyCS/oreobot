@@ -254,7 +254,7 @@ pub mod clone {
     ) -> Result<()> {
         let mut emitter = emitter_arc.lock().await;
 
-        emitter.on_async_filter(
+        emitter.on_filter(
             events::MessageUpdateEvent,
             move |ev_message, ctx| async move {
                 let webhook = ctx
@@ -326,7 +326,7 @@ pub mod clone {
             move |ev_message| ev_message.id.0 == original_id,
         );
 
-        emitter.on_async_filter(
+        emitter.on_filter(
             events::MessageDeleteEvent,
             move |_, ctx| async move {
                 ctx.cache

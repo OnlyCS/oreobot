@@ -6,6 +6,7 @@ extern crate anyhow;
 extern crate chrono;
 extern crate dotenv;
 extern crate futures;
+extern crate itertools;
 extern crate log;
 extern crate poise;
 extern crate serde;

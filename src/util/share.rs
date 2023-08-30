@@ -46,7 +46,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
 
     let mut emitter = emitter_mutex.lock().await;
 
-    emitter.on_async_filter(
+    emitter.on_filter(
         events::ComponentInteractionEvent,
         |press, ctx| async move {
             let message = &press.message;
@@ -85,7 +85,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         |interaction| interaction.data.custom_id == "oreo_share",
     );
 
-    emitter.on_async_filter(
+    emitter.on_filter(
         events::ComponentInteractionEvent,
         |press, ctx| async move {
             let message = &press.message;
