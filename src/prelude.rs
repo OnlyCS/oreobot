@@ -41,6 +41,8 @@ pub use futures::lock::Mutex;
 pub use poise::serenity_prelude as serenity;
 pub use simple_logger::SimpleLogger;
 
+pub use itertools::Itertools;
+
 pub type Shared<T> = Arc<Mutex<T>>;
 
 #[derive(Debug)]

@@ -190,7 +190,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
 
     let mut emitter = emitter_mutex.lock().await;
 
-    emitter.on_async_filter(
+    emitter.on_filter(
         events::MessageReactionAdd,
         |payload, ctx| async move {
             star_no_interaction(&ctx, &payload.message).await?;
@@ -205,7 +205,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         },
     );
 
-    emitter.on_async_filter(
+    emitter.on_filter(
         events::ComponentInteractionEvent,
         |interaction, ctx| async move {
             let author = &interaction.user;
@@ -251,7 +251,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         |interaction| interaction.data.custom_id == "oreo_starboard_delete",
     );
 
-    emitter.on_async_filter(
+    emitter.on_filter(
         events::ModalInteractionEvent,
         |interaction, ctx| async move {
             let prisma = prisma::create().await?;
