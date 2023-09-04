@@ -34,26 +34,20 @@ impl EventEmitter {
         if let Some(listeners) = self.listeners.get_mut(&TypeId::of::<Event>()) {
             let bytes: Vec<u8> = serde_json::to_vec(&argument)?;
 
-            let to_run = listeners
-                .iter()
-                .map(|listener| {
-                    let callback = Arc::clone(&listener.callback);
-                    let filter = listener.filter.as_ref().map(Arc::clone);
-                    let bytes = bytes.clone();
+            for listener in listeners {
+                let bytes = bytes.clone();
 
-                    async move {
-                        if let Some(filter) = filter {
-                            if !filter(bytes.clone()) {
-                                return;
-                            }
-                        }
-
-                        callback(bytes, context.clone()).await.unwrap();
+                if let Some(filter) = &listener.filter {
+                    if !filter(bytes.clone()) {
+                        continue;
                     }
-                })
-                .collect_vec();
+                }
 
-            futures::future::join_all(to_run).await;
+                let callback = listener.callback.clone();
+                let context = context.clone();
+
+                async_non_blocking!({ callback(bytes.clone(), context).await.unwrap() });
+            }
         }
 
         Ok(())

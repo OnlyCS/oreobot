@@ -1,4 +1,13 @@
-#![feature(let_chains, tuple_trait, unboxed_closures, extract_if)]
+// yes to unstable rust, no to unsafe rust :)
+#![feature(
+    let_chains,
+    tuple_trait,
+    unboxed_closures,
+    extract_if,
+    async_fn_in_trait,
+    associated_type_defaults,
+    return_position_impl_trait_in_trait
+)]
 
 #[macro_use]
 extern crate dotenv_codegen;
@@ -21,6 +30,7 @@ mod logging;
 mod nci;
 mod prelude;
 mod prisma;
+mod settings;
 mod util;
 
 use futures::FutureExt;
