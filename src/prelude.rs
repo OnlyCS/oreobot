@@ -26,7 +26,9 @@ pub(crate) use crate::{
     },
 };
 
+use std::future::IntoFuture;
 pub use std::{
+    collections::HashMap,
     default::{self, Default},
     str::FromStr,
     sync::Arc,
@@ -34,6 +36,7 @@ pub use std::{
 };
 
 pub use anyhow::{anyhow, bail, Context as ToAnyhowResult, Result};
+pub use async_trait::async_trait;
 pub use log::{debug, error, info, trace, warn};
 pub use serde::{Deserialize, Serialize};
 
@@ -79,3 +82,11 @@ where
         }
     }
 }
+
+macro_rules! async_non_blocking {
+	($a:block) => {
+		tokio::task::spawn(async move $a)
+	};
+}
+
+pub(crate) use async_non_blocking;
