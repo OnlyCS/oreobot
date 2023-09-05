@@ -181,13 +181,9 @@ pub async fn star_interaction(ctx: &Context<'_>, message: &serenity::Message) ->
 }
 
 pub async fn register(ctx: &serenity::Context) -> Result<()> {
-    let data = ctx.data.read().await;
-    let emitter_mutex = Arc::clone(
-        data.get::<EventEmitterTypeKey>()
-            .context("Could not find event emitter")?,
-    );
-
-    let mut emitter = emitter_mutex.lock().await;
+    let data_arc = data::get_serenity(ctx).await?;
+    let mut data = data_arc.lock().await;
+    let emitter = &mut data.emitter;
 
     emitter.on_filter(
         events::MessageReactionAdd,

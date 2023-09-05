@@ -6,15 +6,9 @@ pub mod payloads;
 use crate::prelude::*;
 
 pub async fn event_handler(ctx: serenity::Context, event: poise::Event<'_>) -> Result<()> {
-    let emitter_mutex = Arc::clone(
-        ctx.data
-            .read()
-            .await
-            .get::<EventEmitterTypeKey>()
-            .context("Could not find event emitter")?,
-    );
-
-    let mut event_emitter = emitter_mutex.lock().await;
+    let data_arc = data::get_serenity(&ctx).await?;
+    let mut data = data_arc.lock().await;
+    let event_emitter = &mut data.emitter;
 
     match event {
         /*** INTERACTION EVENTS ***/

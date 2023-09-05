@@ -117,8 +117,3 @@ impl EventEmitter {
 pub trait EmitterEvent: Send + Sync + 'static {
     type Argument: Serialize + for<'a> Deserialize<'a>;
 }
-
-pub struct EventEmitterTypeKey;
-impl serenity::TypeMapKey for EventEmitterTypeKey {
-    type Value = Shared<EventEmitter>;
-}

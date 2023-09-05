@@ -52,8 +52,7 @@ pub async fn delete(category: serenity::ChannelId) -> Result<()> {
         .channel()
         .update_many(where_param, vec![channel::category::disconnect()])
         .exec()
-        .await
-        .unwrap();
+        .await?;
 
     Ok(())
 }

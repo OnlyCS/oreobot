@@ -1,23 +1,10 @@
-# Oreo Bot
+# Oreo
 
-Oreo Bot is a Discord bot using ~~discord.js~~ Poise and Serentity, and continuing the legacy of the unmaintained Smarty. It's main goal is a utility bot with features that make everyday Discord usage enriched and easier.
+Oreo is a Discord bot using Poise, continuing the legacy of the barely-maintained Smarty. It's main goal is a utility bot with features that make everyday Discord usage enriched and easier.
 
-Also Rust yeaaaaaaaa pog
+## Roadmap
 
-## Notes
-
-Make sure to do this when updating the db:
-
-```rs
-prisma
-	.someschema()
-	.someaction(some_args)
-	// this part, remember to use either ? or unwrap();
-	.exec().await?;
-```
-
-Remember to **include the prelude**
-
-```rs
-use crate::prelude::*
-```
+- This bot is slow af. We need to set up as many caches as possible, to make as few requests to the database as possible
+- Use diesel because it could? be more performant and (probably) will reduce build times in ci
+- More features
+- Better errors (cli, in-discord is fine)

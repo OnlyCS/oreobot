@@ -12,7 +12,9 @@
 #[macro_use]
 extern crate dotenv_codegen;
 extern crate anyhow;
+extern crate async_trait;
 extern crate chrono;
+extern crate color_name;
 extern crate dotenv;
 extern crate futures;
 extern crate itertools;
@@ -49,12 +51,16 @@ async fn main() -> Result<()> {
         })
     });
 
-    let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
-    let event_emitter_clone = Arc::clone(&event_emitter);
+    let data = Arc::new(Mutex::new(Data {
+        emitter: EventEmitter::new(),
+        settings: Settings::new(),
+    }));
+
+    let data_serenity = Arc::clone(&data);
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping::ping(), commands::role::role()],
+            commands: vec![commands::ping::ping(), commands::setting::settings()],
             on_error: |error| {
                 async move {
                     events::error::handle(error).await.unwrap_or(()); // dont throw error to prevent loop
@@ -68,7 +74,7 @@ async fn main() -> Result<()> {
         .client_settings(|client| {
             client
                 .event_handler(handler)
-                .type_map_insert::<EventEmitterTypeKey>(event_emitter_clone)
+                .type_map_insert::<Data>(data_serenity)
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
@@ -79,9 +85,7 @@ async fn main() -> Result<()> {
                 starboard::register(ctx).await?;
                 clone::register(ctx).await?;
 
-                Ok(Data {
-                    emitter: event_emitter,
-                })
+                Ok(data)
             })
         });
 

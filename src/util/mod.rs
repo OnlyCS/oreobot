@@ -1,4 +1,5 @@
-pub mod colors;
+pub mod color;
+pub mod data;
 pub mod embed;
 pub mod is_admin;
 pub mod latency;

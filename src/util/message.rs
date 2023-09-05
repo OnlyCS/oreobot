@@ -66,22 +66,19 @@ pub mod clone {
             })
             .context("Could not get webhook")?;
 
-        let emitter_arc = Arc::clone(
-            ctx.data
-                .read()
-                .await
-                .get::<EventEmitterTypeKey>()
-                .context("Could not find event emitter")?,
-        );
-
         for clone in to_resync {
-            clone_listen(
-                Arc::clone(&emitter_arc),
-                clone.pinned_message_id.parse()?,
-                clone.original_id.parse()?,
-                wh_id.id.0,
-            )
-            .await?;
+            let ctx = ctx.clone();
+
+            async_non_blocking!({
+                clone_listen(
+                    &ctx,
+                    clone.pinned_message_id.parse().unwrap(),
+                    clone.original_id.parse().unwrap(),
+                    wh_id.id.0,
+                )
+                .await
+                .unwrap();
+            });
         }
 
         Ok(())
@@ -96,14 +93,6 @@ pub mod clone {
         mut extra_rows: Vec<serenity::CreateActionRow>,
         sync: bool,
     ) -> Result<serenity::Message> {
-        let emitter_arc = Arc::clone(
-            ctx.data
-                .read()
-                .await
-                .get::<EventEmitterTypeKey>()
-                .context("Could not find event emitter")?,
-        );
-
         let mut wh_message = serenity::ExecuteWebhook::default();
         let mut wh_row = serenity::CreateActionRow::default();
         let mut wh_content = "".to_string();
@@ -240,19 +229,21 @@ pub mod clone {
             let wh_id = webhook.id.0;
             let from_id = message.id.0;
 
-            clone_listen(emitter_arc, cloned_id, from_id, wh_id).await?;
+            clone_listen(&ctx, cloned_id, from_id, wh_id).await?;
         }
 
         Ok(cloned)
     }
 
     async fn clone_listen(
-        emitter_arc: Arc<Mutex<EventEmitter>>,
+        ctx: &serenity::Context,
         wh_message_id: u64,
         original_id: u64,
         webhook_id: u64,
     ) -> Result<()> {
-        let mut emitter = emitter_arc.lock().await;
+        let data_arc = data::get_serenity(ctx).await?;
+        let mut data = data_arc.lock().await;
+        let emitter = &mut data.emitter;
 
         emitter.on_filter(
             events::MessageUpdateEvent,
