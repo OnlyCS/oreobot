@@ -37,22 +37,38 @@ pub async fn update(role: serenity::Role) -> Result<()> {
 
 pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()> {
     let prisma = prisma::create().await?;
+    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
     let prisma_role = prisma
         .role()
         .find_unique(role::id::equals(role.to_string()))
-        .with(role::users::fetch(vec![] /* todo: check if this works and if not, replace */))
+        .with(role::users::fetch(
+            vec![], /* todo: check if this works and if not, replace */
+        ))
         .exec()
         .await?
         .unwrap();
 
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
+    if let Some(mut user) = 'blk: {
+        if !prisma_role.color_role {
+            break 'blk None;
+        };
 
-    if prisma_role.color_role 
-		&& let Some(color_role_user_data) = prisma_role.users()?.first() 
-		&& let Ok(mut user) = nci.member(&ctx,color_role_user_data.id.parse::<u64>()?).await {
+        let Some(user_data) = prisma_role.users()?.first() else {
+            break 'blk None;
+        };
+
+        if user_data.removed {
+            break 'blk None;
+        };
+
+        let Ok(user) = nci.member(&ctx, user_data.id.parse::<u64>()?).await else {
+            break 'blk None;
+        };
+
+        Some(user)
+    } {
         let color = Color::from_hex(prisma_role.color)?.into();
-
         let color_role = nci
             .create_role(&ctx, |role| {
                 role.name(prisma_role.name.clone())
@@ -61,7 +77,7 @@ pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()
             })
             .await?;
 
-		user.add_role(&ctx, color_role.id).await?;
+        user.add_role(&ctx, color_role.id).await?;
 
         prisma
             .role()
@@ -79,7 +95,7 @@ pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()
             .role()
             .update(
                 role::id::equals(role.to_string()),
-                vec![role::deleted::set(true), role::users::set(vec![]) /* if color role, color_role_user relation still exists */],
+                vec![role::deleted::set(true), role::users::set(vec![])],
             )
             .exec()
             .await?;

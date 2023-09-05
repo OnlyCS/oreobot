@@ -58,8 +58,7 @@ impl Color {
     pub fn into_hex_no_hash(&self) -> String {
         vec![self.r, self.g, self.b]
             .into_iter()
-            .enumerate()
-            .map(|(idx, n)| format!("{:x}", n))
+            .map(|n| format!("{:x}", n))
             .join("")
     }
 
@@ -154,8 +153,8 @@ impl poise::SlashArgument for Color {
     }
 
     async fn extract(
-        ctx: &serenity::Context,
-        interaction: poise::ApplicationCommandOrAutocompleteInteraction<'_>,
+        _ctx: &serenity::Context,
+        _interaction: poise::ApplicationCommandOrAutocompleteInteraction<'_>,
         value: &serenity::json::Value,
     ) -> StdResult<Self, poise::SlashArgError> {
         Ok(Self::from_str(value.as_str().unwrap()).unwrap())

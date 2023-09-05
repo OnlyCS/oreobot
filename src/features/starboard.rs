@@ -6,26 +6,17 @@ async fn _star(
     message: &serenity::Message,
 ) -> Result<()> {
     let prisma = prisma::create().await?;
+
     let message_data = prisma
         .message()
         .find_unique(message::id::equals(message.id.to_string()))
+        .with(message::pin::fetch())
         .exec()
         .await?
         .context("Could not find message in database")?;
 
-    let is_pinned = {
-        if message_data.pinned {
-            !prisma
-                .message_pin()
-                .find_unique(message_pin::original_id::equals(message_data.clone().id))
-                .exec()
-                .await?
-                .map(|n| n.removed)
-                .unwrap_or(false)
-        } else {
-            message_data.pinned
-        }
-    };
+    let existing_message_pin = message_data.pin()?;
+    let is_pinned = existing_message_pin.map(|n| !n.removed).unwrap_or(false);
 
     if is_pinned {
         let mut embed = if let Some(ctx) = no_interaction {
@@ -63,23 +54,6 @@ async fn _star(
         }
 
         return Ok(());
-    } else {
-        prisma
-            .message()
-            .update(
-                message::id::equals(message.id.to_string()),
-                vec![message::pinned::set(true)],
-            )
-            .exec()
-            .await?;
-
-        if message_data.pinned {
-            prisma
-                .message_pin()
-                .delete(message_pin::original_id::equals(message_data.id))
-                .exec()
-                .await?;
-        }
     }
 
     let mut row = serenity::CreateActionRow::default();
@@ -108,15 +82,30 @@ async fn _star(
     )
     .await?;
 
-    prisma
-        .message_pin()
-        .create(
-            cloned.id.to_string(),
-            message::id::equals(message.id.to_string()),
-            vec![],
-        )
-        .exec()
-        .await?;
+    if let Some(pin) = existing_message_pin {
+        prisma
+            .message_pin()
+            .update(
+                message_pin::pinned_message_id::equals(pin.pinned_message_id.clone()),
+                vec![
+                    message_pin::removed::set(false),
+                    message_pin::removed_reason::set(None),
+                    message_pin::original::connect(message::id::equals(message.id.to_string())),
+                ],
+            )
+            .exec()
+            .await?;
+    } else {
+        prisma
+            .message_pin()
+            .create(
+                cloned.id.to_string(),
+                message::id::equals(message.id.to_string()),
+                vec![],
+            )
+            .exec()
+            .await?;
+    }
 
     let mut embed = if let Some(ctx) = no_interaction {
         embed::serenity_default(&ctx, EmbedStatus::Sucess)

@@ -2,131 +2,51 @@ pub use crate::prelude::*;
 
 pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Result<()> {
     let prisma = prisma::create().await?;
-
     let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
-    let prisma_user = prisma
+    let user_if_exists = prisma
         .user()
         .find_unique(user::id::equals(member.user.id.to_string()))
-        .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?;
 
-    let color_role = if member.user.bot {
-        member
-            .roles(&ctx)
-            .unwrap_or(vec![])
-            .iter()
-            .find(|role| role.managed)
-            .context("Bot doesnt have managed role wtf?")?
-            .clone()
-    } else {
-        if let Some(prisma_user) = prisma_user.as_ref() {
-            let color_role = prisma_user
-                .roles()?
-                .first()
-                .context("User has no color roles")?;
+    // take care of roles and color roles
+    let color_role = nci
+        .create_role(&ctx, |create| create.name(member.display_name()))
+        .await?;
 
-            let color = Color::from_hex(&color_role.color)?.into();
-
-            let role = nci
-                .create_role(&ctx, |r| {
-                    r.name(color_role.name.clone())
-                        .colour(color)
-                        .mentionable(false)
-                })
-                .await?;
-
-            member.add_role(&ctx, role.id).await?;
-
-            prisma
-                .role()
-                .update(
-                    role::id::equals(color_role.id.to_string()),
-                    vec![
-                        role::id::set(role.id.to_string()),
-                        role::deleted::set(false),
-                        role::users::connect(vec![user::id::equals(member.user.id.to_string())]),
-                    ],
-                )
-                .exec()
-                .await?;
-
-            role
-        } else {
-            let role = nci
-                .create_role(&ctx, |r| {
-                    r.clone_from(&default_role(&member).unwrap());
-                    r
-                })
-                .await?;
-
-            member.add_role(&ctx, role.id).await?;
-
-            prisma
-                .role()
-                .create(
-                    role.id.to_string(),
-                    role.name.clone(),
-                    role.colour.hex(),
-                    vec![role::color_role::set(true)],
-                )
-                .exec()
-                .await?;
-
-            role
-        }
-    };
-
-    if let Some(prisma_user) = prisma_user {
-        let mut updates = vec![];
-
-        updates.push(user::roles::connect(vec![role::id::equals(
-            color_role.id.to_string(),
-        )]));
-
-        updates.push(user::removed::set(false));
-
-        if prisma_user.username != member.user.name {
-            updates.push(user::username::set(member.user.name.clone()));
+    let mut roles_to_add = vec![color_role.id];
+    if let Some(user) = &user_if_exists {
+        if user.admin {
+            roles_to_add.push(nci::roles::OVERRIDES);
         }
 
-        if prisma_user.nickname != member.nick {
-            updates.push(user::nickname::set(member.nick.clone()));
+        if user.verified {
+            roles_to_add.push(nci::roles::MEMBERS);
         }
 
+        if user.bot {
+            roles_to_add.push(nci::roles::BOTS);
+        }
+    }
+    member.add_roles(&ctx, &roles_to_add).await?;
+
+    if let Some(user) = &user_if_exists {
         prisma
             .user()
-            .update(user::id::equals(prisma_user.id), updates)
-            .exec()
-            .await?;
-
-        let mut new_roles = vec![];
-
-        if prisma_user.admin {
-            new_roles.push(nci::roles::OVERRIDES);
-        }
-
-        if prisma_user.verified {
-            new_roles.push(nci::roles::MEMBERS)
-        }
-
-        if prisma_user.bot {
-            new_roles.push(nci::roles::BOTS);
-        }
-
-        if !new_roles.is_empty() {
-            member.add_roles(&ctx, &new_roles).await?;
-        }
-    } else {
-        prisma
-            .user()
-            .create(
-                member.user.id.to_string(),
-                member.user.name.clone(),
-                vec![user::roles::connect(vec![role::id::equals(
-                    color_role.id.to_string(),
-                )])],
+            .update(
+                user::id::equals(user.id.clone()),
+                vec![
+                    user::username::set(member.user.name),
+                    user::nickname::set(member.nick),
+                    user::roles::set(
+                        roles_to_add
+                            .into_iter()
+                            .map(|n| role::id::equals(n.to_string()))
+                            .collect_vec(),
+                    ),
+                    user::removed::set(false),
+                ],
             )
             .exec()
             .await?;
@@ -213,6 +133,7 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
 
 pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
     let prisma = prisma::create().await?;
+    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
 
     let prisma_user = prisma
         .user()
@@ -222,24 +143,22 @@ pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
         .await?
         .context("Could not find user in database")?;
 
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
-
     let color_role = prisma_user
         .roles()?
         .first()
-        .context("User has no color roles")?;
-
-    // this will send a roledelete event, handled in logging/role.rs
-    nci.delete_role(&ctx, color_role.id.parse::<u64>()?).await?;
+        .context("User has no color role")?;
 
     prisma
         .user()
         .update(
             user::id::equals(id.to_string()),
-            vec![user::removed::set(true), user::roles::set(vec![])], /* color role relation is still preserved in case the user re-joins */
+            vec![user::removed::set(true), user::roles::set(vec![])],
         )
         .exec()
         .await?;
+
+    // this will send a roledelete event, handled in logging/role.rs
+    nci.delete_role(&ctx, color_role.id.parse::<u64>()?).await?;
 
     Ok(())
 }

@@ -78,8 +78,7 @@ model Message {
     deleted Boolean @default(false)
     edited  Boolean @default(false)
 
-    pinned Boolean     @default(false) // when you have pinned the message but data is not available yet
-    pin    MessagePin?
+    pin MessagePin?
 }
 
 model MessagePin {
