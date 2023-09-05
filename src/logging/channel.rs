@@ -42,6 +42,10 @@ pub async fn create(channel: serenity::GuildChannel) -> Result<()> {
 }
 
 pub async fn update(channel: serenity::GuildChannel) -> Result<()> {
+    if channel.is_thread() {
+        return Ok(());
+    }
+
     let prisma = prisma::create().await?;
 
     prisma
@@ -93,16 +97,18 @@ pub async fn delete(channel: serenity::ChannelId) -> Result<()> {
         .exec()
         .await?;
 
-    let updates = messages.iter().map(|n| n.id.clone()).map(|id| {
-        prisma.attachment().update_many(
-            vec![attachment::message_id::equals(id)],
-            vec![attachment::deleted::set(true)],
-        )
-    });
+    let updates = messages
+        .iter()
+        .map(|n| n.id.clone())
+        .map(|id| {
+            prisma.attachment().update_many(
+                vec![attachment::message_id::equals(id)],
+                vec![attachment::deleted::set(true)],
+            )
+        })
+        .collect_vec();
 
-    for u in updates {
-        u.exec().await?;
-    }
+    prisma._batch(updates).await?;
 
     Ok(())
 }

@@ -42,15 +42,17 @@ pub async fn delete(category: serenity::ChannelId) -> Result<()> {
         .exec()
         .await?;
 
-    let mut where_param = vec![];
-
-    for prisma_channel in category.channels()? {
-        where_param.push(channel::id::equals(prisma_channel.id.clone()));
-    }
+    let disconnect_channels = category
+        .channels()?
+        .into_iter()
+        .map(|n| &n.id)
+        .cloned()
+        .map(|n| channel::id::equals(n))
+        .collect_vec();
 
     prisma
         .channel()
-        .update_many(where_param, vec![channel::category::disconnect()])
+        .update_many(disconnect_channels, vec![channel::category::disconnect()])
         .exec()
         .await?;
 

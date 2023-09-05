@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::prelude::*;
 
 pub async fn create(message: serenity::Message) -> Result<()> {
@@ -42,7 +40,7 @@ pub async fn create(message: serenity::Message) -> Result<()> {
 pub async fn update(message: serenity::MessageUpdateEvent) -> Result<()> {
     let prisma = prisma::create().await?;
 
-    let prisma_message = prisma
+    prisma
         .message()
         .update(
             message::id::equals(message.id.to_string()),
@@ -51,36 +49,8 @@ pub async fn update(message: serenity::MessageUpdateEvent) -> Result<()> {
                 message::edited::set(true),
             ],
         )
-        .with(message::attachments::fetch(vec![
-            attachment::message_id::equals(message.id.to_string()),
-        ]))
         .exec()
         .await?;
-
-    if let Some(attachments) = message.attachments {
-        let attachment_hs: HashSet<String> = attachments.iter().map(|a| a.id.to_string()).collect();
-
-        let new_attachment_hs: HashSet<String> = prisma_message
-            .attachments
-            .unwrap_or(vec![])
-            .iter()
-            .map(|a| a.id.to_string())
-            .collect();
-
-        let diff = &new_attachment_hs - &attachment_hs;
-
-        let mut where_params = vec![];
-
-        for id in diff.iter().cloned() {
-            where_params.push(attachment::id::equals(id));
-        }
-
-        prisma
-            .attachment()
-            .update_many(where_params, vec![attachment::deleted::set(true)])
-            .exec()
-            .await?;
-    }
 
     Ok(())
 }
