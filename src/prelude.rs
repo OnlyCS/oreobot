@@ -1,6 +1,6 @@
 pub(crate) use crate::{
     events::{
-        emitter::{EmitterEvent, EventEmitter, EventEmitterTypeKey},
+        emitter::{EmitterEvent, EventEmitter},
         events, payloads,
     },
     features::starboard,
@@ -12,8 +12,10 @@ pub(crate) use crate::{
             ChannelType, InteractionType, PrismaClient,
         },
     },
+    settings::{all as settings, Settings, UserSetting},
     util::{
-        colors,
+        color::{consts as colors, Color},
+        data,
         embed::{self, EmbedStatus},
         is_admin, latency,
         loading::Loading,
@@ -26,10 +28,10 @@ pub(crate) use crate::{
     },
 };
 
-use std::future::IntoFuture;
 pub use std::{
     collections::HashMap,
     default::{self, Default},
+    result::Result as StdResult,
     str::FromStr,
     sync::Arc,
     thread,
@@ -48,12 +50,16 @@ pub use itertools::Itertools;
 
 pub type Shared<T> = Arc<Mutex<T>>;
 
-#[derive(Debug)]
 pub struct Data {
-    pub emitter: Shared<EventEmitter>,
+    pub emitter: EventEmitter,
+    pub settings: Settings,
 }
 
-pub type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
+impl serenity::TypeMapKey for Data {
+    type Value = Arc<Mutex<Self>>;
+}
+
+pub type Context<'a> = poise::Context<'a, Shared<Data>, anyhow::Error>;
 
 pub trait IsThread {
     fn is_thread(&self) -> bool;

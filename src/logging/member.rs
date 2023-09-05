@@ -27,12 +27,12 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
                 .first()
                 .context("User has no color roles")?;
 
-            let color = colors::hex_to_color(color_role.color.clone())?;
+            let color = Color::from_hex(&color_role.color)?.into();
 
             let role = nci
                 .create_role(&ctx, |r| {
                     r.name(color_role.name.clone())
-                        .colour(color.0.into())
+                        .colour(color)
                         .mentionable(false)
                 })
                 .await?;

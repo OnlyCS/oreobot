@@ -10,15 +10,9 @@ pub mod ready;
 use crate::prelude::*;
 
 pub async fn register(ctx: &serenity::Context) -> Result<()> {
-    let emitter_mutex = Arc::clone(
-        ctx.data
-            .read()
-            .await
-            .get::<EventEmitterTypeKey>()
-            .context("Could not find event emitter")?,
-    );
-
-    let mut emitter = emitter_mutex.lock().await;
+    let data_arc = data::get_serenity(ctx).await?;
+    let mut data = data_arc.lock().await;
+    let emitter = &mut data.emitter;
 
     // interaction events
     emitter.on(events::CommandInteractionEvent, |interaction, _| {

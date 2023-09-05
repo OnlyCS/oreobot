@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn handle(framework_error: poise::FrameworkError<'_, Data, anyhow::Error>) -> Result<()> {
+pub async fn handle(framework_error: poise::FrameworkError<'_, Shared<Data>, anyhow::Error>) -> Result<()> {
     match &framework_error {
         poise::FrameworkError::Command { error, ctx } => {
             if error.to_string().starts_with("Warning: ") {

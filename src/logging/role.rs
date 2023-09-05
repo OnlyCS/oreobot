@@ -51,7 +51,7 @@ pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()
     if prisma_role.color_role 
 		&& let Some(color_role_user_data) = prisma_role.users()?.first() 
 		&& let Ok(mut user) = nci.member(&ctx,color_role_user_data.id.parse::<u64>()?).await {
-        let color = colors::hex_to_color(prisma_role.color.clone())?.0.into();
+        let color = Color::from_hex(prisma_role.color)?.into();
 
         let color_role = nci
             .create_role(&ctx, |role| {
