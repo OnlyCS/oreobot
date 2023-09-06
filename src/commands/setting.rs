@@ -37,7 +37,7 @@ macro_rules! user_setting {
 				let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
 
 				embed.title(format!("Settings > {} > Set", $stgname));
-				embed.description(format!("Sucessfully set the {} setting", $stgname));
+				embed.description(format!("Sucessfully set the {} setting to `{}`", $stgname, cache.get_user::<settings::$stg>(user.id).await?));
 
 				loading.last(&ctx, embed).await?;
 			} else {
