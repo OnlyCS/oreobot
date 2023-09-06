@@ -3,7 +3,7 @@ use crate::prelude::*;
 use futures::{future::BoxFuture, Future, FutureExt};
 use std::{any::TypeId, collections::HashMap};
 
-type Output = Result<()>;
+type Output = Result<(), AnyError>;
 type AsyncOutput = BoxFuture<'static, Output>;
 
 pub struct Listener {
@@ -27,7 +27,7 @@ impl EventEmitter {
         _event: Event, /* making the user specify generic argument for this looks ugly af */
         argument: Event::Argument,
         context: &serenity::Context,
-    ) -> Result<()>
+    ) -> Result<(), EventError>
     where
         Event: EmitterEvent,
     {
@@ -60,7 +60,7 @@ impl EventEmitter {
     ) where
         Event: EmitterEvent,
         Callback: Fn(Event::Argument, serenity::Context) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<()>> + Send + 'static,
+        Fut: Future<Output = Output> + Send + 'static,
     {
         let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {
             callback(serde_json::from_slice(&bytes).unwrap(), ctx).boxed()
@@ -89,7 +89,7 @@ impl EventEmitter {
     ) where
         Event: EmitterEvent,
         Callback: Fn(Event::Argument, serenity::Context) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<()>> + Send + 'static,
+        Fut: Future<Output = Output> + Send + 'static,
         Filter: Fn(Event::Argument) -> bool + Send + Sync + 'static,
     {
         let parsed_callback = move |bytes: Vec<u8>, ctx: serenity::Context| {

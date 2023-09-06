@@ -5,7 +5,7 @@ pub struct Loading<'a> {
 }
 
 impl<'a> Loading<'a> {
-    pub async fn new<S>(ctx: &'a Context<'_>, msg: S) -> Result<Loading<'a>>
+    pub async fn new<S>(ctx: &'a Context<'_>, msg: S) -> Result<Loading<'a>, serenity::Error>
     where
         S: ToString,
     {
@@ -29,7 +29,7 @@ impl<'a> Loading<'a> {
         Ok(Self { handle })
     }
 
-    pub async fn update<S>(&self, ctx: &'a Context<'_>, msg: S) -> Result<()>
+    pub async fn update<S>(&self, ctx: &'a Context<'_>, msg: S) -> Result<(), serenity::Error>
     where
         S: ToString,
     {
@@ -57,7 +57,7 @@ impl<'a> Loading<'a> {
         self,
         ctx: &'a Context<'_>,
         embed: serenity::CreateEmbed,
-    ) -> Result<poise::ReplyHandle<'a>> {
+    ) -> Result<poise::ReplyHandle<'a>, serenity::Error> {
         self.handle
             .edit(ctx.clone(), |edit| {
                 edit.embed(|e| {

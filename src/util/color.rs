@@ -32,7 +32,7 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn from_hex<S>(hex: S) -> Result<Self>
+    pub fn from_hex<S>(hex: S) -> Result<Self, ColorParseError>
     where
         S: ToString,
     {
@@ -46,7 +46,7 @@ impl Color {
             .map(|n| u8::from_str_radix(&n, 16)) // parse to int
             .map(Result::unwrap) // unwrap like this because it looks cool
             .collect_tuple() // r,g,b
-            .context("Problem parsing hex")?;
+            .make_error(ColorParseError::ParseHex(hex.to_string()))?;
 
         Ok(Self { r, g, b })
     }
@@ -66,7 +66,7 @@ impl Color {
         Self { r, g, b }
     }
 
-    pub fn from_color_name<S>(name: S) -> Result<Self>
+    pub fn from_color_name<S>(name: S) -> Result<Self, ColorParseError>
     where
         S: ToString,
     {
@@ -104,9 +104,9 @@ impl From<Color> for serenity::Color {
 }
 
 impl FromStr for Color {
-    type Err = anyhow::Error;
+    type Err = ColorParseError;
 
-    fn from_str(value: &str) -> Result<Self> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         let value = value.to_string();
 
         let from_hex = Color::from_hex(&value);
@@ -115,7 +115,7 @@ impl FromStr for Color {
             let results = to_parse.split(",").map(str::trim).map(u8::from_str);
 
             if results.clone().any(|n| n.is_err()) {
-                Err(anyhow!("Could not parse from rgb"))
+                Err(ColorParseError::ParseStr(value.to_string()))
             } else {
                 Ok(results
                     .map(Result::unwrap)
@@ -124,13 +124,13 @@ impl FromStr for Color {
                     .unwrap())
             }
         };
-        let from_name = Color::from_color_name(value);
+        let from_name = Color::from_color_name(&value);
 
         vec![from_hex, from_rgb, from_name]
             .into_iter()
             .filter_map(Result::ok)
             .next()
-            .context("Could not parse color")
+            .make_error(ColorParseError::ParseStr(String::from(value)))
     }
 }
 
@@ -156,7 +156,7 @@ impl poise::SlashArgument for Color {
         _ctx: &serenity::Context,
         _interaction: poise::ApplicationCommandOrAutocompleteInteraction<'_>,
         value: &serenity::json::Value,
-    ) -> StdResult<Self, poise::SlashArgError> {
+    ) -> Result<Self, poise::SlashArgError> {
         Ok(Self::from_str(value.as_str().unwrap()).unwrap())
     }
 }

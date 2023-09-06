@@ -7,7 +7,7 @@ pub struct RoleColor;
 impl UserSetting for RoleColor {
     type Value = Color;
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value> {
+    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
 
         let color = prisma
@@ -17,31 +17,31 @@ impl UserSetting for RoleColor {
             .exec()
             .await?
             .map(|n| n.color)
-            .context("No color role found")?;
+            .make_error(anyhow!("no color role found for user {}", user))?;
 
-        Color::from_hex(color)
+        Ok(Color::from_hex(color)?)
     }
 
     async fn on_change(
         ctx: &serenity::Context,
         value: Self::Value,
         user: serenity::UserId,
-    ) -> Result<()> {
+    ) -> Result<(), AnyError> {
         let role = ctx
             .cache
             .member(nci::ID, user)
-            .context("Could not find this user")?
+            .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
             .filter(|r| {
                 vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
             })
             .next()
-            .context("User has no color role")?;
+            .make_error(anyhow!("User has no color role"))?;
 
         ctx.cache
             .guild(nci::ID)
-            .context("NCI not found in cache")?
+            .make_error(anyhow!("NCI not found in cache"))?
             .edit_role(&ctx, role, |edit| edit.colour(value.into()))
             .await?;
 
@@ -56,7 +56,7 @@ pub struct RoleName;
 impl UserSetting for RoleName {
     type Value = String;
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value> {
+    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
 
         let name = prisma
@@ -66,7 +66,7 @@ impl UserSetting for RoleName {
             .exec()
             .await?
             .map(|n| n.name)
-            .context("No color role found")?;
+            .make_error(anyhow!("No color role found"))?;
 
         Ok(name)
     }
@@ -75,22 +75,22 @@ impl UserSetting for RoleName {
         ctx: &serenity::Context,
         value: Self::Value,
         user: serenity::UserId,
-    ) -> Result<()> {
+    ) -> Result<(), AnyError> {
         let role = ctx
             .cache
             .member(nci::ID, user)
-            .context("Could not find this user")?
+            .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
             .filter(|r| {
                 vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
             })
             .next()
-            .context("User has no color role")?;
+            .make_error(anyhow!("User has no color role"))?;
 
         ctx.cache
             .guild(nci::ID)
-            .context("NCI not found in cache")?
+            .make_error(anyhow!("NCI not found in cache"))?
             .edit_role(&ctx, role, |edit| edit.name(value))
             .await?;
 

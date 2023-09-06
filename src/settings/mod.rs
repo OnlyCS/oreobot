@@ -14,8 +14,8 @@ pub trait GuildSetting: Send + Sized + 'static {
         + Display
         + 'static;
 
-    async fn default_value() -> Result<Self::Value>;
-    async fn on_change(_ctx: &serenity::Context, _to: Self::Value) -> Result<()> {
+    async fn default_value() -> Result<Self::Value, AnyError>;
+    async fn on_change(_ctx: &serenity::Context, _to: Self::Value) -> Result<(), AnyError> {
         Ok(())
     }
 }
@@ -31,12 +31,12 @@ pub trait UserSetting: Send + Sized + 'static {
         + Clone
         + 'static;
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value>;
+    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError>;
     async fn on_change(
         _ctx: &serenity::Context,
         _to: Self::Value,
         _user: serenity::UserId,
-    ) -> Result<()> {
+    ) -> Result<(), AnyError> {
         Ok(())
     }
 }
@@ -55,7 +55,7 @@ impl Settings {
         }
     }
 
-    pub async fn get_guild<S>(&mut self) -> Result<S::Value>
+    pub async fn get_guild<S>(&mut self) -> Result<S::Value, SettingsError>
     where
         S: GuildSetting,
     {
@@ -64,7 +64,13 @@ impl Settings {
         if let Some(to_deser) = item {
             Ok(serde_json::from_str(to_deser)?)
         } else {
-            let default = S::default_value().await?;
+            let default =
+                S::default_value()
+                    .await
+                    .make_error(SettingsError::DefaultValueFailed(
+                        std::any::type_name::<S>().into(),
+                    ))?;
+
             self.guild
                 .insert(TypeId::of::<S>(), serde_json::to_string(&default)?);
 
@@ -72,7 +78,11 @@ impl Settings {
         }
     }
 
-    pub async fn set_guild<S>(&mut self, ctx: serenity::Context, value: S::Value) -> Result<()>
+    pub async fn set_guild<S>(
+        &mut self,
+        ctx: serenity::Context,
+        value: S::Value,
+    ) -> Result<(), SettingsError>
     where
         S: GuildSetting,
     {
@@ -80,13 +90,18 @@ impl Settings {
             .insert(TypeId::of::<S>(), serde_json::to_string(&value)?);
 
         async_non_blocking!({
-            S::on_change(&ctx, value).await.unwrap();
+            S::on_change(&ctx, value)
+                .await
+                .make_error(SettingsError::OnChangeFailed(
+                    std::any::type_name::<S>().to_string(),
+                ))
+                .unwrap();
         });
 
         Ok(())
     }
 
-    pub async fn get_user<S>(&mut self, user: serenity::UserId) -> Result<S::Value>
+    pub async fn get_user<S>(&mut self, user: serenity::UserId) -> Result<S::Value, SettingsError>
     where
         S: UserSetting,
     {
@@ -95,7 +110,13 @@ impl Settings {
         if let Some(to_deser) = item {
             Ok(serde_json::from_str(to_deser)?)
         } else {
-            let default = S::default_value(user).await?;
+            let default =
+                S::default_value(user)
+                    .await
+                    .make_error(SettingsError::DefaultValueFailed(
+                        std::any::type_name::<S>().into(),
+                    ))?;
+
             self.user
                 .insert((TypeId::of::<S>(), user), serde_json::to_string(&default)?);
 
@@ -108,7 +129,7 @@ impl Settings {
         ctx: serenity::Context,
         value: S::Value,
         user: serenity::UserId,
-    ) -> Result<()>
+    ) -> Result<(), SettingsError>
     where
         S: UserSetting,
     {
@@ -116,7 +137,12 @@ impl Settings {
             .insert((TypeId::of::<S>(), user), serde_json::to_string(&value)?);
 
         async_non_blocking!({
-            S::on_change(&ctx, value, user).await.unwrap();
+            S::on_change(&ctx, value, user)
+                .await
+                .make_error(SettingsError::OnChangeFailed(
+                    std::any::type_name::<S>().to_string(),
+                ))
+                .unwrap();
         });
 
         Ok(())

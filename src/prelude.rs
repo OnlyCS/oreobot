@@ -1,10 +1,11 @@
 pub(crate) use crate::{
+    error::*,
     events::{
         emitter::{EmitterEvent, EventEmitter},
         events, payloads,
     },
     features::starboard,
-    logging, nci,
+    nci,
     prisma::{
         self,
         prisma_client::{
@@ -31,22 +32,20 @@ pub(crate) use crate::{
 pub use std::{
     collections::HashMap,
     default::{self, Default},
-    result::Result as StdResult,
     str::FromStr,
     sync::Arc,
     thread,
 };
 
-pub use anyhow::{anyhow, bail, Context as ToAnyhowResult, Result};
 pub use async_trait::async_trait;
-pub use log::{debug, error, info, trace, warn};
-pub use serde::{Deserialize, Serialize};
-
 pub use futures::lock::Mutex;
-pub use poise::serenity_prelude as serenity;
-pub use simple_logger::SimpleLogger;
-
 pub use itertools::Itertools;
+pub use log::{debug, error, info, trace, warn};
+pub use poise::serenity_prelude as serenity;
+pub use prisma_client_rust::{NewClientError, QueryError, RelationNotFetchedError};
+pub use serde::{Deserialize, Serialize};
+pub use simple_logger::SimpleLogger;
+pub use thiserror::Error;
 
 pub type Shared<T> = Arc<Mutex<T>>;
 
@@ -59,7 +58,7 @@ impl serenity::TypeMapKey for Data {
     type Value = Arc<Mutex<Self>>;
 }
 
-pub type Context<'a> = poise::Context<'a, Shared<Data>, anyhow::Error>;
+pub type Context<'a> = poise::Context<'a, Shared<Data>, CommandError>;
 
 pub trait IsThread {
     fn is_thread(&self) -> bool;

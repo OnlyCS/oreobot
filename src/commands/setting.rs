@@ -7,7 +7,7 @@ macro_rules! user_setting {
             ctx: Context<'_>,
             #[description = "the value to set"] value: Option<<settings::$stg as UserSetting>::Value>,
 			#[description = "manage this user, admins only"] user: Option<serenity::Member>
-        ) -> Result<()> {
+        ) -> Result<(), CommandError> {
 			let loading = Loading::new(&ctx, "Locking settings.\nDepending on how long the bot has been up, this may take awhile.").await?;
 			let mut data = ctx.data().lock().await;
 			let settings = &mut data.settings;
@@ -57,7 +57,7 @@ macro_rules! user_setting {
 macro_rules! settings_wrapper {
     ($($fnname:expr),*) => {
         #[poise::command(slash_command, subcommands($($fnname,)*))]
-        pub async fn settings(_: Context<'_>) -> Result<()> {
+        pub async fn settings(_: Context<'_>) -> Result<(), CommandError> {
             Ok(())
         }
     };

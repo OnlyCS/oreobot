@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn create(role: serenity::Role) -> Result<()> {
+pub async fn create(role: serenity::Role) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -17,7 +17,7 @@ pub async fn create(role: serenity::Role) -> Result<()> {
     Ok(())
 }
 
-pub async fn update(role: serenity::Role) -> Result<()> {
+pub async fn update(role: serenity::Role) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -35,9 +35,12 @@ pub async fn update(role: serenity::Role) -> Result<()> {
     Ok(())
 }
 
-pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()> {
+pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
+    let nci = ctx
+        .cache
+        .guild(nci::ID)
+        .make_error(LoggingError::NciNotFound)?;
 
     let prisma_role = prisma
         .role()
@@ -62,7 +65,7 @@ pub async fn delete(role: serenity::RoleId, ctx: serenity::Context) -> Result<()
             break 'blk None;
         };
 
-        let Ok(user) = nci.member(&ctx, user_data.id.parse::<u64>()?).await else {
+        let Ok(user) = nci.member(&ctx, user_data.id.parse::<u64>().unwrap()).await else {
             break 'blk None;
         };
 
