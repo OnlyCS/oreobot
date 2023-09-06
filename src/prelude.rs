@@ -5,7 +5,7 @@ pub(crate) use crate::{
         emitter::{EmitterEvent, EventEmitter},
         events, payloads,
     },
-    features::starboard,
+    features::{impersonate, starboard},
     nci,
     prisma::{
         self,

@@ -7,7 +7,7 @@ pub struct Impersonation;
 impl UserCache for Impersonation {
     type Value = Option<serenity::UserId>;
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
+    async fn default_value(_: serenity::UserId) -> Result<Self::Value, AnyError> {
         Ok(None)
     }
 }

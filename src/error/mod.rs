@@ -32,18 +32,16 @@ pub enum CommandError {
     #[error("prisma error")]
     Prisma(#[from] PrismaError),
 
-    #[error("error while running command {command_name}: {description}")]
+    #[error("error while running command: {description}")]
     RuntimeError {
         title: &'static str,
         description: &'static str,
-        command_name: &'static str,
     },
 
-    #[error("warning while running command {command_name}: {description}")]
+    #[error("warning while running command: {description}")]
     RuntimeWarning {
         title: &'static str,
         description: &'static str,
-        command_name: &'static str,
     },
 }
 
@@ -72,6 +70,9 @@ pub enum StarboardError {
 
     #[error("serenity error")]
     Serenity(#[from] serenity::Error),
+
+    #[error("clone builder unfinished")]
+    UnfinishedBuilder(#[from] UnfinishedBuilderError),
 }
 
 #[derive(Error, Debug)]
@@ -108,6 +109,9 @@ pub enum LoggingError {
 
     #[error("{0} not found in database")]
     NotFound(String),
+
+    #[error("warning: user with id {0} impersonated, skipping")]
+    UserImpersonated(serenity::UserId),
 }
 
 #[derive(Error, Debug)]
@@ -198,7 +202,14 @@ pub enum AnyError {
 
     #[error("prisma error")]
     Prisma(#[from] PrismaError),
+
+    #[error("clone builder unfinished")]
+    UnfinishedBuilder(#[from] UnfinishedBuilderError),
 }
+
+#[derive(Error, Debug)]
+#[error("required field(s) {0:?} not found in database")]
+pub struct UnfinishedBuilderError(pub Vec<&'static str>);
 
 pub trait MakeError<T, E> {
     fn make_error(self, error: E) -> Result<T, E>;

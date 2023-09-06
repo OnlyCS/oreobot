@@ -43,7 +43,11 @@ use crate::prelude::*;
 #[tokio::main]
 async fn main() -> Result<(), AnyError> {
     SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
+        .with_level(if cfg!(debug_assertions) {
+            log::LevelFilter::Debug
+        } else {
+            log::LevelFilter::Info
+        })
         .init()
         .make_error(anyhow!("failed to initialize logger"))?;
 
@@ -62,7 +66,11 @@ async fn main() -> Result<(), AnyError> {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping::ping(), commands::setting::settings()],
+            commands: vec![
+                commands::ping::ping(),
+                commands::setting::settings(),
+                commands::impersonate::impersonate(),
+            ],
             on_error: |error| {
                 async move {
                     events::error::handle(error).await.unwrap_or(()); // dont throw error to prevent loop
@@ -85,6 +93,7 @@ async fn main() -> Result<(), AnyError> {
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
 
                 async_non_blocking!({
+                    impersonate::register(&ctx).await;
                     logging::register(&ctx).await;
                     share::register(&ctx).await;
                     starboard::register(&ctx).await.unwrap();
