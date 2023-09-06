@@ -9,81 +9,110 @@ pub mod ready;
 
 use crate::prelude::*;
 
-pub async fn register(ctx: &serenity::Context) -> Result<()> {
-    let data_arc = data::get_serenity(ctx).await?;
+pub async fn register(ctx: &serenity::Context) {
+    let data_arc = data::get_serenity(ctx).await;
     let mut data = data_arc.lock().await;
     let emitter = &mut data.emitter;
 
     // interaction events
-    emitter.on(events::CommandInteractionEvent, |interaction, _| {
-        interaction::command(interaction)
-    });
+    emitter.on(
+        events::CommandInteractionEvent,
+        |interaction, _| async move { Ok(interaction::command(interaction).await?) },
+    );
 
-    emitter.on(events::ComponentInteractionEvent, |interaction, _| {
-        interaction::message_component(interaction)
-    });
+    emitter.on(
+        events::ComponentInteractionEvent,
+        |interaction, _| async move { Ok(interaction::message_component(interaction).await?) },
+    );
 
-    emitter.on(events::ModalInteractionEvent, |interaction, _| {
-        interaction::modal_submit(interaction)
+    emitter.on(events::ModalInteractionEvent, |interaction, _| async move {
+        Ok(interaction::modal_submit(interaction).await?)
     });
 
     // category events
-    emitter.on(events::CategoryCreateEvent, |category, _| {
-        category::create(category)
+    emitter.on(events::CategoryCreateEvent, |category, _| async move {
+        Ok(category::create(category).await?)
     });
 
-    emitter.on(events::CategoryUpdateEvent, |category, _| {
-        category::update(category)
+    emitter.on(events::CategoryUpdateEvent, |category, _| async move {
+        Ok(category::update(category).await?)
     });
 
-    emitter.on(events::CategoryDeleteEvent, |category, _| {
-        category::delete(category.id)
+    emitter.on(events::CategoryDeleteEvent, |category, _| async move {
+        Ok(category::delete(category.id).await?)
     });
 
     // channel events
-    emitter.on(events::ChannelCreateEvent, |channel, _| {
-        channel::create(channel)
+    emitter.on(events::ChannelCreateEvent, |channel, _| async move {
+        match channel::create(channel.clone()).await {
+            Ok(_) => Ok(()),
+            Err(LoggingError::ChannelIsThread(_)) => {
+                warn!("Channel {} is a thread, ignoring", channel.id);
+                Ok(())
+            }
+            Err(e) => Err(e)?,
+        }
     });
 
-    emitter.on(events::ChannelUpdateEvent, |channel, _| {
-        channel::update(channel)
+    emitter.on(events::ChannelUpdateEvent, |channel, _| async move {
+        match channel::update(channel.clone()).await {
+            Ok(_) => Ok(()),
+            Err(LoggingError::ChannelIsThread(_)) => {
+                warn!("Channel {} is a thread, ignoring", channel.id);
+                Ok(())
+            }
+            Err(e) => Err(e)?,
+        }
     });
 
-    emitter.on(events::ChannelDeleteEvent, |channel, _| {
-        channel::delete(channel.id)
+    emitter.on(events::ChannelDeleteEvent, |channel, _| async move {
+        match channel::delete(channel.id).await {
+            Ok(_) => Ok(()),
+            Err(LoggingError::ChannelIsThread(_)) => {
+                warn!("Channel {} is a thread, ignoring", channel.id);
+                Ok(())
+            }
+            Err(e) => Err(e)?,
+        }
     });
 
     // message events
-    emitter.on(events::MessageCreateEvent, |message, _| {
-        message::create(message)
+    emitter.on(events::MessageCreateEvent, |message, _| async move {
+        Ok(message::create(message).await?)
     });
 
-    emitter.on(events::MessageUpdateEvent, |event, _| {
-        message::update(event)
+    emitter.on(events::MessageUpdateEvent, |event, _| async move {
+        Ok(message::update(event).await?)
     });
 
-    emitter.on(events::MessageDeleteEvent, |payload, _| {
-        message::delete(payload.message_id)
+    emitter.on(events::MessageDeleteEvent, |payload, _| async move {
+        Ok(message::delete(payload.message_id).await?)
     });
 
     // role events
-    emitter.on(events::RoleCreateEvent, |role, _| role::create(role));
-    emitter.on(events::RoleUpdateEvent, |role, _| role::update(role));
-    emitter.on(events::RoleDeleteEvent, |payload, ctx| {
-        role::delete(payload.role_id, ctx)
+    emitter.on(events::RoleCreateEvent, |role, _| async move {
+        Ok(role::create(role).await?)
+    });
+
+    emitter.on(events::RoleUpdateEvent, |role, _| async move {
+        Ok(role::update(role).await?)
+    });
+
+    emitter.on(events::RoleDeleteEvent, |payload, ctx| async move {
+        Ok(role::delete(payload.role_id, ctx).await?)
     });
 
     // member events
-    emitter.on(events::MemberJoinEvent, |member, ctx| {
-        member::join(member, ctx)
+    emitter.on(events::MemberJoinEvent, |member, ctx| async move {
+        Ok(member::join(member, ctx).await?)
     });
 
-    emitter.on(events::MemberUpdateEvent, |member, ctx| {
-        member::update(member, ctx)
+    emitter.on(events::MemberUpdateEvent, |member, ctx| async move {
+        Ok(member::update(member, ctx).await?)
     });
 
-    emitter.on(events::MemberLeaveEvent, |payload, ctx| {
-        member::leave(payload.user.id, ctx)
+    emitter.on(events::MemberLeaveEvent, |payload, ctx| async move {
+        Ok(member::leave(payload.user.id, ctx).await?)
     });
 
     // ready event
@@ -98,6 +127,4 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
 
         Ok(())
     });
-
-    Ok(())
 }

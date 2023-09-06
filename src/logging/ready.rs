@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
     // fetch all roles from discord and the database
     let roles = nci.roles.values().collect::<Vec<_>>();
     let prisma_roles = prisma.role().find_many(vec![]).exec().await?;
@@ -67,7 +67,7 @@ async fn users(
     ctx: &serenity::Context,
     nci: &serenity::Guild,
     prisma: &PrismaClient,
-) -> Result<()> {
+) -> Result<(), LoggingError> {
     let mut users = nci.members.values().cloned().collect::<Vec<_>>();
     let prisma_users = prisma
         .user()
@@ -89,7 +89,7 @@ async fn users(
             None => {
                 let role = nci
                     .create_role(&ctx, |r| {
-                        r.clone_from(&default_role(member).unwrap());
+                        r.clone_from(&default_role(member));
                         r
                     })
                     .await?;
@@ -225,7 +225,7 @@ async fn users(
     Ok(())
 }
 
-async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
     let prisma_categories = prisma.channel_category().find_many(vec![]).exec().await?;
     let categories = nci
         .channels
@@ -288,7 +288,7 @@ async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> 
     Ok(())
 }
 
-async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
+async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
     let prisma_channels = prisma.channel().find_many(vec![]).exec().await?;
     let channels = nci
         .channels
@@ -421,20 +421,19 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<()> {
     Ok(())
 }
 
-pub async fn on_ready(ctx: serenity::Context) -> Result<()> {
+pub async fn on_ready(ctx: serenity::Context) -> Result<(), LoggingError> {
     // find NCI server
-    let nci_id = ctx
+    let nci_id = *ctx
         .cache
         .guilds()
         .iter()
         .find(|g| g.to_string() == nci::ID.to_string())
-        .context("Could not find NCI by id")?
-        .clone();
+        .make_error(LoggingError::NciNotFound)?;
 
     let nci = ctx
         .cache
         .guild(nci_id)
-        .context("Could not find NCI server data")?;
+        .make_error(LoggingError::NciNotFound)?;
 
     let prisma = prisma::create().await?;
 

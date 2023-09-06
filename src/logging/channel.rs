@@ -1,11 +1,11 @@
 use crate::prelude::*;
 
-pub async fn create(channel: serenity::GuildChannel) -> Result<()> {
+pub async fn create(channel: serenity::GuildChannel) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     // to hell with all threads
     if channel.is_thread() {
-        return Ok(());
+        return Err(LoggingError::ChannelIsThread(channel.id));
     }
 
     let mut params = vec![];
@@ -41,9 +41,9 @@ pub async fn create(channel: serenity::GuildChannel) -> Result<()> {
     Ok(())
 }
 
-pub async fn update(channel: serenity::GuildChannel) -> Result<()> {
+pub async fn update(channel: serenity::GuildChannel) -> Result<(), LoggingError> {
     if channel.is_thread() {
-        return Ok(());
+        return Err(LoggingError::ChannelIsThread(channel.id));
     }
 
     let prisma = prisma::create().await?;
@@ -69,7 +69,7 @@ pub async fn update(channel: serenity::GuildChannel) -> Result<()> {
     Ok(())
 }
 
-pub async fn delete(channel: serenity::ChannelId) -> Result<()> {
+pub async fn delete(channel: serenity::ChannelId) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     prisma

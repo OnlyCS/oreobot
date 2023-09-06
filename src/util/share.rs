@@ -37,8 +37,8 @@ fn unshare_row() -> serenity::CreateActionRow {
     row
 }
 
-pub async fn register(ctx: &serenity::Context) -> Result<()> {
-    let data_arc = data::get_serenity(ctx).await?;
+pub async fn register(ctx: &serenity::Context) {
+    let data_arc = data::get_serenity(ctx).await;
     let mut data = data_arc.lock().await;
     let emitter = &mut data.emitter;
 
@@ -142,6 +142,4 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
         },
         |interaction| interaction.data.custom_id == "oreo_unshare",
     );
-
-    Ok(())
 }

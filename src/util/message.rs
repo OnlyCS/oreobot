@@ -37,7 +37,7 @@ pub mod mention {
 pub mod clone {
     use crate::prelude::*;
 
-    pub async fn register(ctx: &serenity::Context) -> Result<()> {
+    pub async fn register(ctx: &serenity::Context) -> Result<(), MessageCloneError> {
         // todo: chat/news sync
 
         // let prisma = prisma::create().await?;
@@ -53,7 +53,7 @@ pub mod clone {
         let wh_id = ctx
             .cache
             .guild(nci::ID)
-            .context("Could not find NCI")?
+            .make_error(MessageCloneError::NciNotFound)?
             .webhooks(&ctx)
             .await?
             .into_iter()
@@ -62,9 +62,9 @@ pub mod clone {
                     return false;
                 };
 
-                name == "NCI Internals"
+                name == "Oreo's Internals"
             })
-            .context("Could not get webhook")?;
+            .make_error(MessageCloneError::NoWebhook)?;
 
         for clone in to_resync {
             let ctx = ctx.clone();
@@ -92,7 +92,7 @@ pub mod clone {
         send_to: serenity::ChannelId,
         mut extra_rows: Vec<serenity::CreateActionRow>,
         sync: bool,
-    ) -> Result<serenity::Message> {
+    ) -> Result<serenity::Message, MessageCloneError> {
         let mut wh_message = serenity::ExecuteWebhook::default();
         let mut wh_row = serenity::CreateActionRow::default();
         let mut wh_content = "".to_string();
@@ -222,7 +222,7 @@ pub mod clone {
                 exec
             })
             .await?
-            .context("Could not get webhook message")?;
+            .make_error(MessageCloneError::NoWebhookMessage)?;
 
         if sync {
             let cloned_id = cloned.id.0;
@@ -240,8 +240,8 @@ pub mod clone {
         wh_message_id: u64,
         original_id: u64,
         webhook_id: u64,
-    ) -> Result<()> {
-        let data_arc = data::get_serenity(ctx).await?;
+    ) -> Result<(), MessageCloneError> {
+        let data_arc = data::get_serenity(ctx).await;
         let mut data = data_arc.lock().await;
         let emitter = &mut data.emitter;
 
@@ -251,12 +251,12 @@ pub mod clone {
                 let webhook = ctx
                     .cache
                     .guild(nci::ID)
-                    .context("Could not find guild")?
+                    .make_error(anyhow!("Could not find NCI"))?
                     .webhooks(&ctx)
                     .await?
                     .into_iter()
                     .find(|wh| wh.id == webhook_id)
-                    .context("Could not find webhook")?;
+                    .make_error(anyhow!("Could not find webhook"))?;
 
                 let old_msg = webhook.get_message(&ctx, wh_message_id.into()).await?;
 
@@ -322,12 +322,12 @@ pub mod clone {
             move |_, ctx| async move {
                 ctx.cache
                     .guild(nci::ID)
-                    .context("Could not find guild")?
+                    .make_error(anyhow!("Could not find guild"))?
                     .webhooks(&ctx)
                     .await?
                     .iter()
                     .find(|wh| wh.id.0 == webhook_id)
-                    .context("Could not find webhook")?
+                    .make_error(anyhow!("Could not find webhook"))?
                     .delete_message(&ctx, serenity::MessageId(wh_message_id))
                     .await?;
 

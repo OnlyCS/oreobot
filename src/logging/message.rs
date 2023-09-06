@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn create(message: serenity::Message) -> Result<()> {
+pub async fn create(message: serenity::Message) -> Result<(), LoggingError> {
     if message.webhook_id.is_some() {
         return Ok(()); //ignore webhooks, we manage them in this server
     }
@@ -37,7 +37,7 @@ pub async fn create(message: serenity::Message) -> Result<()> {
     Ok(())
 }
 
-pub async fn update(message: serenity::MessageUpdateEvent) -> Result<()> {
+pub async fn update(message: serenity::MessageUpdateEvent) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -55,7 +55,7 @@ pub async fn update(message: serenity::MessageUpdateEvent) -> Result<()> {
     Ok(())
 }
 
-pub async fn delete(message_id: serenity::MessageId) -> Result<()> {
+pub async fn delete(message_id: serenity::MessageId) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     prisma

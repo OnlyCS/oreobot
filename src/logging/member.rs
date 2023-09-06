@@ -1,8 +1,15 @@
 pub use crate::prelude::*;
 
-pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Result<()> {
+pub async fn join(
+    mut member: serenity::Member,
+    ctx: serenity::Context,
+) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
+
+    let nci = ctx
+        .cache
+        .guild(nci::ID)
+        .make_error(LoggingError::NciNotFound)?;
 
     let user_if_exists = prisma
         .user()
@@ -55,12 +62,16 @@ pub async fn join(mut member: serenity::Member, ctx: serenity::Context) -> Resul
     Ok(())
 }
 
-pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<()> {
+pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
     let mut updates = vec![];
 
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
+    let nci = ctx
+        .cache
+        .guild(nci::ID)
+        .make_error(LoggingError::NciNotFound)?;
+
     let member_roles = member.roles(&ctx).unwrap_or(vec![]);
     let prisma_member = prisma
         .user()
@@ -68,7 +79,7 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
         .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?
-        .context("Could not find user in database")?;
+        .make_error(LoggingError::UserNotInDatabase(member.user.id))?;
 
     let mut role_connects = member_roles
         .iter()
@@ -78,7 +89,7 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
     let color_role = prisma_member
         .roles()?
         .first()
-        .context("User has no color roles")?;
+        .make_error(LoggingError::UserNoColorRole(member.user.id))?;
 
     if !member_roles
         .iter()
@@ -88,7 +99,7 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
 
         nci.member(&ctx, member.user.id)
             .await?
-            .add_role(&ctx, color_role.parse::<u64>()?)
+            .add_role(&ctx, color_role.parse::<u64>().unwrap())
             .await?;
 
         role_connects.push(role::id::equals(color_role));
@@ -131,9 +142,12 @@ pub async fn update(member: serenity::Member, ctx: serenity::Context) -> Result<
     Ok(())
 }
 
-pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
+pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
-    let nci = ctx.cache.guild(nci::ID).context("Could not find NCI")?;
+    let nci = ctx
+        .cache
+        .guild(nci::ID)
+        .make_error(LoggingError::NciNotFound)?;
 
     let prisma_user = prisma
         .user()
@@ -141,12 +155,12 @@ pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
         .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?
-        .context("Could not find user in database")?;
+        .make_error(LoggingError::UserNotInDatabase(id))?;
 
     let color_role = prisma_user
         .roles()?
         .first()
-        .context("User has no color role")?;
+        .make_error(LoggingError::UserNoColorRole(id))?;
 
     prisma
         .user()
@@ -158,7 +172,8 @@ pub async fn leave(id: serenity::UserId, ctx: serenity::Context) -> Result<()> {
         .await?;
 
     // this will send a roledelete event, handled in logging/role.rs
-    nci.delete_role(&ctx, color_role.id.parse::<u64>()?).await?;
+    nci.delete_role(&ctx, color_role.id.parse::<u64>().unwrap())
+        .await?;
 
     Ok(())
 }

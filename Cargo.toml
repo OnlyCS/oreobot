@@ -19,6 +19,7 @@ poise = "0.5.5"
 serde = { version = "1.0.171", features = ["derive"] }
 serde_json = "1.0.104"
 simple_logger = "4.2.0"
+thiserror = "1.0.48"
 tokio = "1.29.1"
 
 [dependencies.prisma-client-rust]

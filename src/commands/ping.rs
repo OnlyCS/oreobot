@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 #[poise::command(slash_command)]
-pub async fn ping(ctx: Context<'_>) -> Result<()> {
+pub async fn ping(ctx: Context<'_>) -> Result<(), CommandError> {
     let created_timestamp = ctx.created_at().timestamp_millis();
     let now = serenity::Timestamp::now().timestamp_millis();
     let latency = now - created_timestamp;

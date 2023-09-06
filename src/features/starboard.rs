@@ -4,7 +4,7 @@ async fn _star(
     no_interaction: Option<&serenity::Context>,
     interaction: Option<&Context<'_>>,
     message: &serenity::Message,
-) -> Result<()> {
+) -> Result<(), StarboardError> {
     let prisma = prisma::create().await?;
 
     let message_data = prisma
@@ -13,7 +13,7 @@ async fn _star(
         .with(message::pin::fetch())
         .exec()
         .await?
-        .context("Could not find message in database")?;
+        .make_error(StarboardError::MessageNotInDatabase(message.id))?;
 
     let existing_message_pin = message_data.pin()?;
     let is_pinned = existing_message_pin.map(|n| !n.removed).unwrap_or(false);
@@ -161,16 +161,19 @@ async fn _star(
 pub async fn star_no_interaction(
     ctx: &serenity::Context,
     message: &serenity::Message,
-) -> Result<()> {
+) -> Result<(), StarboardError> {
     _star(Some(ctx), None, message).await
 }
 
-pub async fn star_interaction(ctx: &Context<'_>, message: &serenity::Message) -> Result<()> {
+pub async fn star_interaction(
+    ctx: &Context<'_>,
+    message: &serenity::Message,
+) -> Result<(), StarboardError> {
     _star(None, Some(ctx), message).await
 }
 
-pub async fn register(ctx: &serenity::Context) -> Result<()> {
-    let data_arc = data::get_serenity(ctx).await?;
+pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {
+    let data_arc = data::get_serenity(ctx).await;
     let mut data = data_arc.lock().await;
     let emitter = &mut data.emitter;
 
@@ -242,12 +245,13 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
             let channel = interaction.channel_id;
             let webhooks = channel.webhooks(&ctx).await?;
             let message = interaction.message.as_ref().unwrap();
+
             let wh = webhooks
                 .into_iter()
                 .find(|wh| wh.name == Some("Oreo's Internals".to_string()))
-                .context("Could not find webhook")?;
+                .make_error(anyhow!("Could not find webhook"))?;
 
-            let reason = interaction
+            let reason = &interaction
                 .data
                 .components
                 .iter()
@@ -261,8 +265,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
                 })
                 .flatten()
                 .next()
-                .context("Could not find reason component")?
-                .clone()
+                .unwrap()
                 .value;
 
             prisma
@@ -271,7 +274,7 @@ pub async fn register(ctx: &serenity::Context) -> Result<()> {
                     message_pin::pinned_message_id::equals(message.id.to_string()),
                     vec![
                         message_pin::removed::set(true),
-                        message_pin::removed_reason::set(Some(reason)),
+                        message_pin::removed_reason::set(Some(reason.clone())),
                     ],
                 )
                 .exec()

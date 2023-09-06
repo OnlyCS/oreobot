@@ -26,6 +26,7 @@ extern crate simple_logger;
 extern crate tokio;
 
 mod commands;
+mod error;
 mod events;
 mod features;
 mod logging;
@@ -40,10 +41,11 @@ use futures::FutureExt;
 use crate::prelude::*;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), AnyError> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
-        .init()?;
+        .init()
+        .make_error(anyhow!("failed to initialize logger"))?;
 
     let handler = poise::EventWrapper(|ctx, event| {
         Box::pin(async move {
@@ -78,12 +80,16 @@ async fn main() -> Result<()> {
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                let ctx = ctx.clone();
 
-                logging::register(ctx).await?;
-                share::register(ctx).await?;
-                starboard::register(ctx).await?;
-                clone::register(ctx).await?;
+                poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
+
+                async_non_blocking!({
+                    logging::register(&ctx).await;
+                    share::register(&ctx).await;
+                    starboard::register(&ctx).await.unwrap();
+                    clone::register(&ctx).await.unwrap();
+                });
 
                 Ok(data)
             })
