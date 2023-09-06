@@ -5,12 +5,12 @@ macro_rules! user_setting {
 		#[poise::command(slash_command)]
         pub async fn $fnname(
             ctx: Context<'_>,
-            #[description = "the value to set"] value: Option<<settings::$stg as UserSetting>::Value>,
+            #[description = "the value to set"] value: Option<<settings::$stg as UserCache>::Value>,
 			#[description = "manage this user, admins only"] user: Option<serenity::Member>
         ) -> Result<(), CommandError> {
-			let loading = Loading::new(&ctx, "Locking settings.\nDepending on how long the bot has been up, this may take awhile.").await?;
+			let mut loading = Loading::<LoadingWithInteraction>::new(&ctx, "Locking settings.\nDepending on how long the bot has been up, this may take awhile.").await?;
 			let mut data = ctx.data().lock().await;
-			let settings = &mut data.settings;
+			let cache = &mut data.cache;
 
 			let user = match user {
 				Some(u) => {
@@ -32,7 +32,7 @@ macro_rules! user_setting {
 
             if let Some(value) = value {
 				loading.update(&ctx, format!("Updating setting {}", $stgname)).await?;
-				settings.set_user::<settings::$stg>(ctx.serenity_context().clone(), value, user.id).await?;
+				cache.set_user::<settings::$stg>(ctx.serenity_context().clone(), value, user.id).await?;
 
 				let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
 
@@ -44,7 +44,7 @@ macro_rules! user_setting {
 				let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
 
 				embed.title(format!("Settings > {} > Get", $stgname));
-				embed.description(format!("The value of the setting is {}", settings.get_user::<settings::$stg>(user.id).await?));
+				embed.description(format!("The value of the setting is {}", cache.get_user::<settings::$stg>(user.id).await?));
 
 				loading.last(&ctx, embed).await?;
 			}

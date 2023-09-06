@@ -58,6 +58,22 @@ pub async fn update(message: serenity::MessageUpdateEvent) -> Result<(), Logging
 pub async fn delete(message_id: serenity::MessageId) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
+    // dont delete impersonated messages yet
+    let message_data = prisma
+        .message()
+        .find_unique(message::id::equals(message_id.to_string()))
+        .with(message::impersonated_message::fetch())
+        .exec()
+        .await?
+        .make_error(LoggingError::NotFound(format!(
+            "message with id {}",
+            message_id
+        )))?;
+
+    if message_data.impersonated_message.flatten().is_some() {
+        return Ok(());
+    }
+
     prisma
         .message()
         .update(

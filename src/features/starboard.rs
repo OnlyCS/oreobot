@@ -1,175 +1,109 @@
 use crate::prelude::*;
 
-async fn _star(
-    no_interaction: Option<&serenity::Context>,
-    interaction: Option<&Context<'_>>,
-    message: &serenity::Message,
-) -> Result<(), StarboardError> {
-    let prisma = prisma::create().await?;
+macro_rules! star {
+    ($ctx:expr, $message:expr, $loading:expr, $seren:expr) => {{
+        let prisma = prisma::create().await?;
+        let ctx = $ctx;
+        let loading = $loading;
+        let message = $message;
 
-    let message_data = prisma
-        .message()
-        .find_unique(message::id::equals(message.id.to_string()))
-        .with(message::pin::fetch())
-        .exec()
-        .await?
-        .make_error(StarboardError::MessageNotInDatabase(message.id))?;
+        let message_data = prisma
+            .message()
+            .find_unique(message::id::equals(message.id.to_string()))
+            .with(message::pin::fetch())
+            .exec()
+            .await?
+            .make_error(StarboardError::MessageNotInDatabase(message.id))?;
 
-    let existing_message_pin = message_data.pin()?;
-    let is_pinned = existing_message_pin.map(|n| !n.removed).unwrap_or(false);
+        let existing_message_pin = message_data.pin()?;
+        let is_pinned = existing_message_pin.map(|n| !n.removed).unwrap_or(false);
 
-    if is_pinned {
-        let mut embed = if let Some(ctx) = no_interaction {
-            embed::serenity_default(&ctx, EmbedStatus::Warning)
-        } else if let Some(ctx) = interaction {
-            embed::default(ctx, EmbedStatus::Warning)
-        } else {
-            unreachable!("No context provided")
-        };
+        if is_pinned {
+            let mut embed = embed::default(&ctx, EmbedStatus::Warning);
 
-        embed.title("Starboard");
-        embed.description("This message is already pinned.");
+            embed.title("Starboard");
+            embed.description("This message is already pinned.");
 
-        if let Some(ctx) = no_interaction {
-            message
-                .channel_id
-                .send_message(&ctx, |reply| {
-                    reply
-                        .reference_message(message)
-                        .allowed_mentions(|mention| mention.replied_user(false));
+            loading.last(&ctx, embed).await?;
 
-                    reply.set_embed(embed);
-
-                    reply
-                })
-                .await?;
-        } else if let Some(ctx) = interaction {
-            ctx.send(|reply| {
-                reply.ephemeral(true);
-                reply.embeds.push(embed);
-
-                reply
-            })
-            .await?;
+            return Ok(());
         }
 
-        return Ok(());
-    }
+        let mut row = serenity::CreateActionRow::default();
+        let mut delete_button = serenity::CreateButton::default();
 
-    let mut row = serenity::CreateActionRow::default();
-    let mut delete_button = serenity::CreateButton::default();
+        delete_button.style(serenity::ButtonStyle::Danger);
+        delete_button.label("Admin: Remove Pin");
+        delete_button.custom_id("oreo_starboard_delete");
 
-    delete_button.style(serenity::ButtonStyle::Danger);
-    delete_button.label("Admin: Remove Pin");
-    delete_button.custom_id("oreo_starboard_delete");
+        row.add_button(delete_button);
 
-    row.add_button(delete_button);
-
-    let cloned = clone::clone(
-        if let Some(ctx) = no_interaction {
-            ctx
-        } else if let Some(ctx) = interaction {
-            ctx.serenity_context()
-        } else {
-            unreachable!("no context")
-        },
-        message,
-        true,
-        true,
-        nci::channels::STARRED,
-        vec![row],
-        false,
-    )
-    .await?;
-
-    if let Some(pin) = existing_message_pin {
-        prisma
-            .message_pin()
-            .update(
-                message_pin::pinned_message_id::equals(pin.pinned_message_id.clone()),
-                vec![
-                    message_pin::removed::set(false),
-                    message_pin::removed_reason::set(None),
-                    message_pin::original::connect(message::id::equals(message.id.to_string())),
-                ],
-            )
-            .exec()
-            .await?;
-    } else {
-        prisma
-            .message_pin()
-            .create(
-                cloned.id.to_string(),
-                message::id::equals(message.id.to_string()),
-                vec![],
-            )
-            .exec()
-            .await?;
-    }
-
-    let mut embed = if let Some(ctx) = no_interaction {
-        embed::serenity_default(&ctx, EmbedStatus::Sucess)
-    } else if let Some(ctx) = interaction {
-        embed::default(ctx, EmbedStatus::Sucess)
-    } else {
-        unreachable!("No context provided")
-    };
-
-    embed.title("Starboard");
-    embed.description("Message starred sucessfully");
-
-    let mut components = serenity::CreateComponents::default();
-    let mut row = serenity::CreateActionRow::default();
-    let mut btn = serenity::CreateButton::default();
-
-    btn.style(serenity::ButtonStyle::Link);
-    btn.label("Jump to starboard");
-    btn.url(cloned.link());
-
-    row.add_button(btn);
-    components.add_action_row(row);
-
-    if let Some(ctx) = no_interaction {
-        message
-            .channel_id
-            .send_message(&ctx, |reply| {
-                reply
-                    .reference_message(message)
-                    .allowed_mentions(|mention| mention.replied_user(false));
-
-                reply.set_components(components);
-                reply.set_embed(embed);
-
-                reply
-            })
-            .await?;
-    } else if let Some(ctx) = interaction {
-        ctx.send(|reply| {
-            reply.ephemeral(true);
-
-            reply.components = Some(components);
-            reply.embeds.push(embed);
-
-            reply
-        })
+        let cloned = clone::clone(
+            $seren,
+            message,
+            true,
+            true,
+            nci::channels::STARRED,
+            vec![row],
+            false,
+            None,
+        )
         .await?;
-    }
 
-    Ok(())
+        if let Some(pin) = existing_message_pin {
+            prisma
+                .message_pin()
+                .update(
+                    message_pin::pinned_message_id::equals(pin.pinned_message_id.clone()),
+                    vec![
+                        message_pin::removed::set(false),
+                        message_pin::removed_reason::set(None),
+                        message_pin::original::connect(message::id::equals(message.id.to_string())),
+                    ],
+                )
+                .exec()
+                .await?;
+        } else {
+            prisma
+                .message_pin()
+                .create(
+                    cloned.id.to_string(),
+                    message::id::equals(message.id.to_string()),
+                    vec![],
+                )
+                .exec()
+                .await?;
+        }
+
+        let mut clone_finish = embed::default(&ctx, EmbedStatus::Sucess);
+
+        clone_finish.title("Starboard");
+        clone_finish.description("Message pinned sucessfully.");
+
+        loading.last(&ctx, clone_finish).await?;
+
+        Ok(())
+    }};
 }
 
 pub async fn star_no_interaction(
     ctx: &serenity::Context,
     message: &serenity::Message,
 ) -> Result<(), StarboardError> {
-    _star(Some(ctx), None, message).await
+    let loading =
+        Loading::<LoadingWithoutInteraction>::new(ctx, message.channel_id, "Starring Message...")
+            .await?;
+
+    star!(ctx, message, loading, ctx)
 }
 
 pub async fn star_interaction(
     ctx: &Context<'_>,
     message: &serenity::Message,
 ) -> Result<(), StarboardError> {
-    _star(None, Some(ctx), message).await
+    let loading = Loading::<LoadingWithInteraction>::new(ctx, "Starring Message...").await?;
+
+    star!(ctx, message, loading, ctx.serenity_context())
 }
 
 pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {

@@ -31,8 +31,9 @@ model User {
     verified Boolean @default(false)
     bot      Boolean @default(false)
 
-    messages     Message[]
-    interactions Interaction[]
+    messages              Message[]
+    impersonated_messages ImpersonatedMessageData[]
+    interactions          Interaction[]
 
     removed Boolean @default(false)
 }
@@ -78,7 +79,8 @@ model Message {
     deleted Boolean @default(false)
     edited  Boolean @default(false)
 
-    pin MessagePin?
+    pin                  MessagePin?
+    impersonated_message ImpersonatedMessageData?
 }
 
 model MessagePin {
@@ -138,4 +140,14 @@ model Interaction {
     // custom id for all except for commands, which has extra data
     command_data CommandInteractionData?
     custom_id    String?
+}
+
+model ImpersonatedMessageData {
+    source    Message @relation(fields: [source_id], references: [id])
+    source_id String  @id
+
+    fake_author    User   @relation(fields: [fake_author_id], references: [id])
+    fake_author_id String
+
+    fake_message_id String
 }

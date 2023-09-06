@@ -25,6 +25,7 @@ extern crate serde_json;
 extern crate simple_logger;
 extern crate tokio;
 
+mod cache;
 mod commands;
 mod error;
 mod events;
@@ -33,7 +34,6 @@ mod logging;
 mod nci;
 mod prelude;
 mod prisma;
-mod settings;
 mod util;
 
 use futures::FutureExt;
@@ -55,7 +55,7 @@ async fn main() -> Result<(), AnyError> {
 
     let data = Arc::new(Mutex::new(Data {
         emitter: EventEmitter::new(),
-        settings: Settings::new(),
+        cache: Cache::new(),
     }));
 
     let data_serenity = Arc::clone(&data);
