@@ -83,7 +83,7 @@ impl UserCache for RoleName {
             .roles
             .into_iter()
             .filter(|r| {
-                vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
+                !vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
             })
             .next()
             .make_error(anyhow!("User has no color role"))?;

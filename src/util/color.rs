@@ -43,12 +43,16 @@ impl Color {
             .chunks(2) // chunks of two because thats how hex works
             .into_iter()
             .map(|n| n.collect::<String>()) // make each group a string
-            .map(|n| u8::from_str_radix(&n, 16)) // parse to int
-            .map(Result::unwrap) // unwrap like this because it looks cool
+            .map(|n| u8::from_str_radix(&n, 16))
+            .map(|n| n.make_error(ColorParseError::ParseHex(hex.to_string())))
             .collect_tuple() // r,g,b
             .make_error(ColorParseError::ParseHex(hex.to_string()))?;
 
-        Ok(Self { r, g, b })
+        Ok(Self {
+            r: r?,
+            g: g?,
+            b: b?,
+        })
     }
 
     pub fn into_hex(&self) -> String {
