@@ -90,6 +90,12 @@ async fn main() -> Result<(), AnyError> {
             Box::pin(async move {
                 let ctx = ctx.clone();
 
+                ctx.set_presence(
+                    Some(serenity::Activity::playing("with Oppenheimer")),
+                    serenity::OnlineStatus::Online,
+                )
+                .await;
+
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
 
                 async_non_blocking!({
