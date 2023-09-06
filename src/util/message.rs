@@ -8,7 +8,7 @@ pub mod emoji {
         S0: ToString,
         S1: ToString,
     {
-        return format!("<:{}:{}>", id.to_string(), name.to_string());
+        return format!("<:{}:{}>", name.to_string(), id.to_string());
     }
 }
 
@@ -38,16 +38,6 @@ pub mod clone {
     use crate::prelude::*;
 
     pub async fn register(ctx: &serenity::Context) -> Result<(), MessageCloneError> {
-        // todo: chat/news sync
-
-        // let prisma = prisma::create().await?;
-
-        // let to_resync = prisma
-        //     .message_clone()
-        //     .find_many(vec![message_clone::sync::equals(true)])
-        //     .exec()
-        //     .await?;
-
         let to_resync: Vec<prisma::prisma_client::message_pin::Data> = vec![];
 
         let wh_id = ctx
@@ -92,48 +82,25 @@ pub mod clone {
         send_to: serenity::ChannelId,
         mut extra_rows: Vec<serenity::CreateActionRow>,
         sync: bool,
+        clone_as: Option<serenity::User>,
     ) -> Result<serenity::Message, MessageCloneError> {
         let mut wh_message = serenity::ExecuteWebhook::default();
         let mut wh_row = serenity::CreateActionRow::default();
         let mut wh_content = "".to_string();
+        let clone_as = clone_as.as_ref().unwrap_or(&message.author);
 
-        if let Some(av) = message.author.avatar_url() {
+        if let Some(av) = clone_as.avatar_url() {
             wh_message.avatar_url(av);
         }
 
-        let username = {
-            let attempt1 = message
-                .member
-                .as_ref()
-                .map(|n| n.nick.as_ref())
-                .flatten()
-                .cloned();
+        let member = ctx
+            .cache
+            .guild(nci::ID)
+            .make_error(MessageCloneError::NciNotFound)?
+            .member(&ctx, clone_as.id)
+            .await?;
 
-            if let Some(name) = attempt1 {
-                name
-            } else {
-                let attempt2 = message.author_nick(&ctx).await;
-
-                if let Some(name) = attempt2 {
-                    name
-                } else {
-                    let prisma = prisma::create().await?;
-
-                    let user = prisma
-                        .user()
-                        .find_unique(user::id::equals(message.author.id.to_string()))
-                        .exec()
-                        .await?;
-
-                    if let Some(user) = user.as_ref() {
-                        user.nickname.as_ref().unwrap_or(&message.author.name)
-                    } else {
-                        &message.author.name
-                    }
-                    .clone()
-                }
-            }
-        };
+        let username = member.display_name();
 
         wh_message.username(username);
 

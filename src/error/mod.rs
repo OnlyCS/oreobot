@@ -27,10 +27,24 @@ pub enum CommandError {
     PrismaRelationNotFetched(#[from] RelationNotFetchedError),
 
     #[error("settings error")]
-    SettingsError(#[from] SettingsError),
+    SettingsError(#[from] CacheError),
 
     #[error("prisma error")]
     Prisma(#[from] PrismaError),
+
+    #[error("error while running command {command_name}: {description}")]
+    RuntimeError {
+        title: &'static str,
+        description: &'static str,
+        command_name: &'static str,
+    },
+
+    #[error("warning while running command {command_name}: {description}")]
+    RuntimeWarning {
+        title: &'static str,
+        description: &'static str,
+        command_name: &'static str,
+    },
 }
 
 #[derive(Error, Debug)]
@@ -88,10 +102,16 @@ pub enum LoggingError {
 
     #[error("color parse error")]
     Color(#[from] ColorParseError),
+
+    #[error("cache error")]
+    Cache(#[from] CacheError),
+
+    #[error("{0} not found in database")]
+    NotFound(String),
 }
 
 #[derive(Error, Debug)]
-pub enum SettingsError {
+pub enum CacheError {
     #[error("serde error")]
     Serde(#[from] serde_json::Error),
 
@@ -171,7 +191,7 @@ pub enum AnyError {
     Logging(#[from] LoggingError),
 
     #[error("settings error")]
-    Settings(#[from] SettingsError),
+    Settings(#[from] CacheError),
 
     #[error("starboard error")]
     Starboard(#[from] StarboardError),

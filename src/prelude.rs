@@ -1,4 +1,5 @@
 pub(crate) use crate::{
+    cache::{self, all as settings, Cache, UserCache},
     error::*,
     events::{
         emitter::{EmitterEvent, EventEmitter},
@@ -13,13 +14,15 @@ pub(crate) use crate::{
             ChannelType, InteractionType, PrismaClient,
         },
     },
-    settings::{all as settings, Settings, UserSetting},
     util::{
         color::{consts as colors, Color},
         data,
         embed::{self, EmbedStatus},
         is_admin, latency,
-        loading::Loading,
+        loading::{
+            Loading, WithInteraction as LoadingWithInteraction,
+            WithoutInteraction as LoadingWithoutInteraction,
+        },
         message::{
             clone, emoji,
             mention::{self, MentionType},
@@ -51,7 +54,7 @@ pub type Shared<T> = Arc<Mutex<T>>;
 
 pub struct Data {
     pub emitter: EventEmitter,
-    pub settings: Settings,
+    pub cache: Cache,
 }
 
 impl serenity::TypeMapKey for Data {

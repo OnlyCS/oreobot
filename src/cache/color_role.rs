@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub struct RoleColor;
 
 #[async_trait]
-impl UserSetting for RoleColor {
+impl UserCache for RoleColor {
     type Value = Color;
 
     async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
@@ -53,7 +53,7 @@ impl UserSetting for RoleColor {
 pub struct RoleName;
 
 #[async_trait]
-impl UserSetting for RoleName {
+impl UserCache for RoleName {
     type Value = String;
 
     async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {

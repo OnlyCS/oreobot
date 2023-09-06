@@ -7,7 +7,7 @@ pub enum EmbedStatus {
     Error,
 }
 
-pub fn default(ctx: &Context<'_>, status: EmbedStatus) -> serenity::CreateEmbed {
+pub fn default(ctx: &impl serenity::CacheHttp, status: EmbedStatus) -> serenity::CreateEmbed {
     let mut embed = serenity::CreateEmbed::default();
 
     embed.color(match status {
@@ -21,8 +21,8 @@ pub fn default(ctx: &Context<'_>, status: EmbedStatus) -> serenity::CreateEmbed 
 			.text("OreoBot")
 			.icon_url(
 				ctx
-					.serenity_context()
-					.cache
+					.cache()
+					.unwrap()
 					.current_user()
 					.avatar_url()
 					.unwrap_or(
