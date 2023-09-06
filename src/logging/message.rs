@@ -1,8 +1,23 @@
 use crate::prelude::*;
 
-pub async fn create(message: serenity::Message) -> Result<(), LoggingError> {
+pub async fn create(
+    ctx: serenity::Context,
+    message: serenity::Message,
+) -> Result<(), LoggingError> {
     if message.webhook_id.is_some() {
         return Ok(()); //ignore webhooks, we manage them in this server
+    }
+
+    let data_arc = data::get_serenity(&ctx).await;
+    let mut data = data_arc.lock().await;
+    let cache = &mut data.cache;
+
+    if cache
+        .get_user::<cache::impersonate::Impersonation>(message.author.id)
+        .await?
+        .is_some()
+    {
+        bail!(LoggingError::UserImpersonated(message.author.id));
     }
 
     let prisma = prisma::create().await?;

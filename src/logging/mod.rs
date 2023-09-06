@@ -77,8 +77,8 @@ pub async fn register(ctx: &serenity::Context) {
     });
 
     // message events
-    emitter.on(events::MessageCreateEvent, |message, _| async move {
-        Ok(message::create(message).await?)
+    emitter.on(events::MessageCreateEvent, |message, ctx| async move {
+        Ok(message::create(ctx, message).await?)
     });
 
     emitter.on(events::MessageUpdateEvent, |event, _| async move {
@@ -117,13 +117,13 @@ pub async fn register(ctx: &serenity::Context) {
 
     // ready event
     emitter.on(events::BotReadyEvent, |_, ctx| async move {
-        ready::on_ready(ctx.clone()).await?;
-
         ctx.set_presence(
-            Some(serenity::Activity::playing("with BOMBS")),
+            Some(serenity::Activity::playing("with Oppenheimer")),
             serenity::OnlineStatus::Online,
         )
         .await;
+
+        ready::on_ready(ctx.clone()).await?;
 
         Ok(())
     });

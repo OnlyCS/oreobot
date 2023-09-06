@@ -2,52 +2,67 @@ use crate::prelude::*;
 
 macro_rules! user_setting {
     ($fnname:ident,$stg:ident,$stgname:expr) => {
-		#[poise::command(slash_command)]
+        #[poise::command(slash_command)]
         pub async fn $fnname(
             ctx: Context<'_>,
             #[description = "the value to set"] value: Option<<settings::$stg as UserCache>::Value>,
-			#[description = "manage this user, admins only"] user: Option<serenity::Member>
+            #[description = "manage this user, admins only"] user: Option<serenity::Member>,
         ) -> Result<(), CommandError> {
-			let mut loading = Loading::<LoadingWithInteraction>::new(&ctx, "Locking settings.\nDepending on how long the bot has been up, this may take awhile.").await?;
-			let mut data = ctx.data().lock().await;
-			let cache = &mut data.cache;
+            let mut loading = Loading::<LoadingWithInteraction>::new(
+                &ctx,
+                "Locking cache. Depending on how long the bot has been up, this may take a while.",
+            )
+            .await?;
 
-			let user = match user {
-				Some(u) => {
-					if is_admin::user(&prisma::create().await?, ctx.author()).await? {
-						u.user
-					} else {
-						let mut embed = embed::default(&ctx, EmbedStatus::Error);
+            let mut data = ctx.data().lock().await;
+            let cache = &mut data.cache;
 
-						embed.title(format!("Settings: Needs Admin"));
-						embed.description(format!("You must have admin permissions to manage other users"));
+            let user = match user {
+                Some(u) => {
+                    if is_admin::user(&prisma::create().await?, ctx.author()).await? {
+                        u.user
+                    } else {
+                        loading.close(&ctx).await?;
 
-						return Ok(())
-					}
-				}
-				None => {
-					ctx.author().clone()
-				}
-			};
+                        bail!(CommandError::RuntimeError {
+                            title: "Admin Only",
+                            description: "You must be an admin to manage other users"
+                        });
+                    }
+                }
+                None => ctx.author().clone(),
+            };
 
             if let Some(value) = value {
-				loading.update(&ctx, format!("Updating setting {}", $stgname)).await?;
-				cache.set_user::<settings::$stg>(ctx.serenity_context().clone(), value, user.id).await?;
+                loading
+                    .update(&ctx, format!("Updating setting {}", $stgname))
+                    .await?;
 
-				let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+                cache
+                    .set_user::<settings::$stg>(ctx.serenity_context().clone(), value, user.id)
+                    .await?;
 
-				embed.title(format!("Settings > {} > Set", $stgname));
-				embed.description(format!("Sucessfully set the {} setting to `{}`", $stgname, cache.get_user::<settings::$stg>(user.id).await?));
+                let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
 
-				loading.last(&ctx, embed).await?;
-			} else {
-				let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+                embed.title(format!("Settings > {} > Set", $stgname));
+                embed.description(format!(
+                    "Sucessfully set the {} setting to `{}`",
+                    $stgname,
+                    cache.get_user::<settings::$stg>(user.id).await?
+                ));
 
-				embed.title(format!("Settings > {} > Get", $stgname));
-				embed.description(format!("The value of the setting is {}", cache.get_user::<settings::$stg>(user.id).await?));
+                loading.last(&ctx, embed).await?;
+            } else {
+                let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
 
-				loading.last(&ctx, embed).await?;
-			}
+                embed.title(format!("Settings > {} > Get", $stgname));
+                embed.description(format!(
+                    "The value of the setting is `{}`",
+                    cache.get_user::<settings::$stg>(user.id).await?
+                ));
+
+                loading.last(&ctx, embed).await?;
+            }
 
             Ok(())
         }

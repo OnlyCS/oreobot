@@ -38,16 +38,12 @@ macro_rules! star {
 
         row.add_button(delete_button);
 
-        let cloned = clone::clone(
-            $seren,
-            message,
-            true,
-            true,
-            nci::channels::STARRED,
-            vec![row],
-            false,
-            None,
-        )
+        let cloned = clone::clone(clone::CloneArgsBuilder::build_from(move |args| {
+            args.message(message.clone());
+            args.destination(nci::channels::STARRED);
+            args.add_rows(vec![row.clone()]);
+            args.ctx($seren);
+        })?)
         .await?;
 
         if let Some(pin) = existing_message_pin {
@@ -94,16 +90,17 @@ pub async fn star_no_interaction(
         Loading::<LoadingWithoutInteraction>::new(ctx, message.channel_id, "Starring Message...")
             .await?;
 
-    star!(ctx, message, loading, ctx)
+    star!(ctx, message, loading, ctx.clone())
 }
 
+// plans to right-click star interaction
 pub async fn star_interaction(
     ctx: &Context<'_>,
     message: &serenity::Message,
 ) -> Result<(), StarboardError> {
     let loading = Loading::<LoadingWithInteraction>::new(ctx, "Starring Message...").await?;
 
-    star!(ctx, message, loading, ctx.serenity_context())
+    star!(ctx, message, loading, ctx.serenity_context().clone())
 }
 
 pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {

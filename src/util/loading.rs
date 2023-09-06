@@ -107,6 +107,23 @@ impl<'a> LoadingMessage<'a> {
             LoadingMessage::WithoutInteraction(msg) => Some(msg),
         }
     }
+
+    async fn close(
+        self,
+        ctx_a: Option<Context<'_>>,
+        ctx_b: Option<serenity::Context>,
+    ) -> Result<(), serenity::Error> {
+        match self {
+            LoadingMessage::WithInteraction(handle) => {
+                handle.delete(ctx_a.unwrap()).await?;
+            }
+            LoadingMessage::WithoutInteraction(msg) => {
+                msg.delete(&ctx_b.unwrap()).await?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct Loading<'a, Type> {
@@ -163,6 +180,12 @@ impl<'a> Loading<'a, WithInteraction> {
 
         Ok(self.inner.inner_handle().unwrap())
     }
+
+    pub async fn close(self, ctx: &'a Context<'_>) -> Result<(), serenity::Error> {
+        self.inner.close(Some(*ctx), None).await?;
+
+        Ok(())
+    }
 }
 
 impl<'a> Loading<'a, WithoutInteraction> {
@@ -215,5 +238,11 @@ impl<'a> Loading<'a, WithoutInteraction> {
         self.inner.last(None, Some(ctx.clone()), embed).await?;
 
         Ok(self.inner.inner_message().unwrap())
+    }
+
+    pub async fn close(self, ctx: &serenity::Context) -> Result<(), serenity::Error> {
+        self.inner.close(None, Some(ctx.clone())).await?;
+
+        Ok(())
     }
 }

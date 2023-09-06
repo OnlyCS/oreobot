@@ -74,16 +74,162 @@ pub mod clone {
         Ok(())
     }
 
-    pub async fn clone(
-        ctx: &serenity::Context,
-        message: &serenity::Message,
-        link_to_prev: bool,
-        clone_reply: bool,
-        send_to: serenity::ChannelId,
-        mut extra_rows: Vec<serenity::CreateActionRow>,
+    #[derive(Clone)]
+    pub struct CloneArgs {
+        pub jump_btn: bool,
+        pub reply: bool,
+        pub destination: serenity::ChannelId,
+        pub add_rows: Vec<serenity::CreateActionRow>,
+        pub sync: bool,
+        pub clone_as: Option<serenity::User>,
+        pub message: serenity::Message,
+        pub ctx: serenity::Context,
+        pub ping: bool,
+    }
+
+    #[derive(Clone)]
+    pub struct CloneArgsBuilder {
+        jump_btn: bool,
+        reply: bool,
+        destination: Option<serenity::ChannelId>,
+        add_rows: Vec<serenity::CreateActionRow>,
         sync: bool,
         clone_as: Option<serenity::User>,
-    ) -> Result<serenity::Message, MessageCloneError> {
+        message: Option<serenity::Message>,
+        ctx: Option<serenity::Context>,
+        ping: bool,
+    }
+
+    #[allow(dead_code)]
+    impl CloneArgsBuilder {
+        pub fn build_from(
+            builder: impl Fn(&mut CloneArgsBuilder),
+        ) -> Result<CloneArgs, UnfinishedBuilderError> {
+            let mut args = CloneArgsBuilder {
+                jump_btn: true,
+                reply: true,
+                destination: None,
+                add_rows: vec![],
+                sync: false,
+                clone_as: None,
+                message: None,
+                ctx: None,
+                ping: false,
+            };
+
+            builder(&mut args);
+            args.build()
+        }
+
+        pub fn jump_btn(&mut self, jump_btn: bool) -> &mut Self {
+            self.jump_btn = jump_btn;
+            self
+        }
+
+        pub fn reply(&mut self, reply: bool) -> &mut Self {
+            self.reply = reply;
+            self
+        }
+
+        pub fn destination(&mut self, destination: serenity::ChannelId) -> &mut Self {
+            self.destination = Some(destination);
+            self
+        }
+
+        pub fn add_rows(&mut self, add_rows: Vec<serenity::CreateActionRow>) -> &mut Self {
+            self.add_rows = add_rows;
+            self
+        }
+
+        pub fn sync(&mut self, sync: bool) -> &mut Self {
+            self.sync = sync;
+            self
+        }
+
+        pub fn clone_as(&mut self, clone_as: serenity::User) -> &mut Self {
+            self.clone_as = Some(clone_as);
+            self
+        }
+
+        pub fn message(&mut self, message: serenity::Message) -> &mut Self {
+            self.message = Some(message);
+            self
+        }
+
+        pub fn ctx(&mut self, ctx: serenity::Context) -> &mut Self {
+            self.ctx = Some(ctx);
+            self
+        }
+
+        pub fn ping(&mut self, ping: bool) -> &mut Self {
+            self.ping = ping;
+            self
+        }
+
+        fn build(self) -> Result<CloneArgs, UnfinishedBuilderError> {
+            let destination_provided = self.destination.is_some();
+            let message_provided = self.message.is_some();
+            let ctx_provided = self.ctx.is_some();
+
+            if !destination_provided || !message_provided {
+                let mut missing = vec![];
+
+                if !destination_provided {
+                    missing.push("destination");
+                }
+
+                if !message_provided {
+                    missing.push("message");
+                }
+
+                if !ctx_provided {
+                    missing.push("ctx");
+                }
+
+                bail!(UnfinishedBuilderError(missing));
+            }
+
+            let CloneArgsBuilder {
+                jump_btn,
+                reply,
+                destination,
+                add_rows,
+                sync,
+                clone_as,
+                message,
+                ctx,
+                ping,
+            } = self;
+
+            let args = CloneArgs {
+                jump_btn,
+                reply,
+                destination: destination.unwrap(),
+                add_rows,
+                sync,
+                clone_as,
+                message: message.unwrap(),
+                ctx: ctx.unwrap(),
+                ping,
+            };
+
+            Ok(args)
+        }
+    }
+
+    pub async fn clone(args: CloneArgs) -> Result<serenity::Message, MessageCloneError> {
+        let CloneArgs {
+            jump_btn,
+            reply,
+            destination,
+            mut add_rows,
+            sync,
+            clone_as,
+            message,
+            ctx,
+            ping,
+        } = args;
+
         let mut wh_message = serenity::ExecuteWebhook::default();
         let mut wh_row = serenity::CreateActionRow::default();
         let mut wh_content = "".to_string();
@@ -104,16 +250,20 @@ pub mod clone {
 
         wh_message.username(username);
 
-        if link_to_prev {
+        let mut row_has_content = false;
+
+        if jump_btn {
             wh_row.create_button(|btn| {
                 btn.style(serenity::ButtonStyle::Link);
                 btn.label("Jump to original");
                 btn.url(message.link());
                 btn
             });
+
+            row_has_content = true;
         }
 
-        if clone_reply {
+        if reply {
             // until rust-analyzer works with if-let chains, don't use them
             if let Some(reply) = message.referenced_message.as_ref() {
                 let truncated = {
@@ -139,6 +289,15 @@ pub mod clone {
                     btn.url(reply.link());
                     btn
                 });
+
+                row_has_content = true;
+            }
+        }
+
+        if !row_has_content {
+            if add_rows.len() > 0 {
+                wh_row = add_rows.remove(0);
+                row_has_content = true;
             }
         }
 
@@ -164,12 +323,19 @@ pub mod clone {
         wh_message.embeds(wh_embeds);
         wh_message.content(wh_content);
 
-        all_rows.push(wh_row);
-        all_rows.append(&mut extra_rows);
-        components.set_action_rows(all_rows);
-        wh_message.set_components(components);
+        if !ping {
+            wh_message.allowed_mentions(|f| f.empty_users().empty_roles());
+        }
 
-        let maybe_webhook = send_to.webhooks(&ctx).await?.into_iter().find(|n| {
+        all_rows.push(wh_row);
+        all_rows.append(&mut add_rows);
+        components.set_action_rows(all_rows);
+
+        if row_has_content {
+            wh_message.set_components(components);
+        }
+
+        let maybe_webhook = destination.webhooks(&ctx).await?.into_iter().find(|n| {
             let Some(name) = n.name.as_ref() else {
                 return false;
             };
@@ -180,7 +346,7 @@ pub mod clone {
         let webhook = if let Some(wh) = maybe_webhook {
             wh
         } else {
-            send_to.create_webhook(&ctx, "Oreo's Internals").await?
+            destination.create_webhook(&ctx, "Oreo's Internals").await?
         };
 
         let cloned = webhook

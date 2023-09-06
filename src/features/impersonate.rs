@@ -1,3 +1,5 @@
+use events::clone::CloneArgsBuilder;
+
 use crate::prelude::*;
 
 pub async fn register(ctx: &serenity::Context) {
@@ -17,20 +19,46 @@ pub async fn register(ctx: &serenity::Context) {
             .await?;
 
         let Some(clone_as) = user else { return Ok(()) };
+        message.delete(&ctx).await?;
 
-        let cloned = clone::clone(
-            &ctx,
-            &message,
-            false,
-            true,
-            message.channel_id,
-            vec![],
-            false,
-            ctx.cache.user(clone_as),
-        )
+        let cloned = clone::clone(CloneArgsBuilder::build_from(|args| {
+            args.ctx(ctx.clone());
+            args.message(message.clone());
+            args.jump_btn(false);
+            args.clone_as(ctx.cache.user(clone_as).unwrap());
+            args.destination(message.channel_id);
+            args.ping(true);
+        })?)
         .await?;
 
         let prisma = prisma::create().await?;
+
+        prisma
+            .message()
+            .create(
+                message.id.to_string(),
+                message.content,
+                user::id::equals(message.author.id.to_string()),
+                channel::id::equals(message.channel_id.to_string()),
+                vec![],
+            )
+            .exec()
+            .await?;
+
+        for attachment in message.attachments {
+            prisma
+                .attachment()
+                .create(
+                    attachment.id.to_string(),
+                    attachment.filename,
+                    attachment.url,
+                    attachment.size as i64, //cannot exceed 100gb, so i64 is fine
+                    message::id::equals(message.id.to_string()),
+                    vec![],
+                )
+                .exec()
+                .await?;
+        }
 
         prisma
             .impersonated_message_data()
@@ -42,8 +70,6 @@ pub async fn register(ctx: &serenity::Context) {
             )
             .exec()
             .await?;
-
-        message.delete(&ctx).await?;
 
         Ok(())
     });
