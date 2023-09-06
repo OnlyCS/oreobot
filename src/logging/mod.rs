@@ -117,14 +117,6 @@ pub async fn register(ctx: &serenity::Context) {
 
     // ready event
     emitter.on(events::BotReadyEvent, |_, ctx| async move {
-        ctx.set_presence(
-            Some(serenity::Activity::playing("with Oppenheimer")),
-            serenity::OnlineStatus::Online,
-        )
-        .await;
-
-        ready::on_ready(ctx.clone()).await?;
-
-        Ok(())
+        Ok(ready::on_ready(ctx.clone()).await?)
     });
 }
