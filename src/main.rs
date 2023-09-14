@@ -89,6 +89,7 @@ async fn main() -> Result<(), AnyError> {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 let ctx = ctx.clone();
+                logging::register(&ctx).await;
 
                 ctx.set_presence(
                     Some(serenity::Activity::playing("with Oppenheimer")),
@@ -100,7 +101,6 @@ async fn main() -> Result<(), AnyError> {
 
                 async_non_blocking!({
                     impersonate::register(&ctx).await;
-                    logging::register(&ctx).await;
                     share::register(&ctx).await;
                     starboard::register(&ctx).await.unwrap();
                     clone::register(&ctx).await.unwrap();
