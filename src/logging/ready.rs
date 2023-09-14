@@ -3,7 +3,7 @@ use crate::prelude::*;
 async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
     // fetch all roles from discord and the database
     let roles = nci.roles.values().collect::<Vec<_>>();
-    let prisma_roles = prisma.role().find_many(vec![]).exec().await?;
+    let prisma_roles = prisma.role().find_many(vec![]).exec().await.unwrap();
 
     for role in &roles {
         if let Some(prisma_role) = prisma_roles.iter().find(|r| r.id == role.id.to_string()) {
@@ -18,6 +18,13 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
                 updates.push(role::color::set(role.colour.hex()));
             }
 
+            if !vec![nci::roles::MEMBERS, nci::roles::OVERRIDES, nci::roles::BOTS]
+                .contains(&role.id)
+                && !prisma_role.color_role
+            {
+                updates.push(role::color_role::set(true));
+            }
+
             // if no updates, skip
             if updates.is_empty() {
                 continue;
@@ -27,7 +34,8 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
                 .role()
                 .update(role::id::equals(role.id.to_string()), updates)
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         } else {
             // otherwise create it
             prisma
@@ -36,10 +44,14 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
                     role.id.to_string(),
                     role.name.clone(),
                     role.colour.hex(),
-                    vec![],
+                    vec![role::color_role::set(
+                        !vec![nci::roles::MEMBERS, nci::roles::OVERRIDES, nci::roles::BOTS]
+                            .contains(&role.id),
+                    )],
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -57,7 +69,8 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
             .role()
             .update_many(remove, vec![role::deleted::set(true)])
             .exec()
-            .await?;
+            .await
+            .unwrap();
     }
 
     Ok(())
@@ -74,7 +87,8 @@ async fn users(
         .find_many(vec![])
         .with(user::roles::fetch(vec![]))
         .exec()
-        .await?;
+        .await
+        .unwrap();
 
     let mut color_roles = vec![];
 
@@ -92,9 +106,10 @@ async fn users(
                         r.clone_from(&default_role(member));
                         r
                     })
-                    .await?;
+                    .await
+                    .unwrap();
 
-                member.add_role(&ctx, role.id).await?;
+                member.add_role(&ctx, role.id).await.unwrap();
 
                 prisma
                     .role()
@@ -105,7 +120,8 @@ async fn users(
                         vec![role::color_role::set(true), role::users::set(vec![])],
                     )
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
 
                 role
             }
@@ -165,7 +181,8 @@ async fn users(
                     .user()
                     .update(user::id::equals(member.user.id.to_string()), updates)
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             prisma
@@ -187,7 +204,8 @@ async fn users(
                     ],
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
 
         // update the list of color roles
@@ -198,7 +216,8 @@ async fn users(
         .role()
         .update_many(color_roles, vec![role::color_role::set(true)])
         .exec()
-        .await?;
+        .await
+        .unwrap();
 
     // check for users in db that don't exist in discord
     let mut remove = vec![];
@@ -219,14 +238,20 @@ async fn users(
             .user()
             .update_many(remove, vec![user::removed::set(true)])
             .exec()
-            .await?;
+            .await
+            .unwrap();
     }
 
     Ok(())
 }
 
 async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
-    let prisma_categories = prisma.channel_category().find_many(vec![]).exec().await?;
+    let prisma_categories = prisma
+        .channel_category()
+        .find_many(vec![])
+        .exec()
+        .await
+        .unwrap();
     let categories = nci
         .channels
         .values()
@@ -252,14 +277,16 @@ async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), 
                         updates,
                     )
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             prisma
                 .channel_category()
                 .create(category.id.to_string(), category.name.clone(), vec![])
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -282,14 +309,15 @@ async fn categories(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), 
             .channel_category()
             .update_many(remove, vec![channel_category::deleted::set(true)])
             .exec()
-            .await?;
+            .await
+            .unwrap();
     }
 
     Ok(())
 }
 
 async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), LoggingError> {
-    let prisma_channels = prisma.channel().find_many(vec![]).exec().await?;
+    let prisma_channels = prisma.channel().find_many(vec![]).exec().await.unwrap();
     let channels = nci
         .channels
         .values()
@@ -351,7 +379,8 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Lo
                     .channel()
                     .update(channel::id::equals(channel.id.to_string()), updates)
                     .exec()
-                    .await?;
+                    .await
+                    .unwrap();
             }
         } else {
             prisma
@@ -381,7 +410,8 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Lo
                     },
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -404,7 +434,8 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Lo
             .channel()
             .update_many(remove.clone(), vec![channel::deleted::set(true)])
             .exec()
-            .await?;
+            .await
+            .unwrap();
 
         for channel in remove {
             prisma
@@ -414,7 +445,8 @@ async fn channels(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Lo
                     vec![message::deleted::set(true)],
                 )
                 .exec()
-                .await?;
+                .await
+                .unwrap();
         }
     }
 
@@ -428,19 +460,21 @@ pub async fn on_ready(ctx: serenity::Context) -> Result<(), LoggingError> {
         .guilds()
         .iter()
         .find(|g| g.to_string() == nci::ID.to_string())
-        .make_error(LoggingError::NciNotFound)?;
+        .make_error(LoggingError::NciNotFound)
+        .unwrap();
 
     let nci = ctx
         .cache
         .guild(nci_id)
-        .make_error(LoggingError::NciNotFound)?;
+        .make_error(LoggingError::NciNotFound)
+        .unwrap();
 
-    let prisma = prisma::create().await?;
+    let prisma = prisma::create().await.unwrap();
 
-    roles(&nci, &prisma).await?;
-    users(&ctx, &nci, &prisma).await?;
-    categories(&nci, &prisma).await?;
-    channels(&nci, &prisma).await?;
+    roles(&nci, &prisma).await.unwrap();
+    users(&ctx, &nci, &prisma).await.unwrap();
+    categories(&nci, &prisma).await.unwrap();
+    channels(&nci, &prisma).await.unwrap();
 
     Ok(())
 }
