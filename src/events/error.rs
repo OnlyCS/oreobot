@@ -17,15 +17,22 @@ pub async fn handle(
             match error {
                 CommandError::RuntimeWarning { title, description } => {
                     embed.title(format!("{} > Warning > {}", ctx.command().name, title));
-                    embed.description(format!("Warning in command {}\n{}\nDon't worry, this warning has been appropriately handled and the bot will continue to function normally", ctx.command().name, description));
+                    embed.description(format!("Warning in command `/{}`:\n{}\n\nDon't worry, this warning has been appropriately handled and the bot will continue to function normally", ctx.command().name, description));
                 }
                 CommandError::RuntimeError { title, description } => {
-                    embed.title(format!("{} > Error > {}", ctx.command().name, title));
-                    embed.description(format!("Warning in command {}\n{}\nDon't worry, this error has been appropriately handled and the bot will continue to function normally", ctx.command().name, description));
+                    embed.title(format!(
+                        "{} > Error > {}",
+                        ctx.command().name.capitalize_first_letter(),
+                        title
+                    ));
+                    embed.description(format!("Error in command `/{}`:\n{}\n\nDon't worry, this error has been appropriately handled and the bot will continue to function normally", ctx.command().name, description));
                 }
                 _ => {
-                    embed.title(format!("{} > Error", ctx.command().name));
-                    embed.description(format!("{}\nDon't worry, this error has been appropriately handled and the bot will continue to function normally", error.to_string()));
+                    embed.title(format!(
+                        "{} > Error",
+                        ctx.command().name.capitalize_first_letter()
+                    ));
+                    embed.description(format!("Error in command `/{}`:\n{}\n\nDon't worry, this error has been appropriately handled and the bot will continue to function normally", ctx.command().name, error.to_string()));
                 }
             }
 

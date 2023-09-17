@@ -2,10 +2,10 @@ use crate::prelude::*;
 
 #[derive(Error, Debug)]
 pub enum PrismaError {
-    #[error("prisma query error")]
+    #[error("prisma query error: {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error: {0}")]
     PrismaCreate(#[from] NewClientError),
 
     #[error("{0} not found in database")]
@@ -14,22 +14,22 @@ pub enum PrismaError {
 
 #[derive(Error, Debug)]
 pub enum CommandError {
-    #[error("serenity error")]
+    #[error("serenity error, {0}")]
     Serenity(#[from] serenity::Error),
 
-    #[error("prisma query error")]
+    #[error("prisma query error, {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error, {0}")]
     PrismaCreate(#[from] NewClientError),
 
-    #[error("prisma relation not fetched error")]
+    #[error("prisma relation not fetched error, {0}")]
     PrismaRelationNotFetched(#[from] RelationNotFetchedError),
 
-    #[error("settings error")]
+    #[error("settings error, {0}")]
     SettingsError(#[from] CacheError),
 
-    #[error("prisma error")]
+    #[error("prisma error, {0}")]
     Prisma(#[from] PrismaError),
 
     #[error("error while running command: {description}")]
@@ -43,20 +43,23 @@ pub enum CommandError {
         title: &'static str,
         description: &'static str,
     },
+
+    #[error("starboard error, {0}")]
+    Starboard(#[from] StarboardError),
 }
 
 #[derive(Error, Debug)]
 pub enum EventError {
-    #[error("serde error")]
+    #[error("serde error {0}")]
     Serde(#[from] serde_json::Error),
 }
 
 #[derive(Error, Debug)]
 pub enum StarboardError {
-    #[error("prisma query error")]
+    #[error("prisma query error {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error: {0}")]
     PrismaCreate(#[from] NewClientError),
 
     #[error("prisma relation not fetched error")]
@@ -68,7 +71,7 @@ pub enum StarboardError {
     #[error("message clone error")]
     MessageClone(#[from] MessageCloneError),
 
-    #[error("serenity error")]
+    #[error("serenity error {0}")]
     Serenity(#[from] serenity::Error),
 
     #[error("clone builder unfinished")]
@@ -77,16 +80,16 @@ pub enum StarboardError {
 
 #[derive(Error, Debug)]
 pub enum LoggingError {
-    #[error("prisma query error")]
+    #[error("prisma query error: {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error: {0}")]
     PrismaCreate(#[from] NewClientError),
 
     #[error("prisma relation not fetched error")]
     PrismaRelationNotFetched(#[from] RelationNotFetchedError),
 
-    #[error("serenity error")]
+    #[error("serenity error {0}")]
     Serenity(#[from] serenity::Error),
 
     #[error("channel with id {0} is a thread")]
@@ -101,10 +104,10 @@ pub enum LoggingError {
     #[error("could not find nci in ctx.cache")]
     NciNotFound,
 
-    #[error("color parse error")]
+    #[error("color parse error: {0}")]
     Color(#[from] ColorParseError),
 
-    #[error("cache error")]
+    #[error("cache error: {0}")]
     Cache(#[from] CacheError),
 
     #[error("{0} not found in database")]
@@ -116,7 +119,7 @@ pub enum LoggingError {
 
 #[derive(Error, Debug)]
 pub enum CacheError {
-    #[error("serde error")]
+    #[error("serde error: {0}")]
     Serde(#[from] serde_json::Error),
 
     #[error("<{0}>::default_value failed")]
@@ -140,16 +143,16 @@ pub enum ColorParseError {
 
 #[derive(Error, Debug)]
 pub enum MessageCloneError {
-    #[error("serenity error")]
+    #[error("serenity error: {0}")]
     Serenity(#[from] serenity::Error),
 
-    #[error("prisma query error")]
+    #[error("prisma query error: {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error: {0}")]
     PrismaCreate(#[from] NewClientError),
 
-    #[error("prisma relation not fetched error")]
+    #[error("prisma relation not fetched error: {0}")]
     PrismaRelationNotFetched(#[from] RelationNotFetchedError),
 
     #[error("webhook not found while trying to resync")]
@@ -164,13 +167,13 @@ pub enum MessageCloneError {
 
 #[derive(Error, Debug)]
 pub enum AnyError {
-    #[error("serenity error")]
+    #[error("serenity error {0}")]
     Serenity(#[from] serenity::Error),
 
-    #[error("prisma query error")]
+    #[error("prisma query error: {0}")]
     PrismaQuery(#[from] QueryError),
 
-    #[error("prisma create error")]
+    #[error("prisma create error: {0}")]
     PrismaCreate(#[from] NewClientError),
 
     #[error("prisma relation not fetched error")]
@@ -182,28 +185,28 @@ pub enum AnyError {
     #[error("message clone error")]
     Clone(#[from] MessageCloneError),
 
-    #[error("color parse error")]
+    #[error("color parse error: {0}")]
     Color(#[from] ColorParseError),
 
-    #[error("command error")]
+    #[error("command error: {0}")]
     Command(#[from] CommandError),
 
-    #[error("event emitter error")]
+    #[error("event emitter error: {0}")]
     Event(#[from] EventError),
 
-    #[error("database logging error")]
+    #[error("database logging error: {0}")]
     Logging(#[from] LoggingError),
 
-    #[error("settings error")]
+    #[error("settings error: {0}")]
     Settings(#[from] CacheError),
 
-    #[error("starboard error")]
+    #[error("starboard error: {0}")]
     Starboard(#[from] StarboardError),
 
-    #[error("prisma error")]
+    #[error("prisma error: {0}")]
     Prisma(#[from] PrismaError),
 
-    #[error("clone builder unfinished")]
+    #[error("clone builder unfinished: {0}")]
     UnfinishedBuilder(#[from] UnfinishedBuilderError),
 }
 
