@@ -1,4 +1,20 @@
+use poise::ReplyHandle;
+
 use crate::prelude::*;
+
+const DEPRICATION_NOTICE: &'static str = "
+The pin reaction is being phased out in favor of the context menu command. 
+From now on, please either
+
+- Tap and hold on the message (mobile)
+- Click the three dots on the message (desktop)
+- Right click the message (desktop)
+
+and then select `Apps > Oreo: Star Message`.
+
+Thank you for your cooperation.
+This message will self-destruct in 3 seconds...
+";
 
 macro_rules! star {
     ($ctx:expr, $message:expr, $loading:expr, $seren:expr) => {{
@@ -76,10 +92,10 @@ macro_rules! star {
         clone_finish.title("Starboard");
         clone_finish.description("Message pinned sucessfully.");
 
-        loading.last(&ctx, clone_finish).await?;
+        let message = loading.last(&ctx, clone_finish).await?;
 
-        Ok(())
-    }};
+        Ok((cloned, message))
+    } as Result<_, StarboardError>};
 }
 
 pub async fn star_no_interaction(
@@ -90,7 +106,41 @@ pub async fn star_no_interaction(
         Loading::<LoadingWithoutInteraction>::new(ctx, message.channel_id, "Starring Message...")
             .await?;
 
-    star!(ctx, message, loading, ctx.clone())
+    let (cloned, mut star_success): (serenity::Message, serenity::Message) =
+        star!(ctx, message, loading, ctx.clone())?;
+
+    star_success
+        .edit(&ctx, |builder| {
+            builder.components(|components| {
+                components
+                    .add_action_row(share::row(false))
+                    .create_action_row(|row| {
+                        row.create_button(|btn| {
+                            btn.custom_id("oreo_starboard_link")
+                                .style(serenity::ButtonStyle::Link)
+                                .label("Jump to starred message")
+                                .url(cloned.link())
+                        })
+                    })
+            });
+
+            builder
+        })
+        .await?;
+
+    let mut deprication_embed = embed::default(&ctx, EmbedStatus::Warning);
+    deprication_embed.title("Starboard > Pin Reaction Deprication Notice");
+    deprication_embed.description(DEPRICATION_NOTICE);
+
+    let depricated = message
+        .channel_id
+        .send_message(&ctx, |b| b.set_embed(deprication_embed))
+        .await?;
+
+    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+    depricated.delete(ctx).await.unwrap();
+
+    Ok(())
 }
 
 // plans to right-click star interaction
@@ -100,7 +150,29 @@ pub async fn star_interaction(
 ) -> Result<(), StarboardError> {
     let loading = Loading::<LoadingWithInteraction>::new(ctx, "Starring Message...").await?;
 
-    star!(ctx, message, loading, ctx.serenity_context().clone())
+    let (cloned, handle): (serenity::Message, ReplyHandle) =
+        star!(ctx, message, loading, ctx.serenity_context().clone())?;
+
+    handle
+        .edit(*ctx, |builder| {
+            builder.components(|components| {
+                components
+                    .add_action_row(share::row(false))
+                    .create_action_row(|row| {
+                        row.create_button(|btn| {
+                            btn.custom_id("oreo_starboard_link")
+                                .style(serenity::ButtonStyle::Link)
+                                .label("Jump to starred message")
+                                .url(cloned.link())
+                        })
+                    })
+            });
+
+            builder
+        })
+        .await?;
+
+    Ok(())
 }
 
 pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {

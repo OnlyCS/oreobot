@@ -70,6 +70,8 @@ async fn main() -> Result<(), AnyError> {
                 commands::ping::ping(),
                 commands::setting::settings(),
                 commands::impersonate::impersonate(),
+                commands::help::help(),
+                commands::star::star(),
             ],
             on_error: |error| {
                 async move {
