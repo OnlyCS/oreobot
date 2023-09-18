@@ -81,6 +81,7 @@ model Message {
 
     pin                  MessagePin?
     impersonated_message ImpersonatedMessageData?
+    NewsInChat           NewsInChat[]
 }
 
 model MessagePin {
@@ -149,5 +150,11 @@ model ImpersonatedMessageData {
     fake_author    User   @relation(fields: [fake_author_id], references: [id])
     fake_author_id String
 
+    fake_message_id String
+}
+
+model NewsInChat {
+    source          Message @relation(fields: [source_id], references: [id])
+    source_id       String  @id
     fake_message_id String
 }

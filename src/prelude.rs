@@ -1,17 +1,18 @@
+#[allow(unused_imports)]
 pub(crate) use crate::{
-    cache::{self, all as settings, Cache, UserCache},
+    cache::{self, all as cache_items, Cache},
     error::*,
     events::{
         emitter::{EmitterEvent, EventEmitter},
         events, payloads,
     },
-    features::{impersonate, starboard},
+    features::{impersonate, newsinchat, starboard},
     nci,
     prisma::{
         self,
         prisma_client::{
-            attachment, channel, channel_category, interaction, message, message_pin, role, user,
-            ChannelType, InteractionType, PrismaClient,
+            attachment, channel, channel_category, interaction, message, message_pin, news_in_chat,
+            role, user, ChannelType, InteractionType, PrismaClient,
         },
     },
     util::{

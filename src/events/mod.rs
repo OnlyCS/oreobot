@@ -8,7 +8,7 @@ use crate::prelude::*;
 pub async fn event_handler(
     ctx: serenity::Context,
     event: poise::Event<'_>,
-) -> Result<(), EventError> {
+) -> Result<(), EmitterError> {
     let data_arc = data::get_serenity(&ctx).await;
     let mut data = data_arc.lock().await;
     let event_emitter = &mut data.emitter;

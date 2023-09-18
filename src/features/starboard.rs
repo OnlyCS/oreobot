@@ -10,7 +10,7 @@ From now on, please either
 - Click the three dots on the message (desktop)
 - Right click the message (desktop)
 
-and then select `Apps > Oreo: Star Message`.
+and then select `Apps > Star Message`.
 
 Thank you for your cooperation.
 This message will self-destruct in 3 seconds...
@@ -90,7 +90,7 @@ macro_rules! star {
         let mut clone_finish = embed::default(&ctx, EmbedStatus::Sucess);
 
         clone_finish.title("Starboard");
-        clone_finish.description("Message pinned sucessfully.");
+        clone_finish.description("Message starred sucessfully.");
 
         let message = loading.last(&ctx, clone_finish).await?;
 
@@ -116,8 +116,7 @@ pub async fn star_no_interaction(
                     .add_action_row(share::row(false))
                     .create_action_row(|row| {
                         row.create_button(|btn| {
-                            btn.custom_id("oreo_starboard_link")
-                                .style(serenity::ButtonStyle::Link)
+                            btn.style(serenity::ButtonStyle::Link)
                                 .label("Jump to starred message")
                                 .url(cloned.link())
                         })
@@ -138,7 +137,7 @@ pub async fn star_no_interaction(
         .await?;
 
     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-    depricated.delete(ctx).await.unwrap();
+    depricated.delete(ctx).await?;
 
     Ok(())
 }
@@ -160,8 +159,7 @@ pub async fn star_interaction(
                     .add_action_row(share::row(false))
                     .create_action_row(|row| {
                         row.create_button(|btn| {
-                            btn.custom_id("oreo_starboard_link")
-                                .style(serenity::ButtonStyle::Link)
+                            btn.style(serenity::ButtonStyle::Link)
                                 .label("Jump to starred message")
                                 .url(cloned.link())
                         })
@@ -175,7 +173,7 @@ pub async fn star_interaction(
     Ok(())
 }
 
-pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {
+pub async fn register(ctx: &serenity::Context) {
     let data_arc = data::get_serenity(ctx).await;
     let mut data = data_arc.lock().await;
     let emitter = &mut data.emitter;
@@ -307,6 +305,4 @@ pub async fn register(ctx: &serenity::Context) -> Result<(), StarboardError> {
                 .starts_with("oreo_starboard_delete_confirm")
         },
     );
-
-    Ok(())
 }

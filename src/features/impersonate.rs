@@ -15,8 +15,11 @@ pub async fn register(ctx: &serenity::Context) {
         let cache = &mut data.cache;
 
         let user = cache
-            .get_user::<cache::impersonate::Impersonation>(author_id)
-            .await?;
+            .get::<cache::impersonate::Impersonation>()
+            .await?
+            .get(&author_id)
+            .cloned()
+            .flatten();
 
         let Some(clone_as) = user else { return Ok(()) };
         message.delete(&ctx).await?;

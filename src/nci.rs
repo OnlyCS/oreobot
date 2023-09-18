@@ -17,4 +17,10 @@ pub mod channels {
     pub const STARRED: ChannelId = ChannelId(1016113247662919760);
 }
 
+pub mod smarty {
+    use crate::prelude::serenity::*;
+
+    pub const CHAT_WH: WebhookId = WebhookId(1013868027500052561);
+}
+
 pub const ID: GuildId = GuildId(803315311663251537);

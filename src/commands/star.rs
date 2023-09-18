@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[poise::command(context_menu_command = "Oreo: Star Message")]
+#[poise::command(context_menu_command = "Star Message")]
 pub async fn star(ctx: Context<'_>, message: serenity::Message) -> Result<(), CommandError> {
     if message.channel_id == nci::channels::STARRED {
         Err(CommandError::RuntimeError {
