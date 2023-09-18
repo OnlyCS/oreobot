@@ -30,6 +30,7 @@ pub(crate) use crate::{
         },
         role::default_role,
         share,
+		string::StringUtil
     },
 };
 
@@ -71,24 +72,6 @@ pub trait IsThread {
 impl IsThread for serenity::GuildChannel {
     fn is_thread(&self) -> bool {
         self.thread_metadata.is_some()
-    }
-}
-
-pub trait CapitalizeFirstLetter {
-    fn capitalize_first_letter(&self) -> String;
-}
-
-impl<T> CapitalizeFirstLetter for T
-where
-    T: ToString,
-{
-    fn capitalize_first_letter(&self) -> String {
-        let string = self.to_string();
-        let mut chars = string.chars();
-        match chars.next() {
-            None => String::new(),
-            Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
-        }
     }
 }
 

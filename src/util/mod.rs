@@ -7,3 +7,4 @@ pub mod loading;
 pub mod message;
 pub mod role;
 pub mod share;
+pub mod string;
