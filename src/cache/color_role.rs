@@ -43,9 +43,7 @@ impl cache::CacheItem for RoleColor {
             .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
-            .filter(|r| {
-                !vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
-            })
+            .filter(|r| nci::roles::is_color_role(*r))
             .next()
             .make_error(anyhow!("User {} has no color role", user_id))?;
 
@@ -80,7 +78,13 @@ impl cache::CacheItem for RoleName {
             .exec()
             .await?
             .into_iter()
-            .map(|n| (n.users().unwrap()[0].id.to_string(), n.name))
+            .filter(|n| !n.deleted)
+            .map(|n| (n.users().unwrap().clone(), n.name))
+            .map(|n| {
+                info!("{:?}", n);
+                n
+            })
+            .map(|(users, name)| (users[0].id.to_string(), name))
             .map(|(uid, name)| (serenity::UserId(u64::from_str(&uid).unwrap()), name))
             .collect::<HashMap<_, _>>();
 
@@ -100,9 +104,7 @@ impl cache::CacheItem for RoleName {
             .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
-            .filter(|r| {
-                !vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
-            })
+            .filter(|r| nci::roles::is_color_role(*r))
             .next()
             .make_error(anyhow!("User {} has no color role", user_id))?;
 

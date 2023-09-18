@@ -18,11 +18,8 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
                 updates.push(role::color::set(role.colour.hex()));
             }
 
-            if !vec![nci::roles::MEMBERS, nci::roles::OVERRIDES, nci::roles::BOTS]
-                .contains(&role.id)
-                && !prisma_role.color_role
-            {
-                updates.push(role::color_role::set(true));
+            if nci::roles::is_color_role(role.id) != prisma_role.color_role {
+                updates.push(role::color_role::set(nci::roles::is_color_role(role.id)));
             }
 
             // if no updates, skip
@@ -44,10 +41,7 @@ async fn roles(nci: &serenity::Guild, prisma: &PrismaClient) -> Result<(), Loggi
                     role.id.to_string(),
                     role.name.clone(),
                     role.colour.hex(),
-                    vec![role::color_role::set(
-                        !vec![nci::roles::MEMBERS, nci::roles::OVERRIDES, nci::roles::BOTS]
-                            .contains(&role.id),
-                    )],
+                    vec![role::color_role::set(nci::roles::is_color_role(role.id))],
                 )
                 .exec()
                 .await
