@@ -4,46 +4,59 @@ use crate::prelude::*;
 pub struct RoleColor;
 
 #[async_trait]
-impl UserCache for RoleColor {
-    type Value = Color;
+impl cache::CacheItem for RoleColor {
+    type Value = HashMap<serenity::UserId, Color>;
+    type UpdateValue = (serenity::UserId, Color);
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
+    async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
 
         let color = prisma
             .role()
-            .find_first(vec![role::color_role::equals(true)])
-            .with(role::users::fetch(vec![user::id::equals(user.to_string())]))
+            .find_many(vec![role::color_role::equals(true)])
+            .with(role::users::fetch(vec![]))
             .exec()
             .await?
-            .map(|n| n.color)
-            .make_error(anyhow!("no color role found for user {}", user))?;
+            .into_iter()
+            .map(|n| (n.users().unwrap()[0].id.to_string(), n.color))
+            .map(|(uid, color)| {
+                (
+                    serenity::UserId(u64::from_str(&uid).unwrap()),
+                    Color::from_hex(color).unwrap(),
+                )
+            })
+            .collect::<HashMap<_, _>>();
 
-        Ok(Color::from_hex(color)?)
+        Ok(color)
     }
 
-    async fn on_change(
+    async fn update(
         ctx: &serenity::Context,
-        value: Self::Value,
-        user: serenity::UserId,
+        current_value: &mut Self::Value,
+        value: Self::UpdateValue,
     ) -> Result<(), AnyError> {
-        let role = ctx
+        let (user_id, color) = value;
+
+        let role_id = ctx
             .cache
-            .member(nci::ID, user)
+            .member(nci::ID, user_id)
             .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
             .filter(|r| {
-                vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
+                !vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
             })
             .next()
-            .make_error(anyhow!("User has no color role"))?;
+            .make_error(anyhow!("User {} has no color role", user_id))?;
 
-        ctx.cache
-            .guild(nci::ID)
-            .make_error(anyhow!("NCI not found in cache"))?
-            .edit_role(&ctx, role, |edit| edit.colour(value.into()))
-            .await?;
+        let role = ctx
+            .cache
+            .role(nci::ID, role_id)
+            .make_error(anyhow!("Could not find role {} in cache", role_id))?;
+
+        role.edit(&ctx, |r| r.colour(color.into())).await?;
+
+        current_value.insert(user_id, color);
 
         Ok(())
     }
@@ -53,32 +66,37 @@ impl UserCache for RoleColor {
 pub struct RoleName;
 
 #[async_trait]
-impl UserCache for RoleName {
-    type Value = String;
+impl cache::CacheItem for RoleName {
+    type Value = HashMap<serenity::UserId, String>;
+    type UpdateValue = (serenity::UserId, String);
 
-    async fn default_value(user: serenity::UserId) -> Result<Self::Value, AnyError> {
+    async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
 
         let name = prisma
             .role()
-            .find_first(vec![role::color_role::equals(true)])
-            .with(role::users::fetch(vec![user::id::equals(user.to_string())]))
+            .find_many(vec![role::color_role::equals(true)])
+            .with(role::users::fetch(vec![]))
             .exec()
             .await?
-            .map(|n| n.name)
-            .make_error(anyhow!("No color role found"))?;
+            .into_iter()
+            .map(|n| (n.users().unwrap()[0].id.to_string(), n.name))
+            .map(|(uid, name)| (serenity::UserId(u64::from_str(&uid).unwrap()), name))
+            .collect::<HashMap<_, _>>();
 
         Ok(name)
     }
 
-    async fn on_change(
+    async fn update(
         ctx: &serenity::Context,
-        value: Self::Value,
-        user: serenity::UserId,
+        current_value: &mut Self::Value,
+        value: Self::UpdateValue,
     ) -> Result<(), AnyError> {
-        let role = ctx
+        let (user_id, name) = value;
+
+        let role_id = ctx
             .cache
-            .member(nci::ID, user)
+            .member(nci::ID, user_id)
             .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
@@ -86,13 +104,16 @@ impl UserCache for RoleName {
                 !vec![nci::roles::OVERRIDES, nci::roles::MEMBERS, nci::roles::BOTS].contains(r)
             })
             .next()
-            .make_error(anyhow!("User has no color role"))?;
+            .make_error(anyhow!("User {} has no color role", user_id))?;
 
-        ctx.cache
-            .guild(nci::ID)
-            .make_error(anyhow!("NCI not found in cache"))?
-            .edit_role(&ctx, role, |edit| edit.name(value))
-            .await?;
+        let role = ctx
+            .cache
+            .role(nci::ID, role_id)
+            .make_error(anyhow!("Could not find role {} in cache", role_id))?;
+
+        role.edit(&ctx, |r| r.name(&name)).await?;
+
+        current_value.insert(user_id, name);
 
         Ok(())
     }

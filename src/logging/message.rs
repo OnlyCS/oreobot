@@ -5,7 +5,11 @@ pub async fn create(
     message: serenity::Message,
 ) -> Result<(), LoggingError> {
     if message.webhook_id.is_some() {
-        return Ok(()); //ignore webhooks, we manage them in this server
+        bail!(LoggingError::WebhookMessage(message.id));
+    }
+
+    if message.channel_id == nci::channels::NEWS {
+        bail!(LoggingError::NewsMessage(message.id));
     }
 
     let data_arc = data::get_serenity(&ctx).await;
@@ -13,8 +17,11 @@ pub async fn create(
     let cache = &mut data.cache;
 
     if cache
-        .get_user::<cache::impersonate::Impersonation>(message.author.id)
+        .get::<cache::impersonate::Impersonation>()
         .await?
+        .get(&message.author.id)
+        .cloned()
+        .flatten()
         .is_some()
     {
         bail!(LoggingError::UserImpersonated(message.author.id));
@@ -34,20 +41,27 @@ pub async fn create(
         .exec()
         .await?;
 
-    for attachment in message.attachments {
-        prisma
-            .attachment()
-            .create(
+    let attachments = message
+        .attachments
+        .iter()
+        .map(|attachment| {
+            (
                 attachment.id.to_string(),
-                attachment.filename,
-                attachment.url,
+                attachment.filename.clone(),
+                attachment.url.clone(),
                 attachment.size as i64, //cannot exceed 100gb, so i64 is fine
-                message::id::equals(message.id.to_string()),
+                message.id.to_string(),
                 vec![],
             )
-            .exec()
-            .await?;
-    }
+        })
+        .collect_vec();
+
+    prisma
+        .attachment()
+        .create_many(attachments)
+        .exec()
+        .await
+        .unwrap();
 
     Ok(())
 }

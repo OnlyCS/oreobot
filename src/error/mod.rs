@@ -38,6 +38,7 @@ pub enum CommandError {
         description: &'static str,
     },
 
+    #[allow(unused)] // todo: use this
     #[error("warning while running command: {description}")]
     RuntimeWarning {
         title: &'static str,
@@ -49,7 +50,7 @@ pub enum CommandError {
 }
 
 #[derive(Error, Debug)]
-pub enum EventError {
+pub enum EmitterError {
     #[error("serde error {0}")]
     Serde(#[from] serde_json::Error),
 }
@@ -115,6 +116,12 @@ pub enum LoggingError {
 
     #[error("warning: user with id {0} impersonated, skipping")]
     UserImpersonated(serenity::UserId),
+
+    #[error("messaged owned by webhook: {0}")]
+    WebhookMessage(serenity::MessageId),
+
+    #[error("got message in channel #news: {0}")]
+    NewsMessage(serenity::MessageId),
 }
 
 #[derive(Error, Debug)]
@@ -125,8 +132,8 @@ pub enum CacheError {
     #[error("<{0}>::default_value failed")]
     DefaultValueFailed(String),
 
-    #[error("<{0}>::on_change failed")]
-    OnChangeFailed(String),
+    #[error("<{0}>::update failed")]
+    UpdateFailed(String),
 }
 
 #[derive(Error, Debug)]
@@ -192,7 +199,7 @@ pub enum AnyError {
     Command(#[from] CommandError),
 
     #[error("event emitter error: {0}")]
-    Event(#[from] EventError),
+    Event(#[from] EmitterError),
 
     #[error("database logging error: {0}")]
     Logging(#[from] LoggingError),

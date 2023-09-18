@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub mod emoji {
     pub const CURVED: &str = "1034653422416302151";
     pub const STRAIGHT: &str = "1034653871613681714";

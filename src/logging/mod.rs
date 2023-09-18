@@ -78,7 +78,21 @@ pub async fn register(ctx: &serenity::Context) {
 
     // message events
     emitter.on(events::MessageCreateEvent, |message, ctx| async move {
-        Ok(message::create(ctx, message).await?)
+        match message::create(ctx, message).await {
+            Ok(_) => Ok(()),
+            Err(LoggingError::WebhookMessage(id)) => {
+                warn!("Message {} is owned by a webhook, ignoring", id);
+                Ok(())
+            }
+            Err(LoggingError::NewsMessage(id)) => {
+                warn!(
+                    "Message {} is in #news, ignoring, will be handled in the newstochat feature",
+                    id
+                );
+                Ok(())
+            }
+            Err(e) => Err(e)?,
+        }
     });
 
     emitter.on(events::MessageUpdateEvent, |event, _| async move {

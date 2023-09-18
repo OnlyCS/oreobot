@@ -23,10 +23,9 @@ pub async fn impersonate(
 
     if to_impersonate.user.id == ctx.author().id {
         cache
-            .set_user::<cache::impersonate::Impersonation>(
+            .update::<cache_items::Impersonation>(
                 ctx.serenity_context().clone(),
-                None,
-                ctx.author().id,
+                (ctx.author().id, None),
             )
             .await?;
 
@@ -38,10 +37,9 @@ pub async fn impersonate(
         loading.last(&ctx, embed).await?;
     } else {
         cache
-            .set_user::<cache::impersonate::Impersonation>(
+            .update::<cache_items::Impersonation>(
                 ctx.serenity_context().clone(),
-                Some(to_impersonate.user.id),
-                ctx.author().id,
+                (ctx.author().id, Some(to_impersonate.user.id)),
             )
             .await?;
 

@@ -27,27 +27,29 @@ impl EventEmitter {
         _event: Event, /* making the user specify generic argument for this looks ugly af */
         argument: Event::Argument,
         context: &serenity::Context,
-    ) -> Result<(), EventError>
+    ) -> Result<(), EmitterError>
     where
         Event: EmitterEvent,
     {
-        if let Some(listeners) = self.listeners.get_mut(&TypeId::of::<Event>()) {
-            let bytes: Vec<u8> = serde_json::to_vec(&argument)?;
+        let Some(listeners) = self.listeners.get_mut(&TypeId::of::<Event>()) else {
+            return Ok(());
+        };
 
-            for listener in listeners {
-                let bytes = bytes.clone();
+        let bytes: Vec<u8> = serde_json::to_vec(&argument)?;
 
-                if let Some(filter) = &listener.filter {
-                    if !filter(bytes.clone()) {
-                        continue;
-                    }
+        for listener in listeners.iter_mut() {
+            let bytes = bytes.clone();
+
+            if let Some(filter) = &listener.filter {
+                if !filter(bytes.clone()) {
+                    continue;
                 }
-
-                let callback = listener.callback.clone();
-                let context = context.clone();
-
-                async_non_blocking!({ callback(bytes.clone(), context).await.unwrap() });
             }
+
+            let callback = listener.callback.clone();
+            let context = context.clone();
+
+            async_non_blocking!({ callback(bytes.clone(), context).await.unwrap() });
         }
 
         Ok(())

@@ -43,11 +43,7 @@ use crate::prelude::*;
 #[tokio::main]
 async fn main() -> Result<(), AnyError> {
     SimpleLogger::new()
-        .with_level(if cfg!(debug_assertions) {
-            log::LevelFilter::Debug
-        } else {
-            log::LevelFilter::Info
-        })
+        .with_level(log::LevelFilter::Info)
         .init()
         .make_error(anyhow!("failed to initialize logger"))?;
 
@@ -68,10 +64,11 @@ async fn main() -> Result<(), AnyError> {
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::ping::ping(),
-                commands::setting::settings(),
                 commands::impersonate::impersonate(),
                 commands::help::help(),
                 commands::star::star(),
+                commands::jumptochat::jump_to_chat(),
+                commands::role::role(),
             ],
             on_error: |error| {
                 async move {
@@ -104,8 +101,9 @@ async fn main() -> Result<(), AnyError> {
                 async_non_blocking!({
                     impersonate::register(&ctx).await;
                     share::register(&ctx).await;
-                    starboard::register(&ctx).await.unwrap();
+                    starboard::register(&ctx).await;
                     clone::register(&ctx).await.unwrap();
+                    newsinchat::register(&ctx).await;
                 });
 
                 Ok(data)
