@@ -1837,6 +1837,7 @@ dependencies = [
  "log",
  "poise",
  "prisma-client-rust",
+ "rand 0.8.5",
  "serde",
  "serde_json",
  "simple_logger",
@@ -2450,6 +2451,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
  "libc",
+ "log",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
 ]

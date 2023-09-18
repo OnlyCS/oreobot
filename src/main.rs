@@ -20,6 +20,7 @@ extern crate futures;
 extern crate itertools;
 extern crate log;
 extern crate poise;
+extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate simple_logger;
@@ -69,6 +70,7 @@ async fn main() -> Result<(), AnyError> {
                 commands::star::star(),
                 commands::jumptochat::jump_to_chat(),
                 commands::role::role(),
+                commands::chernobyl::chernobyl(),
             ],
             on_error: |error| {
                 async move {
