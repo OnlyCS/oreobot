@@ -1,3 +1,4 @@
+pub mod chernobyl;
 pub mod help;
 pub mod impersonate;
 pub mod jumptochat;

@@ -30,13 +30,14 @@ pub(crate) use crate::{
         },
         role::default_role,
         share,
-		string::StringUtil
+        string::StringUtil,
     },
 };
 
 pub use std::{
     collections::HashMap,
     default::{self, Default},
+    num,
     str::FromStr,
     sync::Arc,
     thread,
@@ -48,6 +49,7 @@ pub use itertools::Itertools;
 pub use log::{debug, error, info, trace, warn};
 pub use poise::serenity_prelude as serenity;
 pub use prisma_client_rust::{NewClientError, QueryError, RelationNotFetchedError};
+pub use rand::prelude::*;
 pub use serde::{Deserialize, Serialize};
 pub use simple_logger::SimpleLogger;
 pub use thiserror::Error;

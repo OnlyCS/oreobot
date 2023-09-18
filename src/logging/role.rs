@@ -20,6 +20,10 @@ pub async fn create(role: serenity::Role) -> Result<(), LoggingError> {
 pub async fn update(role: serenity::Role) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
+    if nci::roles::can_log(role.id) {
+        bail!(LoggingError::Blacklisted(format!("role with id {}", role.id)));
+    }
+
     prisma
         .role()
         .update(

@@ -47,6 +47,9 @@ pub enum CommandError {
 
     #[error("starboard error, {0}")]
     Starboard(#[from] StarboardError),
+
+    #[error("Command must be run in a server")]
+    NotInGuild,
 }
 
 #[derive(Error, Debug)]
@@ -122,6 +125,12 @@ pub enum LoggingError {
 
     #[error("got message in channel #news: {0}")]
     NewsMessage(serenity::MessageId),
+
+    #[error("stuff in blacklisted: {0}")]
+    Blacklisted(String),
+
+    #[error("error parsing id: {0}")]
+    ParseIdError(#[from] num::ParseIntError),
 }
 
 #[derive(Error, Debug)]
@@ -245,7 +254,7 @@ impl<T, E> MakeError<T, E> for Option<T> {
 
 macro_rules! bail {
     ($err:expr) => {
-        return Err($err);
+        return Err($err)
     };
 }
 
