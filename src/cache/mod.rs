@@ -1,4 +1,5 @@
 pub mod color_role;
+pub mod custom_role;
 pub mod impersonate;
 pub mod newsinchat;
 
