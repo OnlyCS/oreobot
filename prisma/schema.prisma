@@ -127,16 +127,17 @@ model CommandInteractionData {
 }
 
 model Interaction {
-    id   String          @id
-    kind InteractionType
+    id             String          @id
+    kind           InteractionType
+    token          String
+    created        DateTime        @default(now())
+    application_id String
 
-    channel    Channel @relation(fields: [channel_id], references: [id])
+    channel Channel @relation(fields: [channel_id], references: [id])
+    invoker User    @relation(fields: [invoker_id], references: [id])
+
     channel_id String
-
-    invoker    User   @relation(fields: [invoker_id], references: [id])
     invoker_id String
-
-    created DateTime @default(now())
 
     // custom id for all except for commands, which has extra data
     command_data CommandInteractionData?
