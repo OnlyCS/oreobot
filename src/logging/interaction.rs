@@ -10,6 +10,8 @@ pub async fn command(
         .create(
             interaction.id.to_string(),
             InteractionType::Command,
+            interaction.token.to_string(),
+            interaction.application_id.to_string(),
             channel::id::equals(interaction.channel_id.to_string()),
             user::id::equals(interaction.user.id.to_string()),
             vec![],
@@ -41,6 +43,8 @@ pub async fn message_component(
         .create(
             interaction.id.to_string(),
             InteractionType::MessageComponent,
+            interaction.token.to_string(),
+            interaction.application_id.to_string(),
             channel::id::equals(interaction.channel_id.to_string()),
             user::id::equals(interaction.user.id.to_string()),
             vec![interaction::custom_id::set(Some(
@@ -63,6 +67,8 @@ pub async fn modal_submit(
         .create(
             interaction.id.to_string(),
             InteractionType::ModalSubmit,
+            interaction.token.to_string(),
+            interaction.application_id.to_string(),
             channel::id::equals(interaction.channel_id.to_string()),
             user::id::equals(interaction.user.id.to_string()),
             vec![interaction::custom_id::set(Some(
