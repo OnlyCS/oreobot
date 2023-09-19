@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[poise::command(slash_command, subcommands("edit", "color_role"))]
+#[poise::command(slash_command, subcommands("edit", "color_role", "add"))]
 pub async fn role(_: Context<'_>) -> Result<(), CommandError> {
     Ok(())
 }
