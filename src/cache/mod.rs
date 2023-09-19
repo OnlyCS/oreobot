@@ -80,6 +80,7 @@ impl Cache {
 pub mod all {
     pub use super::color_role::RoleColor;
     pub use super::color_role::RoleName;
+    pub use super::custom_role::CustomRole;
     pub use super::impersonate::Impersonation;
     pub use super::newsinchat::NewsInChat;
 }

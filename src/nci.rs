@@ -36,7 +36,7 @@ pub mod channels {
 pub mod smarty {
     use crate::prelude::serenity::*;
 
-    pub const CHAT_WH: WebhookId = WebhookId(1013868027500052561);
+    pub const CHAT_WEBHOOK_ID: WebhookId = WebhookId(1013868027500052561);
 }
 
 pub const ID: GuildId = GuildId(803315311663251537);

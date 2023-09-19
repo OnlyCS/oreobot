@@ -1,7 +1,19 @@
 use crate::prelude::*;
 
-pub async fn create(role: serenity::Role) -> Result<(), LoggingError> {
+pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
+
+    let data_arc = data::get_serenity(&ctx).await;
+    let mut data = data_arc.lock().await;
+    let cache = &mut data.cache;
+
+    if cache
+        .get::<cache_items::CustomRole>()
+        .await?
+        .contains(&role.id)
+    {
+        bail!(LoggingError::CustomRole(role.id));
+    }
 
     prisma
         .role()
@@ -17,11 +29,26 @@ pub async fn create(role: serenity::Role) -> Result<(), LoggingError> {
     Ok(())
 }
 
-pub async fn update(role: serenity::Role) -> Result<(), LoggingError> {
+pub async fn update(role: serenity::Role, ctx: serenity::Context) -> Result<(), LoggingError> {
     let prisma = prisma::create().await?;
 
+    let data_arc = data::get_serenity(&ctx).await;
+    let mut data = data_arc.lock().await;
+    let cache = &mut data.cache;
+
+    if cache
+        .get::<cache_items::CustomRole>()
+        .await?
+        .contains(&role.id)
+    {
+        bail!(LoggingError::CustomRole(role.id));
+    }
+
     if nci::roles::can_log(role.id) {
-        bail!(LoggingError::Blacklisted(format!("role with id {}", role.id)));
+        bail!(LoggingError::Blacklisted(format!(
+            "role with id {}",
+            role.id
+        )));
     }
 
     prisma

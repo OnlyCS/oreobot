@@ -104,12 +104,12 @@ pub async fn register(ctx: &serenity::Context) {
     });
 
     // role events
-    emitter.on(events::RoleCreateEvent, |role, _| async move {
-        Ok(role::create(role).await?)
+    emitter.on(events::RoleCreateEvent, |role, ctx| async move {
+        Ok(role::create(role, ctx).await?)
     });
 
-    emitter.on(events::RoleUpdateEvent, |role, _| async move {
-        Ok(role::update(role).await?)
+    emitter.on(events::RoleUpdateEvent, |role, ctx| async move {
+        Ok(role::update(role, ctx).await?)
     });
 
     emitter.on(events::RoleDeleteEvent, |payload, ctx| async move {

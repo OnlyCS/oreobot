@@ -69,8 +69,8 @@ async fn main() -> Result<(), AnyError> {
                 commands::help::help(),
                 commands::star::star(),
                 commands::jumptochat::jump_to_chat(),
-                commands::role::role(),
                 commands::chernobyl::chernobyl(),
+                commands::role::role(),
             ],
             on_error: |error| {
                 async move {
