@@ -131,6 +131,9 @@ pub enum LoggingError {
 
     #[error("error parsing id: {0}")]
     ParseIdError(#[from] num::ParseIntError),
+
+    #[error("not logging custom role: {0}")]
+    CustomRole(serenity::RoleId),
 }
 
 #[derive(Error, Debug)]
