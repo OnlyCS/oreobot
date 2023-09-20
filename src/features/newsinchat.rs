@@ -45,9 +45,6 @@ pub async fn register(ctx: &serenity::Context) {
 
             Ok(())
         },
-        |message| {
-            message.channel_id == nci::channels::CHAT
-                && message.webhook_id == Some(nci::smarty::CHAT_WEBHOOK_ID)
-        },
+        |message| message.channel_id == nci::channels::CHAT && message.webhook_id.is_some(),
     )
 }
