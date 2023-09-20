@@ -17,17 +17,18 @@ pub async fn register(ctx: &serenity::Context) {
     // interaction events
     emitter.on(
         events::CommandInteractionEvent,
-        |interaction, _| async move { Ok(interaction::command(interaction).await?) },
+        |interaction, ctx| async move { Ok(interaction::command(ctx, interaction).await?) },
     );
 
     emitter.on(
         events::ComponentInteractionEvent,
-        |interaction, _| async move { Ok(interaction::message_component(interaction).await?) },
+        |interaction, ctx| async move { Ok(interaction::message_component(ctx,interaction).await?) },
     );
 
-    emitter.on(events::ModalInteractionEvent, |interaction, _| async move {
-        Ok(interaction::modal_submit(interaction).await?)
-    });
+    emitter.on(
+        events::ModalInteractionEvent,
+        |interaction, ctx| async move { Ok(interaction::modal_submit(ctx, interaction).await?) },
+    );
 
     // category events
     emitter.on(events::CategoryCreateEvent, |category, _| async move {
