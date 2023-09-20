@@ -19,7 +19,7 @@ pub(crate) use crate::{
         color::{consts as colors, Color},
         data,
         embed::{self, EmbedStatus},
-        is_admin, latency,
+        ephemeral, is_admin, latency,
         loading::{
             Loading, WithInteraction as LoadingWithInteraction,
             WithoutInteraction as LoadingWithoutInteraction,
@@ -48,7 +48,7 @@ pub use futures::lock::Mutex;
 pub use itertools::Itertools;
 pub use log::{debug, error, info, trace, warn};
 pub use poise::serenity_prelude as serenity;
-pub use prisma_client_rust::{NewClientError, QueryError, RelationNotFetchedError};
+pub use prisma_client_rust::{and, not, or, NewClientError, QueryError, RelationNotFetchedError};
 pub use rand::prelude::*;
 pub use serde::{Deserialize, Serialize};
 pub use simple_logger::SimpleLogger;

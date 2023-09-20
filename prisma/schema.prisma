@@ -130,8 +130,9 @@ model Interaction {
     id             String          @id
     kind           InteractionType
     token          String
-    created        DateTime        @default(now())
     application_id String
+    created        DateTime        @default(now())
+    reusable       Boolean         @default(false)
 
     channel Channel @relation(fields: [channel_id], references: [id])
     invoker User    @relation(fields: [invoker_id], references: [id])
