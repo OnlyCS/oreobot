@@ -8,11 +8,18 @@ pub async fn create(role: serenity::Role, ctx: serenity::Context) -> Result<(), 
     let cache = &mut data.cache;
 
     if cache
-        .get::<cache_items::CustomRole>()
+        .get::<cache_items::CustomRole>(ctx, ())
         .await?
         .contains(&role.id)
     {
         bail!(LoggingError::CustomRole(role.id));
+    }
+
+    if !nci::roles::can_log(role.id) {
+        bail!(LoggingError::Blacklisted(format!(
+            "role with id {}",
+            role.id
+        )));
     }
 
     prisma
@@ -37,14 +44,14 @@ pub async fn update(role: serenity::Role, ctx: serenity::Context) -> Result<(), 
     let cache = &mut data.cache;
 
     if cache
-        .get::<cache_items::CustomRole>()
+        .get::<cache_items::CustomRole>(ctx, ())
         .await?
         .contains(&role.id)
     {
         bail!(LoggingError::CustomRole(role.id));
     }
 
-    if nci::roles::can_log(role.id) {
+    if !nci::roles::can_log(role.id) {
         bail!(LoggingError::Blacklisted(format!(
             "role with id {}",
             role.id

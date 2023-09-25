@@ -34,6 +34,7 @@ model User {
     messages              Message[]
     impersonated_messages ImpersonatedMessageData[]
     interactions          Interaction[]
+    settings              UserSettingsData?
 
     removed Boolean @default(false)
 }
@@ -163,4 +164,11 @@ model NewsInChat {
 
 model LoglessRoles {
     id String @id
+}
+
+model UserSettingsData {
+    user    User   @relation(fields: [user_id], references: [id])
+    user_id String @id
+
+    pin_confirm Boolean @default(true)
 }

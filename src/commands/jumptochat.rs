@@ -26,8 +26,9 @@ pub async fn jump_to_chat(
     let mut data = data_arc.lock().await;
     let cache = &mut data.cache;
 
-    let news_in_chat = cache.get::<cache_items::NewsInChat>().await?;
-    let chat_msg_id = news_in_chat.get(&message.id);
+    let chat_msg_id = cache
+        .get::<cache_items::NewsInChat>(ctx.serenity_context().clone(), message.clone())
+        .await?;
 
     let Some(chat_msg_id) = chat_msg_id else {
         bail!(CommandError::RuntimeWarning {

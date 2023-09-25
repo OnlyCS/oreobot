@@ -7,6 +7,9 @@ impl cache::CacheItem for CustomRole {
     type Value = Vec<serenity::RoleId>;
     type UpdateValue = serenity::RoleId;
 
+    type InnerKey = ();
+    type Get = Vec<serenity::RoleId>;
+
     async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
 
@@ -21,9 +24,18 @@ impl cache::CacheItem for CustomRole {
             .collect_vec())
     }
 
+    async fn get(
+        _ctx: &serenity::Context,
+        _key: Self::InnerKey,
+        value: Self::Value,
+    ) -> Result<Self::Get, AnyError> {
+        Ok(value)
+    }
+
     async fn update(
         _ctx: &serenity::Context,
         current_value: &mut Self::Value,
+        _key: Self::InnerKey,
         to: Self::UpdateValue,
     ) -> Result<(), AnyError> {
         current_value.push(to);

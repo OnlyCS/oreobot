@@ -1835,6 +1835,7 @@ dependencies = [
  "futures",
  "itertools 0.11.0",
  "log",
+ "oreo_proc_macros",
  "poise",
  "prisma-client-rust",
  "rand 0.8.5",
@@ -1843,6 +1844,16 @@ dependencies = [
  "simple_logger",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "oreo_proc_macros"
+version = "0.1.0"
+dependencies = [
+ "itertools 0.11.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.37",
 ]
 
 [[package]]

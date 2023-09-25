@@ -25,7 +25,8 @@ pub async fn impersonate(
         cache
             .update::<cache_items::Impersonation>(
                 ctx.serenity_context().clone(),
-                (ctx.author().id, None),
+                ctx.author().id,
+                None,
             )
             .await?;
 
@@ -39,7 +40,8 @@ pub async fn impersonate(
         cache
             .update::<cache_items::Impersonation>(
                 ctx.serenity_context().clone(),
-                (ctx.author().id, Some(to_impersonate.user.id)),
+                ctx.author().id,
+                Some(to_impersonate.user.id),
             )
             .await?;
 
