@@ -47,6 +47,9 @@ pub async fn register(ctx: &serenity::Context) {
         events::ComponentInteractionEvent,
         |interaction, ctx| async move {
             let value = interaction.data.values.first().unwrap();
+
+            info!("value: {}", value);
+
             let setting = UserSetting::from_str(value)?;
             let row = setting.type_row(format!("oreo_setting_value_{}", value));
 
@@ -61,7 +64,7 @@ pub async fn register(ctx: &serenity::Context) {
             interaction
                 .create_interaction_response(&ctx, |response| {
                     response.interaction_response_data(|data| {
-                        data.add_embed(embed).set_components(components)
+                        data.add_embed(embed).set_components(components).ephemeral(true)
                     })
                 })
                 .await?;
@@ -79,6 +82,8 @@ pub async fn register(ctx: &serenity::Context) {
                 .custom_id
                 .trim_start_matches("oreo_setting_value_");
 
+            info!("value: {}", value);
+
             let setting = UserSetting::from_str(value)?;
 
             let data_arc = data::get_serenity(&ctx).await;
@@ -92,13 +97,27 @@ pub async fn register(ctx: &serenity::Context) {
 
                     cache
                         .update::<cache_items::UserSettings>(
-                            ctx,
+                            ctx.clone(),
                             interaction.user.id,
                             SettingsDataUpdate::PinConfirm(boolean_value),
                         )
                         .await?;
                 }
             }
+
+            let mut embed = embed::serenity_default(&ctx, EmbedStatus::Sucess);
+            embed.title("Settings");
+            embed.description("Setting updated");
+
+            interaction
+                .create_interaction_response(&ctx, |resp| {
+                    resp.interaction_response_data(|data| {
+                        data.add_embed(embed)
+                            .components(|components| components.add_action_row(share::row(false)))
+                            .ephemeral(true)
+                    })
+                })
+                .await?;
 
             Ok(())
         },

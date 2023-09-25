@@ -40,7 +40,7 @@ fn parse_meta(
 						.. 
 					}
 				) => {
-					let value = str_lit.value();
+					let str_value = str_lit.value();
 					let name = path.get_ident();
 		
 					let Some(name) = name else {
@@ -48,8 +48,8 @@ fn parse_meta(
 					};
 		
 					match name.to_string().as_str() {
-						"label" => label = Some(value),
-						"ty" => ty_str = Some(value),
+						"label" => label = Some(str_value),
+						"ty" => ty_str = Some(str_value),
 						_ => continue,
 					}
 				}, 
@@ -280,8 +280,9 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     type Err = AnyError;
 
                     fn from_str(from: &str) -> Result<Self, Self::Err> {
-                        let values = vec![#(#labels),*];
+                        let values = vec![#(#values),*];
                         let idents = vec![#(#ident::#idents),*];
+
                         let idx = values.iter().position(|n| n.to_string() == from.to_string()).unwrap();
                         Ok(idents[idx])
                     }
