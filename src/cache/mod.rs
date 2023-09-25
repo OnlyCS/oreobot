@@ -2,6 +2,7 @@ pub mod color_role;
 pub mod custom_role;
 pub mod impersonate;
 pub mod newsinchat;
+pub mod user_settings;
 
 use crate::prelude::*;
 use std::any::TypeId;
@@ -11,11 +12,21 @@ pub trait CacheItem: Send + Sized + 'static {
     type Value: for<'de> Deserialize<'de> + Serialize + Send + Sync + Clone + 'static;
     type UpdateValue;
 
+    type InnerKey;
+    type Get;
+
     async fn default_value() -> Result<Self::Value, AnyError>;
+
+    async fn get(
+        ctx: &serenity::Context,
+        key: Self::InnerKey,
+        value: Self::Value,
+    ) -> Result<Self::Get, AnyError>;
 
     async fn update(
         ctx: &serenity::Context,
         current_value: &mut Self::Value,
+        key: Self::InnerKey,
         to: Self::UpdateValue,
     ) -> Result<(), AnyError>;
 }
@@ -32,7 +43,24 @@ impl Cache {
         }
     }
 
-    pub async fn get<S>(&mut self) -> Result<S::Value, CacheError>
+    pub async fn get<S>(
+        &mut self,
+        ctx: serenity::Context,
+        inner_key: S::InnerKey,
+    ) -> Result<S::Get, CacheError>
+    where
+        S: CacheItem,
+    {
+        let full_value = self._get_full_value::<S>().await?;
+
+        Ok(S::get(&ctx, inner_key, full_value)
+            .await
+            .make_error(CacheError::GetFailed(
+                std::any::type_name::<S::Value>().into(),
+            ))?)
+    }
+
+    async fn _get_full_value<S>(&mut self) -> Result<S::Value, CacheError>
     where
         S: CacheItem,
     {
@@ -57,21 +85,22 @@ impl Cache {
     pub async fn update<S>(
         &mut self,
         ctx: serenity::Context,
+        key: S::InnerKey,
         value: S::UpdateValue,
     ) -> Result<(), CacheError>
     where
         S: CacheItem,
     {
-        let mut old_value = self.get::<S>().await?;
+        let mut full_value = self._get_full_value::<S>().await?;
 
-        S::update(&ctx, &mut old_value, value)
+        S::update(&ctx, &mut full_value, key, value)
             .await
             .make_error(CacheError::UpdateFailed(String::from(
                 std::any::type_name::<S::Value>(),
             )))?;
 
         self.items
-            .insert(TypeId::of::<S>(), serde_json::to_string(&old_value)?);
+            .insert(TypeId::of::<S>(), serde_json::to_string(&full_value)?);
 
         Ok(())
     }
@@ -83,4 +112,5 @@ pub mod all {
     pub use super::custom_role::CustomRole;
     pub use super::impersonate::Impersonation;
     pub use super::newsinchat::NewsInChat;
+    pub use super::user_settings::UserSettings;
 }

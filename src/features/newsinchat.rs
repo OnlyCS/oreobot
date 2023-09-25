@@ -40,7 +40,7 @@ pub async fn register(ctx: &serenity::Context) {
             let cache = &mut data.cache;
 
             cache
-                .update::<cache_items::NewsInChat>(ctx, (working_news, clone.id))
+                .update::<cache_items::NewsInChat>(ctx, working_news, clone.id)
                 .await?;
 
             Ok(())

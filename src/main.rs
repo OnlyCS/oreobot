@@ -71,6 +71,7 @@ async fn main() -> Result<(), AnyError> {
                 commands::jumptochat::jump_to_chat(),
                 commands::chernobyl::chernobyl(),
                 commands::role::role(),
+                commands::settings::settings(),
             ],
             on_error: |error| {
                 async move {
@@ -102,6 +103,7 @@ async fn main() -> Result<(), AnyError> {
 
                 async_non_blocking!({
                     impersonate::register(&ctx).await;
+                    commands::settings::register(&ctx).await;
                     share::register(&ctx).await;
                     starboard::register(&ctx).await;
                     clone::register(&ctx).await.unwrap();

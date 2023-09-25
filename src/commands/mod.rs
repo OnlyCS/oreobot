@@ -4,4 +4,5 @@ pub mod impersonate;
 pub mod jumptochat;
 pub mod ping;
 pub mod role;
+pub mod settings;
 pub mod star;

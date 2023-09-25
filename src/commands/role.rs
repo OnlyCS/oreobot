@@ -48,13 +48,13 @@ pub async fn color_role(
         confirmation.field("Name", &name, true);
 
         cache
-            .update::<cache_items::RoleName>(ctx.serenity_context().clone(), (user.id, name))
+            .update::<cache_items::RoleName>(ctx.serenity_context().clone(), user.id, name)
             .await?;
     }
 
     if let Some(color) = color {
         cache
-            .update::<cache_items::RoleColor>(ctx.serenity_context().clone(), (user.id, color))
+            .update::<cache_items::RoleColor>(ctx.serenity_context().clone(), user.id, color)
             .await?;
 
         confirmation.field("Color", color.into_hex(), true);
@@ -179,7 +179,7 @@ pub async fn add(
         .await?;
 
     cache
-        .update::<cache_items::CustomRole>(ctx.serenity_context().clone(), role.id)
+        .update::<cache_items::CustomRole>(ctx.serenity_context().clone(), (), role.id)
         .await?;
 
     member.add_role(&ctx, role.id).await?;

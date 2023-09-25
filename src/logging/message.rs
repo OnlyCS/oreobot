@@ -17,11 +17,8 @@ pub async fn create(
     let cache = &mut data.cache;
 
     if cache
-        .get::<cache::impersonate::Impersonation>()
+        .get::<cache::impersonate::Impersonation>(ctx, message.author.id)
         .await?
-        .get(&message.author.id)
-        .cloned()
-        .flatten()
         .is_some()
     {
         bail!(LoggingError::UserImpersonated(message.author.id));

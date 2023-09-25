@@ -6,7 +6,10 @@ pub struct RoleColor;
 #[async_trait]
 impl cache::CacheItem for RoleColor {
     type Value = HashMap<serenity::UserId, Color>;
-    type UpdateValue = (serenity::UserId, Color);
+    type UpdateValue = Color;
+
+    type InnerKey = serenity::UserId;
+    type Get = Color;
 
     async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
@@ -30,31 +33,47 @@ impl cache::CacheItem for RoleColor {
         Ok(color)
     }
 
+    async fn get(
+        ctx: &serenity::Context,
+        key: Self::InnerKey,
+        value: Self::Value,
+    ) -> Result<Self::Get, AnyError> {
+        let get = value.get(&key).copied();
+
+        if let Some(g) = get {
+            Ok(g)
+        } else {
+            Ok(Self::default_value()
+                .await
+                .map(|v| v.get(&key).copied())?
+                .make_error(anyhow!("Could not find color role for user {}", key))?)
+        }
+    }
+
     async fn update(
         ctx: &serenity::Context,
         current_value: &mut Self::Value,
+        key: Self::InnerKey,
         value: Self::UpdateValue,
     ) -> Result<(), AnyError> {
-        let (user_id, color) = value;
-
         let role_id = ctx
             .cache
-            .member(nci::ID, user_id)
+            .member(nci::ID, key)
             .make_error(anyhow!("Could not find this user"))?
             .roles
             .into_iter()
             .filter(|r| nci::roles::is_color_role(*r))
             .next()
-            .make_error(anyhow!("User {} has no color role", user_id))?;
+            .make_error(anyhow!("User {} has no color role", key))?;
 
         let role = ctx
             .cache
             .role(nci::ID, role_id)
             .make_error(anyhow!("Could not find role {} in cache", role_id))?;
 
-        role.edit(&ctx, |r| r.colour(color.into())).await?;
+        role.edit(&ctx, |r| r.colour(value.into())).await?;
 
-        current_value.insert(user_id, color);
+        current_value.insert(key, value);
 
         Ok(())
     }
@@ -66,7 +85,10 @@ pub struct RoleName;
 #[async_trait]
 impl cache::CacheItem for RoleName {
     type Value = HashMap<serenity::UserId, String>;
-    type UpdateValue = (serenity::UserId, String);
+    type UpdateValue = String;
+
+    type InnerKey = serenity::UserId;
+    type Get = String;
 
     async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
@@ -91,12 +113,31 @@ impl cache::CacheItem for RoleName {
         Ok(name)
     }
 
+    async fn get(
+        ctx: &serenity::Context,
+        key: Self::InnerKey,
+        value: Self::Value,
+    ) -> Result<Self::Get, AnyError> {
+        let get = value.get(&key).cloned();
+
+        if let Some(g) = get {
+            Ok(g)
+        } else {
+            Ok(Self::default_value()
+                .await
+                .map(|v| v.get(&key).cloned())?
+                .make_error(anyhow!("Could not find color role for user {}", key))?)
+        }
+    }
+
     async fn update(
         ctx: &serenity::Context,
         current_value: &mut Self::Value,
+        key: Self::InnerKey,
         value: Self::UpdateValue,
     ) -> Result<(), AnyError> {
-        let (user_id, name) = value;
+        let user_id = key;
+        let name = value;
 
         let role_id = ctx
             .cache

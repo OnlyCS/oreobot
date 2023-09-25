@@ -5,7 +5,10 @@ pub struct NewsInChat;
 #[async_trait]
 impl cache::CacheItem for NewsInChat {
     type Value = HashMap<serenity::MessageId, serenity::MessageId>;
-    type UpdateValue = (serenity::Message, serenity::MessageId);
+    type UpdateValue = serenity::MessageId;
+
+    type InnerKey = serenity::Message;
+    type Get = Option<serenity::MessageId>;
 
     async fn default_value() -> Result<Self::Value, AnyError> {
         let prisma = prisma::create().await?;
@@ -26,12 +29,22 @@ impl cache::CacheItem for NewsInChat {
             .collect::<HashMap<_, _>>())
     }
 
+    async fn get(
+        ctx: &serenity::Context,
+        key: Self::InnerKey,
+        value: Self::Value,
+    ) -> Result<Self::Get, AnyError> {
+        Ok(value.get(&key.id).copied())
+    }
+
     async fn update(
         _ctx: &serenity::Context,
         current_value: &mut Self::Value,
+        key: Self::InnerKey,
         value: Self::UpdateValue,
     ) -> Result<(), AnyError> {
-        let (source, clone) = value;
+        let source = key;
+        let clone = value;
         current_value.insert(source.id, clone);
 
         let prisma = prisma::create().await?;

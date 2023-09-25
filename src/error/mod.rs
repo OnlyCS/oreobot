@@ -146,6 +146,9 @@ pub enum CacheError {
 
     #[error("<{0}>::update failed")]
     UpdateFailed(String),
+
+    #[error("<{0}>::get failed")]
+    GetFailed(String),
 }
 
 #[derive(Error, Debug)]
