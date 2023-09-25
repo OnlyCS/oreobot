@@ -10,7 +10,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), CommandError> {
     let api_latency = latency::api_ping(&ctx).await;
 
     ctx.send(|reply| {
-        let mut embed = embed::default(&ctx, embed::EmbedStatus::Sucess);
+        let mut embed = embed::default(&ctx, embed::EmbedStatus::Success);
 
         embed.title("The bot is up and running!");
 

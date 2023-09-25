@@ -23,7 +23,7 @@ pub async fn settings(ctx: Context<'_>) -> Result<(), CommandError> {
     components.add_action_row(row);
     components.add_action_row(share::row(false));
 
-    let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut embed = embed::default(&ctx, EmbedStatus::Success);
     embed.title("Settings");
     embed.description("Select a setting to change");
 
@@ -57,14 +57,16 @@ pub async fn register(ctx: &serenity::Context) {
             components.add_action_row(row);
             components.add_action_row(share::row(false));
 
-            let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+            let mut embed = embed::default(&ctx, EmbedStatus::Success);
             embed.title("Settings");
             embed.description("Change value of setting");
 
             interaction
                 .create_interaction_response(&ctx, |response| {
                     response.interaction_response_data(|data| {
-                        data.add_embed(embed).set_components(components).ephemeral(true)
+                        data.add_embed(embed)
+                            .set_components(components)
+                            .ephemeral(true)
                     })
                 })
                 .await?;
@@ -105,7 +107,7 @@ pub async fn register(ctx: &serenity::Context) {
                 }
             }
 
-            let mut embed = embed::serenity_default(&ctx, EmbedStatus::Sucess);
+            let mut embed = embed::serenity_default(&ctx, EmbedStatus::Success);
             embed.title("Settings");
             embed.description("Setting updated");
 

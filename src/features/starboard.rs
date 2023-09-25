@@ -1,9 +1,6 @@
 use crate::prelude::*;
 
-async fn star(
-    message: &serenity::Message,
-    seren: &serenity::Context,
-) -> Result<(), StarboardError> {
+async fn star(message: &serenity::Message, ctx: &serenity::Context) -> Result<(), StarboardError> {
     let prisma = prisma::create().await?;
 
     let message_data = prisma
@@ -24,7 +21,7 @@ async fn star(
     let cloned = clone::clone(clone::CloneArgsBuilder::build_from(move |args| {
         args.message(message.clone());
         args.destination(nci::channels::STARRED);
-        args.ctx(seren.clone());
+        args.ctx(ctx.clone());
     })?)
     .await?;
 
@@ -84,6 +81,25 @@ pub async fn register(ctx: &serenity::Context) {
         events::MessageReactionAdd,
         |payload, ctx| async move {
             star_no_interaction(&ctx, &payload.message).await?;
+
+            let data_arc = data::get_serenity(&ctx).await;
+            let mut data = data_arc.lock().await;
+            let cache = &mut data.cache;
+            let user = payload.reaction.user(&ctx).await?.id;
+
+            let settings = cache
+                .get::<cache_items::UserSettings>(ctx.clone(), user)
+                .await?;
+
+            if !settings.pin_confirm {
+                return Ok(());
+            };
+
+            let mut embed = embed::serenity_default(&ctx, EmbedStatus::Success);
+            embed.title("Starboard > Success");
+            embed.description("Message has been starred");
+            ephemeral::send_ephemeral(&ctx, user, |response| response.set_embed(embed)).await?;
+
             Ok(())
         },
         |payload| {
