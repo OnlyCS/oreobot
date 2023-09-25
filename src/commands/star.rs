@@ -11,7 +11,7 @@ pub async fn star(ctx: Context<'_>, message: serenity::Message) -> Result<(), Co
 
     starboard::star_interaction(&ctx, &message).await?;
 
-    let mut confirmation = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut confirmation = embed::default(&ctx, EmbedStatus::Success);
     confirmation.title("Starboard > Star");
     confirmation.description("Sucessfully starred message");
 

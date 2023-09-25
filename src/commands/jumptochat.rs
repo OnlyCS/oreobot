@@ -44,7 +44,7 @@ pub async fn jump_to_chat(
         chat_msg_id
     );
 
-    let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut embed = embed::default(&ctx, EmbedStatus::Success);
     embed.title("Jump to Chat > Link");
     embed.description(
         "Sorry, you have to click two buttons :(\n Discord should add context menu links.",

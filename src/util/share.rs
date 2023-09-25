@@ -120,7 +120,7 @@ pub async fn register(ctx: &serenity::Context) {
                     resp.interaction_response_data(|data| {
                         data.ephemeral(true);
 
-                        let mut embed = embed::serenity_default(&ctx, EmbedStatus::Sucess);
+                        let mut embed = embed::serenity_default(&ctx, EmbedStatus::Success);
 
                         embed.title("Unshare");
                         embed.description("Message sucessfully unsahred");

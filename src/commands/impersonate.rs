@@ -30,7 +30,7 @@ pub async fn impersonate(
             )
             .await?;
 
-        let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+        let mut embed = embed::default(&ctx, EmbedStatus::Success);
 
         embed.title(format!("Impersonate > Set > Stop"));
         embed.description("Sucessfully stopped your impersonation");
@@ -45,7 +45,7 @@ pub async fn impersonate(
             )
             .await?;
 
-        let mut embed = embed::default(&ctx, EmbedStatus::Sucess);
+        let mut embed = embed::default(&ctx, EmbedStatus::Success);
 
         embed.title(format!("Impersonate > Set > {}", to_impersonate.user.tag()));
         embed.description(format!(

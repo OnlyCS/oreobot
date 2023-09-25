@@ -40,7 +40,7 @@ pub async fn color_role(
         ctx.author()
     };
 
-    let mut confirmation = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut confirmation = embed::default(&ctx, EmbedStatus::Success);
     confirmation.title("Role > Set");
     confirmation.description("Sucessfully updated your role");
 
@@ -107,7 +107,7 @@ pub async fn edit(
     }
 
     // 5. send confirmation
-    let mut confirmation = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut confirmation = embed::default(&ctx, EmbedStatus::Success);
     confirmation.title("Role > Manage");
     confirmation.description(format!(
         "Sucessfully updated role {}",
@@ -184,7 +184,7 @@ pub async fn add(
 
     member.add_role(&ctx, role.id).await?;
 
-    let mut confirmation = embed::default(&ctx, EmbedStatus::Sucess);
+    let mut confirmation = embed::default(&ctx, EmbedStatus::Success);
     confirmation.title("Role > Create");
     confirmation.description(format!(
         "Successfully created a new role: {}",

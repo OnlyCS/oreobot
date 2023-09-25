@@ -4,6 +4,8 @@ pub async fn command(
     ctx: serenity::Context,
     interaction: serenity::ApplicationCommandInteraction,
 ) -> Result<(), LoggingError> {
+    interaction.defer(&ctx).await?;
+
     let prisma = prisma::create().await?;
 
     prisma

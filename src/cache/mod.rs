@@ -33,7 +33,7 @@ pub trait CacheItem: Send + Sized + 'static {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Cache {
-    pub items: HashMap<TypeId, String>,
+    items: HashMap<TypeId, String>,
 }
 
 impl Cache {

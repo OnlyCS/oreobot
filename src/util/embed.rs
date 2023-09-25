@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EmbedStatus {
-    Sucess,
+    Success,
     Warning,
     Error,
 }
@@ -11,7 +11,7 @@ pub fn default(ctx: &impl serenity::CacheHttp, status: EmbedStatus) -> serenity:
     let mut embed = serenity::CreateEmbed::default();
 
     embed.color(match status {
-        EmbedStatus::Sucess => colors::PRIMARY,
+        EmbedStatus::Success => colors::PRIMARY,
         EmbedStatus::Warning => colors::WARN,
         EmbedStatus::Error => colors::ERROR,
     });
@@ -40,7 +40,7 @@ pub fn serenity_default(ctx: &serenity::Context, status: EmbedStatus) -> serenit
     let mut embed = serenity::CreateEmbed::default();
 
     embed.color(match status {
-        EmbedStatus::Sucess => colors::PRIMARY,
+        EmbedStatus::Success => colors::PRIMARY,
         EmbedStatus::Warning => colors::WARN,
         EmbedStatus::Error => colors::ERROR,
     });
