@@ -1,35 +1,28 @@
-[package]
-name = "oreo-bot"
-version = "0.1.0"
-edition = "2021"
+# [package]
+# name = "oreo-bot"
+# version = "0.1.0"
+# edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-anyhow = { version = "1.0.75", features = ["backtrace"] }
-async-trait = "0.1.73"
-chrono = "0.4.29"
-color-name = "1.1.0"
-dotenv = "0.15.0"
-dotenv_codegen = "0.15.0"
-futures = "0.3.28"
-itertools = "0.11.0"
-log = "0.4.20"
-poise = "0.5.5"
-rand = { version = "0.8.5", features = ["nightly", "log"] }
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.105"
-simple_logger = "4.2.0"
-thiserror = "1.0.48"
-tokio = "1.32.0"
-oreo_proc_macros = { path = "./oreo-proc-macros" }
-
-[dependencies.prisma-client-rust]
-git = "https://github.com/Brendonovich/prisma-client-rust"
-tag = "0.6.9"
-default-features = false
-features = ["postgresql"]
+# [dependencies]
+# anyhow = { version = "1.0.75", features = ["backtrace"] }
+# async-trait = "0.1.73"
+# chrono = "0.4.29"
+# color-name = "1.1.0"
+# dotenv = "0.15.0"
+# dotenv_codegen = "0.15.0"
+# futures = "0.3.28"
+# itertools = "0.11.0"
+# log = "0.4.20"
+# poise = { git = "https://github.com/serenity-rs/poise", branch = "serenity-next" }
+# rand = { version = "0.8.5", features = ["nightly", "log"] }
+# serde = { version = "1.0.188", features = ["derive"] }
+# serde_json = "1.0.105"
+# simple_logger = "4.2.0"
+# thiserror = "1.0.48"
+# tokio = "1.32.0"
+# oreo_proc_macros = { path = "./oreo-proc-macros" }
 
 [workspace]
 resolver = "2"
-members = ["prisma-cli", ".", "oreo-proc-macros"]
+members = ["router", "oreo-proc-macros", "prisma", "logger", "prelude"]

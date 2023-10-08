@@ -1,0 +1,30 @@
+[package]
+name = "oreo-prisma"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.188", features = ["derive"] }
+thiserror = "1.0.49"
+
+[dependencies.prisma-client-rust]
+path = "../../prisma-client-rust/crates/lib"
+default-features = false
+features = ["postgresql"]
+
+[dependencies.prisma-client-rust-cli]
+# git = "https://github.com/onlycs/prisma-client-rust"
+# branch = "main"
+path = "../../prisma-client-rust/crates/cli"
+default-features = false
+features = ["postgresql"]
+optional = true
+
+[features]
+default = []
+bin = ["dep:prisma-client-rust-cli"]
+
+[[bin]]
+name = "prisma-cli"
+path = "src/bin/prisma_cli.rs"
+required-features = ["bin"]

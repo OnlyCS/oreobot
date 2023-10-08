@@ -293,3 +293,67 @@ pub fn derive(input: TokenStream) -> TokenStream {
         _ => panic!("SelectMenuOptions can only be derived for enums"),
     }
 }
+
+#[proc_macro_attribute]
+pub fn make_trait(args: TokenStream, input: TokenStream) -> TokenStream {
+	let input = parse_macro_input!(input as DeriveInput);
+
+	let as_enum = match input.data {
+		syn::Data::Enum(e) => e,
+		_ => panic!("make_trait can only be derived for enums")
+	};
+
+	let mut idents = vec![];
+	let mut tys = vec![];
+	let mut structs = vec![];
+
+	for variant in as_enum.variants {
+		idents.push(variant.ident.clone());
+
+		if variant.fields.len() < 1 {
+			tys.push(quote! { () });
+		} 
+
+		let is_struct = variant.fields.iter().nth(0).map(|n| n.ident.is_some()).unwrap_or(false);
+
+		if is_struct {
+			let mut fields = vec![];
+
+			for field in variant.fields {
+				let ty = field.ty;
+				let ident = field.ident.unwrap();
+
+				fields.push(quote! { #ident: #ty });
+			}
+
+			let ident = format!("{}{}", variant.ident, "Data");
+
+			structs.push(quote! {
+				#[derive(Debug, Clone)]
+				pub struct #ident {
+					#(#fields),*
+				}
+			});
+		} else {
+			let ty = variant.fields.iter().map(|n| n.ty.clone());
+
+			tys.push(quote! { (#(#ty),*) });
+		}
+	}
+
+	quote! {
+		pub trait #&input.ident {
+			type Data: serde::Serialize + for <'de> serde::Deserialize<'de>;
+		}
+
+		#(#structs)*
+			
+		#(
+			pub struct #idents;
+
+			impl #&input.ident for #idents {
+				type Data = #tys;
+			}
+		)*
+	}.into()
+}

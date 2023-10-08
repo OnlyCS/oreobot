@@ -1,3 +1,3 @@
-# Oreo
+# The Great Schism
 
-Oreo is a Discord bot using Poise, continuing the legacy of the barely-maintained Smarty. It's main goal is a utility bot with features that make everyday Discord usage enriched and easier.
+Oreo will be split into multiple applications (binaries) coordinated via a large `TCPStream`

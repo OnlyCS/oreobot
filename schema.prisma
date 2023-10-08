@@ -1,0 +1,174 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "cargo prisma"
+  output   = "./prisma/src/generated.rs"
+}
+
+enum ChannelType {
+  Text
+  News
+  Stage
+  Voice
+}
+
+enum InteractionType {
+  Command
+  ModalSubmit
+  MessageComponent
+}
+
+model User {
+  id       BigInt  @id
+  username String
+  nickname String?
+  roles    Role[]
+
+  admin    Boolean @default(false)
+  verified Boolean @default(false)
+  bot      Boolean @default(false)
+
+  messages              Message[]
+  impersonated_messages ImpersonatedMessageData[]
+  interactions          Interaction[]
+  settings              UserSettingsData?
+
+  removed Boolean @default(false)
+}
+
+model Role {
+  id    BigInt @id
+  name  String
+  color String
+
+  users      User[]
+  color_role Boolean @default(false)
+
+  deleted Boolean @default(false)
+}
+
+model Attachment {
+  id         BigInt @id
+  filename   String
+  url        String
+  size_bytes BigInt
+
+  message    Message @relation(fields: [message_id], references: [id])
+  message_id BigInt
+
+  deleted Boolean @default(false)
+}
+
+model Message {
+  id      BigInt @id
+  content String
+
+  author    User   @relation(fields: [author_id], references: [id])
+  author_id BigInt
+
+  channel    Channel @relation(fields: [channel_id], references: [id])
+  channel_id BigInt
+
+  attachments Attachment[]
+
+  created    DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  deleted Boolean @default(false)
+  edited  Boolean @default(false)
+
+  pin                  MessagePin?
+  impersonated_message ImpersonatedMessageData?
+  NewsInChat           NewsInChat[]
+}
+
+model MessagePin {
+  pinned_message_id BigInt @id
+
+  original    Message @relation(fields: [original_id], references: [id])
+  original_id BigInt  @unique
+
+  removed        Boolean @default(false)
+  removed_reason String?
+}
+
+model Channel {
+  id    BigInt      @id
+  name  String
+  topic String?
+  nsfw  Boolean
+  kind  ChannelType
+
+  messages     Message[]
+  interactions Interaction[]
+
+  category    ChannelCategory? @relation(fields: [category_id], references: [id])
+  category_id BigInt?
+
+  deleted Boolean @default(false)
+}
+
+model ChannelCategory {
+  id       BigInt    @id
+  name     String
+  channels Channel[]
+
+  deleted Boolean @default(false)
+}
+
+model CommandInteractionData {
+  command_id   String
+  command_name String
+
+  interaction    Interaction @relation(fields: [interaction_id], references: [id])
+  interaction_id BigInt      @unique
+}
+
+model Interaction {
+  id             BigInt          @id
+  kind           InteractionType
+  token          String
+  application_id BigInt
+  created        DateTime        @default(now())
+  reusable       Boolean         @default(false)
+
+  channel Channel @relation(fields: [channel_id], references: [id])
+  invoker User    @relation(fields: [invoker_id], references: [id])
+
+  channel_id BigInt
+  invoker_id BigInt
+
+  // custom id for all except for commands, which has extra data
+  command_data CommandInteractionData?
+  custom_id    String?
+}
+
+model ImpersonatedMessageData {
+  source    Message @relation(fields: [source_id], references: [id])
+  source_id BigInt  @id
+
+  fake_author    User   @relation(fields: [fake_author_id], references: [id])
+  fake_author_id BigInt
+
+  fake_message_id BigInt
+}
+
+model NewsInChat {
+  source          Message @relation(fields: [source_id], references: [id])
+  source_id       BigInt  @id
+  fake_message_id BigInt
+}
+
+model LoglessRoles {
+  id BigInt @id
+}
+
+model UserSettingsData {
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id BigInt @id
+
+  pin_confirm Boolean @default(true)
+}
