@@ -5,6 +5,7 @@ pub fn log_check(role: serenity::RoleId) -> Result<(), RoleLogError> {
         bail!(RoleLogError::Blacklisted(role));
     }
 
+    // custom roles handled seperately
     if todo!("Check if role is a custom role, and if so, skip") {
         bail!(RoleLogError::CustomRole(role));
     }
@@ -42,7 +43,7 @@ pub async fn update(role: serenity::Role) -> Result<(), RoleLogError> {
             role::id::equals(role.id),
             vec![
                 role::name::set(role.name),
-                role::color::set(role.colour.hex()),
+                role::color::set(Color::database(role.colour)),
             ],
         )
         .exec()

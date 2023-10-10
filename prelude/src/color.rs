@@ -99,6 +99,10 @@ impl Color {
 
         Ok(Self { r, g, b })
     }
+
+    pub fn database(this: impl Into<Self>) -> String {
+        this.into().to_raw_hex()
+    }
 }
 
 impl From<(u8, u8, u8)> for Color {

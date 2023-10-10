@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn command(interaction: serenity::CommandInteraction) -> Result<(), InteractionLogError> {
+async fn command(interaction: serenity::CommandInteraction) -> Result<(), InteractionLogError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -31,7 +31,7 @@ pub async fn command(interaction: serenity::CommandInteraction) -> Result<(), In
     Ok(())
 }
 
-pub async fn message_component(
+async fn message_component(
     interaction: serenity::ComponentInteraction,
 ) -> Result<(), InteractionLogError> {
     let prisma = prisma::create().await?;
@@ -55,9 +55,7 @@ pub async fn message_component(
     Ok(())
 }
 
-pub async fn modal_submit(
-    interaction: serenity::ModalInteraction,
-) -> Result<(), InteractionLogError> {
+async fn modal_submit(interaction: serenity::ModalInteraction) -> Result<(), InteractionLogError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -75,6 +73,23 @@ pub async fn modal_submit(
         )
         .exec()
         .await?;
+
+    Ok(())
+}
+
+pub async fn create(interaction: serenity::Interaction) -> Result<(), InteractionLogError> {
+    match interaction.kind() {
+        serenity::InteractionType::Command => {
+            command(interaction.command().unwrap()).await?;
+        }
+        serenity::InteractionType::Component => {
+            message_component(interaction.message_component().unwrap()).await?;
+        }
+        serenity::InteractionType::Modal => {
+            modal_submit(interaction.modal_submit().unwrap()).await?;
+        }
+        _ => {}
+    };
 
     Ok(())
 }

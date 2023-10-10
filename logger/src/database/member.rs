@@ -1,4 +1,4 @@
-pub use crate::prelude::*;
+use crate::prelude::*;
 
 pub async fn join(mut member: serenity::Member) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;

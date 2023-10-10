@@ -11,7 +11,7 @@ struct SelectMenuMeta {
 
 fn parse_meta(
     variants: syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
-	enum_ident: &syn::Ident,
+    enum_ident: &syn::Ident,
 ) -> SelectMenuMeta {
     let mut idents = vec![];
     let mut labels = vec![];
@@ -24,37 +24,38 @@ fn parse_meta(
         let mut label = None;
         let mut ty_str = None;
         let ident = &variant.ident;
-        let value = format!("oreo_selectoption_{}_{}", enum_ident.to_string(), ident.to_string());
+        let value = format!(
+            "oreo_selectoption_{}_{}",
+            enum_ident.to_string(),
+            ident.to_string()
+        );
 
         for thisattr in attrs {
-			match &thisattr.meta { 
-				syn::Meta::NameValue(
-					syn::MetaNameValue { 
-						value: syn::Expr::Lit(
-							syn::ExprLit { 
-								lit: syn::Lit::Str(str_lit), 
-								.. 
-							}
-						),
-						path,
-						.. 
-					}
-				) => {
-					let str_value = str_lit.value();
-					let name = path.get_ident();
-		
-					let Some(name) = name else {
-						continue;
-					};
-		
-					match name.to_string().as_str() {
-						"label" => label = Some(str_value),
-						"ty" => ty_str = Some(str_value),
-						_ => continue,
-					}
-				}, 
-				_ => continue,
-			};
+            match &thisattr.meta {
+                syn::Meta::NameValue(syn::MetaNameValue {
+                    value:
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Str(str_lit),
+                            ..
+                        }),
+                    path,
+                    ..
+                }) => {
+                    let str_value = str_lit.value();
+                    let name = path.get_ident();
+
+                    let Some(name) = name else {
+                        continue;
+                    };
+
+                    match name.to_string().as_str() {
+                        "label" => label = Some(str_value),
+                        "ty" => ty_str = Some(str_value),
+                        _ => continue,
+                    }
+                }
+                _ => continue,
+            };
         }
 
         idents.push(ident.clone());
@@ -71,45 +72,52 @@ fn parse_meta(
     }
 }
 
-
 #[proc_macro_attribute]
 pub fn updatable(args: TokenStream, input: TokenStream) -> TokenStream {
-	let input = parse_macro_input!(input as DeriveInput);
-	let args_ts = proc_macro2::TokenStream::from(args);
+    let input = parse_macro_input!(input as DeriveInput);
+    let args_ts = proc_macro2::TokenStream::from(args);
 
-	let data = &input.data;
-	let ident = &input.ident;
-	let mut rewritten_idents = vec![];
-	let mut rewritten_types = vec![];
+    let data = &input.data;
+    let ident = &input.ident;
+    let mut rewritten_idents = vec![];
+    let mut rewritten_types = vec![];
 
-	let syn::Data::Struct(s) = data else {
-		panic!("updatable can only be derived for structs");
-	};
+    let syn::Data::Struct(s) = data else {
+        panic!("updatable can only be derived for structs");
+    };
 
-	let fields = &s.fields;
+    let fields = &s.fields;
 
-	for field in fields {
-		let ty = &field.ty;
-		let ident = field.ident.as_ref().unwrap().to_string();
-		let ident_camel = ident.split('_').map(|spl| spl.chars().enumerate().map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c }).collect::<String>()).collect::<String>();
+    for field in fields {
+        let ty = &field.ty;
+        let ident = field.ident.as_ref().unwrap().to_string();
+        let ident_camel = ident
+            .split('_')
+            .map(|spl| {
+                spl.chars()
+                    .enumerate()
+                    .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
+                    .collect::<String>()
+            })
+            .collect::<String>();
 
-		let new_ident = syn::Ident::new(&ident_camel, field.ident.as_ref().unwrap().span());
+        let new_ident = syn::Ident::new(&ident_camel, field.ident.as_ref().unwrap().span());
 
-		rewritten_idents.push(new_ident.clone());
-		rewritten_types.push(ty.clone());
+        rewritten_idents.push(new_ident.clone());
+        rewritten_types.push(ty.clone());
+    }
 
-	}
+    let new_ident = syn::Ident::new(&format!("{}Update", ident.to_string()), ident.span());
 
-	let new_ident = syn::Ident::new(&format!("{}Update", ident.to_string()), ident.span());
+    quote! {
+        #args_ts
+        #input
 
-	quote! {
-		#args_ts
-		#input
-
-		pub enum #new_ident {
-			#(#rewritten_idents (#rewritten_types)),*
-		}
-	}.into()
+        pub enum #new_ident {
+            #(#rewritten_idents (#rewritten_types)),*
+        }
+    }
+    .into()
 }
 
 #[proc_macro_derive(SelectMenuOptions, attributes(label, ty))]
@@ -296,64 +304,70 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn make_trait(args: TokenStream, input: TokenStream) -> TokenStream {
-	let input = parse_macro_input!(input as DeriveInput);
+    let input = parse_macro_input!(input as DeriveInput);
 
-	let as_enum = match input.data {
-		syn::Data::Enum(e) => e,
-		_ => panic!("make_trait can only be derived for enums")
-	};
+    let as_enum = match input.data {
+        syn::Data::Enum(e) => e,
+        _ => panic!("make_trait can only be derived for enums"),
+    };
 
-	let mut idents = vec![];
-	let mut tys = vec![];
-	let mut structs = vec![];
+    let mut idents = vec![];
+    let mut tys = vec![];
+    let mut structs = vec![];
 
-	for variant in as_enum.variants {
-		idents.push(variant.ident.clone());
+    for variant in as_enum.variants {
+        idents.push(variant.ident.clone());
 
-		if variant.fields.len() < 1 {
-			tys.push(quote! { () });
-		} 
+        if variant.fields.len() < 1 {
+            tys.push(quote! { () });
+        }
 
-		let is_struct = variant.fields.iter().nth(0).map(|n| n.ident.is_some()).unwrap_or(false);
+        let is_struct = variant
+            .fields
+            .iter()
+            .nth(0)
+            .map(|n| n.ident.is_some())
+            .unwrap_or(false);
 
-		if is_struct {
-			let mut fields = vec![];
+        if is_struct {
+            let mut fields = vec![];
 
-			for field in variant.fields {
-				let ty = field.ty;
-				let ident = field.ident.unwrap();
+            for field in variant.fields {
+                let ty = field.ty;
+                let ident = field.ident.unwrap();
 
-				fields.push(quote! { #ident: #ty });
-			}
+                fields.push(quote! { #ident: #ty });
+            }
 
-			let ident = format!("{}{}", variant.ident, "Data");
+            let ident = format!("{}{}", variant.ident, "Data");
 
-			structs.push(quote! {
-				#[derive(Debug, Clone)]
-				pub struct #ident {
-					#(#fields),*
-				}
-			});
-		} else {
-			let ty = variant.fields.iter().map(|n| n.ty.clone());
+            structs.push(quote! {
+                #[derive(Debug, Clone)]
+                pub struct #ident {
+                    #(#fields),*
+                }
+            });
+        } else {
+            let ty = variant.fields.iter().map(|n| n.ty.clone());
 
-			tys.push(quote! { (#(#ty),*) });
-		}
-	}
+            tys.push(quote! { (#(#ty),*) });
+        }
+    }
 
-	quote! {
-		pub trait #&input.ident {
-			type Data: serde::Serialize + for <'de> serde::Deserialize<'de>;
-		}
+    quote! {
+        pub trait #&input.ident {
+            type Data: serde::Serialize + for <'de> serde::Deserialize<'de>;
+        }
 
-		#(#structs)*
-			
-		#(
-			pub struct #idents;
+        #(#structs)*
 
-			impl #&input.ident for #idents {
-				type Data = #tys;
-			}
-		)*
-	}.into()
+        #(
+            pub struct #idents;
+
+            impl #&input.ident for #idents {
+                type Data = #tys;
+            }
+        )*
+    }
+    .into()
 }

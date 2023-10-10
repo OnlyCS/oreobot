@@ -26,11 +26,6 @@ pub enum LoggingRequest {
         message_id: MessageId,
     },
 
-    LogReactionAdd {
-        reaction: Reaction,
-        message: Message,
-    },
-
     LogRoleCreate(Role),
     LogRoleUpdate(Role),
     LogRoleDelete {

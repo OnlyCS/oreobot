@@ -5,12 +5,12 @@ use std::num::NonZeroU64;
 pub mod roles {
     use super::*;
 
-    pub const OVERRIDES: RoleId = RoleId(NonZeroU64::new(878033546848108606).unwrap());
-    pub const MEMBERS: RoleId = RoleId(NonZeroU64::new(1016810972415008850).unwrap());
-    pub const BOTS: RoleId = RoleId(NonZeroU64::new(813138438013452348).unwrap());
-    pub const BOOSTER: RoleId = RoleId(NonZeroU64::new(1022189509363904716).unwrap());
-    pub const EVERYONE: RoleId = RoleId(NonZeroU64::new(803315311663251537).unwrap());
-    pub const SECRET: RoleId = RoleId(NonZeroU64::new(1153141223398330398).unwrap());
+    pub const OVERRIDES: RoleId = RoleId::new(878033546848108606);
+    pub const MEMBERS: RoleId = RoleId::new(1016810972415008850);
+    pub const BOTS: RoleId = RoleId::new(813138438013452348);
+    pub const BOOSTER: RoleId = RoleId::new(1022189509363904716);
+    pub const EVERYONE: RoleId = RoleId::new(803315311663251537);
+    pub const SECRET: RoleId = RoleId::new(1153141223398330398);
 
     pub fn is_color_role(role: RoleId) -> bool {
         !matches!(
@@ -27,9 +27,9 @@ pub mod roles {
 pub mod channels {
     use super::*;
 
-    pub const CHAT: ChannelId = ChannelId(NonZeroU64::new(1014256055330549842).unwrap());
-    pub const NEWS: ChannelId = ChannelId(NonZeroU64::new(997661924546322472).unwrap());
-    pub const STARRED: ChannelId = ChannelId(NonZeroU64::new(1016113247662919760).unwrap());
+    pub const CHAT: ChannelId = ChannelId::new(1014256055330549842);
+    pub const NEWS: ChannelId = ChannelId::new(997661924546322472);
+    pub const STARRED: ChannelId = ChannelId::new(1016113247662919760);
 }
 
-pub const ID: GuildId = GuildId(NonZeroU64::new(803315311663251537).unwrap());
+pub const ID: GuildId = GuildId::new(803315311663251537);

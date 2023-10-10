@@ -104,13 +104,6 @@ pub enum RoleLogError {
 
 #[derive(Error, Debug)]
 pub enum ReadyEventError {
-    #[error("Problem with database: {error}")]
-    Database {
-        #[from]
-        error: prisma_error::PrismaError,
-        backtrace: Backtrace,
-    },
-
     #[error("Problem updating roles: {error}")]
     RoleUpdate {
         #[from]
