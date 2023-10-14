@@ -72,6 +72,7 @@ async fn main() -> Result<(), AnyError> {
                 commands::chernobyl::chernobyl(),
                 commands::role::role(),
                 commands::settings::settings(),
+                commands::boo::boo(),
             ],
             on_error: |error| {
                 async move {
