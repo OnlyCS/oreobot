@@ -94,7 +94,7 @@ pub async fn create(interaction: serenity::Interaction) -> Result<(), Interactio
     Ok(())
 }
 
-pub async fn get(
+pub async fn read(
     interaction_id: serenity::InteractionId,
 ) -> Result<prisma::data::InteractionData, InteractionLogError> {
     let prisma = prisma::create().await?;

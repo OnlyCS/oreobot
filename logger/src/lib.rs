@@ -1,3 +1,5 @@
+#![feature(trace_macros)]
+
 extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate serde;
@@ -11,43 +13,33 @@ use serde::{Deserialize, Serialize};
 pub enum LoggingRequest {
     IsReady,
 
-    LogInteractionCreate(Interaction),
-    GetInteraction(InteractionId),
+    InteractionCreate(Interaction),
+    InteractionRead(InteractionId),
 
-    LogCategoryCreate(GuildChannel),
-    LogCategoryUpdate(GuildChannel),
-    LogCategoryDelete(GuildChannel),
-    GetCategory(ChannelId),
+    CategoryCreate(GuildChannel),
+    CategoryRead(ChannelId),
+    CategoryUpdate(GuildChannel),
+    CategoryDelete(ChannelId),
 
-    LogChannelCreate(GuildChannel),
-    LogChannelUpdate(GuildChannel),
-    LogChannelDelete(GuildChannel),
-    GetChannel(ChannelId),
+    ChannelCreate(GuildChannel),
+    ChannelRead(ChannelId),
+    ChannelUpdate(GuildChannel),
+    ChannelDelete(ChannelId),
 
-    LogMessageCreate(Message),
-    LogMessageUpdate(MessageUpdateEvent),
-    LogMessageDelete {
-        guild_id: Option<GuildId>,
-        channel_id: ChannelId,
-        message_id: MessageId,
-    },
-    GetMessage(MessageId),
+    MessageCreate(Message),
+    MessageRead(MessageId),
+    MessageUpdate(MessageUpdateEvent),
+    MessageDelete(MessageId),
 
-    LogRoleCreate(Role),
-    LogRoleUpdate(Role),
-    LogRoleDelete {
-        guild_id: GuildId,
-        role_id: RoleId,
-    },
-    GetRole(RoleId),
+    RoleCreate(Role),
+    RoleRead(RoleId),
+    RoleUpdate(Role),
+    RoleDelete(RoleId),
 
-    LogMemberJoin(Member),
-    LogMemberUpdate(Member),
-    LogMemberLeave {
-        guild_id: GuildId,
-        user: User,
-    },
-    GetMember(UserId),
+    MemberCreate(Member),
+    MemberRead(UserId),
+    MemberUpdate(Member),
+    MemberDelete(UserId),
 
     LogReady,
 }

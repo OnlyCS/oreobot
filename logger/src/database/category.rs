@@ -59,7 +59,7 @@ pub async fn delete(category_id: serenity::ChannelId) -> Result<(), CategoryLogE
     Ok(())
 }
 
-pub async fn get(
+pub async fn read(
     category_id: serenity::ChannelId,
 ) -> Result<prisma::data::ChannelCategoryData, CategoryLogError> {
     let prisma = prisma::create().await?;

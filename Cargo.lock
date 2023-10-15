@@ -1715,6 +1715,7 @@ name = "oreo-logger"
 version = "0.1.0"
 dependencies = [
  "oreo-prelude",
+ "oreo-proc-macros",
  "oreo-router",
  "serde",
  "thiserror",

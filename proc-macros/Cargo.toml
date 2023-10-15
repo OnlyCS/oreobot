@@ -18,3 +18,4 @@ proc-macro = true
 default = []
 update-enum = []
 select-menu-options = []
+wire = []

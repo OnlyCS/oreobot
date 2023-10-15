@@ -97,7 +97,7 @@ pub async fn delete(message_id: serenity::MessageId) -> Result<(), MessageLogErr
     Ok(())
 }
 
-pub async fn get(
+pub async fn read(
     message_id: serenity::MessageId,
 ) -> Result<prisma::data::MessageData, MessageLogError> {
     let prisma = prisma::create().await?;

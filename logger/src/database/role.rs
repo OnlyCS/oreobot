@@ -58,7 +58,7 @@ pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
 
     let prisma = prisma::create().await?;
 
-    let prisma_role = get(role_id).await?;
+    let prisma_role = read(role_id).await?;
 
     // if role is a color role if the user exists
     if nci::roles::is_color_role(role_id) && todo!("Comms: check user has not left") {
@@ -70,7 +70,7 @@ pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
     Ok(())
 }
 
-pub async fn get(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, RoleLogError> {
+pub async fn read(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, RoleLogError> {
     log_check(role_id)?;
 
     let prisma = prisma::create().await?;

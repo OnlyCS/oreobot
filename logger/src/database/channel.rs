@@ -113,7 +113,7 @@ pub async fn delete(channel_id: serenity::ChannelId) -> Result<(), ChannelLogErr
     Ok(())
 }
 
-pub async fn get(
+pub async fn read(
     channel_id: serenity::ChannelId,
 ) -> Result<prisma::data::ChannelData, ChannelLogError> {
     let prisma = prisma::create().await?;

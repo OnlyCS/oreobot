@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub async fn join(mut member: serenity::Member) -> Result<(), MemberLogError> {
+pub async fn create(mut member: serenity::Member) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
 
     todo!("Create user's color role (tcp with bot). Should trigger rolecreate event, handled in role.rs");
@@ -161,7 +161,7 @@ pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
     Ok(())
 }
 
-pub async fn leave(id: serenity::UserId) -> Result<(), MemberLogError> {
+pub async fn delete(id: serenity::UserId) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
 
     let prisma_user = prisma
@@ -192,7 +192,7 @@ pub async fn leave(id: serenity::UserId) -> Result<(), MemberLogError> {
     Ok(())
 }
 
-pub async fn get(id: serenity::UserId) -> Result<prisma::data::UserData, MemberLogError> {
+pub async fn read(id: serenity::UserId) -> Result<prisma::data::UserData, MemberLogError> {
     let prisma = prisma::create().await?;
 
     let user = prisma

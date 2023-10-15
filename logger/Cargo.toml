@@ -18,6 +18,10 @@ default-features = false
 path = "../prelude"
 features = ["serenity"]
 
+[dependencies.oreo-proc-macros]
+path = "../proc-macros"
+features = ["wire"]
+
 [features]
 default = []
 bin = [
