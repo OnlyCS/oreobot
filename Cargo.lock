@@ -1699,6 +1699,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a86ed3f5f244b372d6b1a00b72ef7f8876d0bc6a78a4c9985c53614041512063"
 
 [[package]]
+name = "oreo-cache"
+version = "0.1.0"
+dependencies = [
+ "oreo-prelude",
+ "oreo-proc-macros",
+ "oreo-router",
+ "serde",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "oreo-logger"
 version = "0.1.0"
 dependencies = [
@@ -1735,6 +1747,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "oreo-proc-macros"
+version = "0.1.0"
+dependencies = [
+ "itertools 0.11.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.38",
+]
+
+[[package]]
 name = "oreo-router"
 version = "0.1.0"
 dependencies = [
@@ -1743,16 +1765,6 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
-]
-
-[[package]]
-name = "oreo_proc_macros"
-version = "0.1.0"
-dependencies = [
- "itertools 0.11.0",
- "proc-macro2",
- "quote",
- "syn 2.0.38",
 ]
 
 [[package]]

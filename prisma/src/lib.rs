@@ -18,6 +18,17 @@ pub mod prelude {
         pub async fn create() -> Result<PrismaClient, prisma_client_rust::NewClientError> {
             PrismaClient::_builder().build().await
         }
+
+        pub mod data {
+            pub use crate::generated::{
+                attachment::Data as AttachmentData, channel::Data as ChannelData,
+                channel_category::Data as ChannelCategoryData,
+                interaction::Data as InteractionData, message::Data as MessageData,
+                message_pin::Data as MessagePinData, news_in_chat::Data as NewsInChatData,
+                role::Data as RoleData, user::Data as UserData,
+                user_settings_data::Data as UserSettingsData,
+            };
+        }
     }
 
     pub mod prisma_error {

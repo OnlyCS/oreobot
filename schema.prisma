@@ -83,7 +83,7 @@ model Message {
 
     pin                  MessagePin?
     impersonated_message ImpersonatedMessageData?
-    NewsInChat           NewsInChat[]
+    chat_message         NewsInChat?
 }
 
 model MessagePin {

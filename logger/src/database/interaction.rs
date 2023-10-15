@@ -93,3 +93,21 @@ pub async fn create(interaction: serenity::Interaction) -> Result<(), Interactio
 
     Ok(())
 }
+
+pub async fn get(
+    interaction_id: serenity::InteractionId,
+) -> Result<prisma::data::InteractionData, InteractionLogError> {
+    let prisma = prisma::create().await?;
+
+    let interaction = prisma
+        .interaction()
+        .find_unique(interaction::id::equals(interaction_id))
+        .with(interaction::command_data::fetch())
+        .with(interaction::channel::fetch())
+        .with(interaction::invoker::fetch())
+        .exec()
+        .await?
+        .make_error(InteractionLogError::NotFound(interaction_id))?;
+
+    Ok(interaction)
+}

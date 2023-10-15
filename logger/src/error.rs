@@ -14,7 +14,7 @@ pub enum MessageLogError {
     UserImpersonated(serenity::UserId),
 
     #[error("Message ({{ id: {0} }}) not found")]
-    MessageNotFound(serenity::MessageId),
+    NotFound(serenity::MessageId),
 
     #[error("Warning: Skipping delete for message ({{ id: {0} }}), impersonated")]
     MessageImpersonated(serenity::MessageId),
@@ -35,6 +35,9 @@ pub enum CategoryLogError {
         error: prisma_error::PrismaError,
         backtrace: Backtrace,
     },
+
+    #[error("Category ({{ id: {0} }}) not found")]
+    NotFound(serenity::ChannelId),
 }
 
 #[derive(Error, Debug)]
@@ -48,6 +51,9 @@ pub enum ChannelLogError {
         error: prisma_error::PrismaError,
         backtrace: Backtrace,
     },
+
+    #[error("Channel ({{ id: {0} }}) not found")]
+    NotFound(serenity::ChannelId),
 }
 
 #[derive(Error, Debug)]
@@ -58,6 +64,9 @@ pub enum InteractionLogError {
         error: prisma_error::PrismaError,
         backtrace: Backtrace,
     },
+
+    #[error("Interaction ({{ id: {0} }}) not found")]
+    NotFound(serenity::InteractionId),
 }
 
 #[derive(Error, Debug)]
@@ -70,7 +79,7 @@ pub enum MemberLogError {
     },
 
     #[error("Member ({{ id: {0} }}) not found")]
-    MemberNotFound(serenity::UserId),
+    NotFound(serenity::UserId),
 
     #[error("Member ({{ id: {0} }}) has no color role")]
     NoColorRole(serenity::UserId),

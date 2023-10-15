@@ -25,4 +25,4 @@
 
 [workspace]
 resolver = "2"
-members = ["router", "oreo-proc-macros", "prisma", "logger", "prelude"]
+members = ["router", "proc-macros", "prisma", "logger", "prelude", "cache"]

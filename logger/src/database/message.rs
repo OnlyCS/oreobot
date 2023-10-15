@@ -70,7 +70,7 @@ pub async fn delete(message_id: serenity::MessageId) -> Result<(), MessageLogErr
         .with(message::impersonated_message::fetch())
         .exec()
         .await?
-        .make_error(MessageLogError::MessageNotFound(message_id))?;
+        .make_error(MessageLogError::NotFound(message_id))?;
 
     if message.impersonated_message.flatten().is_some() {
         bail!(MessageLogError::MessageImpersonated(message_id));
@@ -95,4 +95,25 @@ pub async fn delete(message_id: serenity::MessageId) -> Result<(), MessageLogErr
         .await?;
 
     Ok(())
+}
+
+pub async fn get(
+    message_id: serenity::MessageId,
+) -> Result<prisma::data::MessageData, MessageLogError> {
+    let prisma = prisma::create().await?;
+
+    let message = prisma
+        .message()
+        .find_unique(message::id::equals(message_id))
+        .with(message::attachments::fetch(vec![]))
+        .with(message::channel::fetch())
+        .with(message::pin::fetch())
+        .with(message::impersonated_message::fetch())
+        .with(message::chat_message::fetch())
+        .with(message::author::fetch())
+        .exec()
+        .await?
+        .make_error(MessageLogError::NotFound(message_id))?;
+
+    Ok(message)
 }

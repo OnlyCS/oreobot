@@ -58,13 +58,7 @@ pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
 
     let prisma = prisma::create().await?;
 
-    let prisma_role = prisma
-        .role()
-        .find_unique(role::id::equals(role_id))
-        .with(role::users::fetch(vec![]))
-        .exec()
-        .await?
-        .make_error(RoleLogError::RoleNotFound(role_id))?;
+    let prisma_role = get(role_id).await?;
 
     // if role is a color role if the user exists
     if nci::roles::is_color_role(role_id) && todo!("Comms: check user has not left") {
@@ -74,4 +68,20 @@ pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
     }
 
     Ok(())
+}
+
+pub async fn get(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, RoleLogError> {
+    log_check(role_id)?;
+
+    let prisma = prisma::create().await?;
+
+    let role = prisma
+        .role()
+        .find_unique(role::id::equals(role_id))
+        .with(role::users::fetch(vec![]))
+        .exec()
+        .await?
+        .make_error(RoleLogError::RoleNotFound(role_id))?;
+
+    Ok(role)
 }

@@ -112,3 +112,20 @@ pub async fn delete(channel_id: serenity::ChannelId) -> Result<(), ChannelLogErr
 
     Ok(())
 }
+
+pub async fn get(
+    channel_id: serenity::ChannelId,
+) -> Result<prisma::data::ChannelData, ChannelLogError> {
+    let prisma = prisma::create().await?;
+
+    let channel = prisma
+        .channel()
+        .find_unique(channel::id::equals(channel_id))
+        .with(channel::category::fetch())
+        .with(channel::messages::fetch(vec![]))
+        .exec()
+        .await?
+        .make_error(ChannelLogError::NotFound(channel_id))?;
+
+    Ok(channel)
+}

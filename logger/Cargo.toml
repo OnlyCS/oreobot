@@ -21,12 +21,12 @@ features = ["serenity"]
 [features]
 default = []
 bin = [
-	"oreo-router/server",
-	"dep:tokio",
-	"oreo-prelude/prisma",
-	"oreo-prelude/nci",
-	"oreo-prelude/log",
-	"oreo-prelude/color",
+    "oreo-router/server",
+    "dep:tokio",
+    "oreo-prelude/prisma",
+    "oreo-prelude/nci",
+    "oreo-prelude/log",
+    "oreo-prelude/color",
 ]
 
 [[bin]]

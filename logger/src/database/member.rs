@@ -73,7 +73,7 @@ pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
         .with(user::roles::fetch(vec![]))
         .exec()
         .await?
-        .make_error(MemberLogError::MemberNotFound(member.user.id))?;
+        .make_error(MemberLogError::NotFound(member.user.id))?;
 
     // find user's color role in db
     let color_role = prisma_user
@@ -170,7 +170,7 @@ pub async fn leave(id: serenity::UserId) -> Result<(), MemberLogError> {
         .with(user::roles::fetch(vec![role::color_role::equals(true)]))
         .exec()
         .await?
-        .make_error(MemberLogError::MemberNotFound(id))?;
+        .make_error(MemberLogError::NotFound(id))?;
 
     let color_role_id = prisma_user
         .roles()?
@@ -190,4 +190,22 @@ pub async fn leave(id: serenity::UserId) -> Result<(), MemberLogError> {
     todo!("Comms: delete color role");
 
     Ok(())
+}
+
+pub async fn get(id: serenity::UserId) -> Result<prisma::data::UserData, MemberLogError> {
+    let prisma = prisma::create().await?;
+
+    let user = prisma
+        .user()
+        .find_unique(user::id::equals(id))
+        .with(user::roles::fetch(vec![]))
+        .with(user::messages::fetch(vec![]))
+        .with(user::impersonated_messages::fetch(vec![]))
+        .with(user::interactions::fetch(vec![]))
+        .with(user::settings::fetch())
+        .exec()
+        .await?
+        .make_error(MemberLogError::NotFound(id))?;
+
+    Ok(user)
 }

@@ -1,5 +1,5 @@
 [package]
-name = "oreo_proc_macros"
+name = "oreo-proc-macros"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,3 +13,8 @@ syn = "2.0.37"
 
 [lib]
 proc-macro = true
+
+[features]
+default = []
+update-enum = []
+select-menu-options = []

@@ -8,6 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/prisma/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/router/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cache/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/proc-macros/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

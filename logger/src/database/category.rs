@@ -58,3 +58,19 @@ pub async fn delete(category_id: serenity::ChannelId) -> Result<(), CategoryLogE
 
     Ok(())
 }
+
+pub async fn get(
+    category_id: serenity::ChannelId,
+) -> Result<prisma::data::ChannelCategoryData, CategoryLogError> {
+    let prisma = prisma::create().await?;
+
+    let category = prisma
+        .channel_category()
+        .find_unique(channel_category::id::equals(category_id))
+        .with(channel_category::channels::fetch(vec![]))
+        .exec()
+        .await?
+        .make_error(CategoryLogError::NotFound(category_id))?;
+
+    Ok(category)
+}
