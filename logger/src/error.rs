@@ -4,14 +4,18 @@ use std::backtrace::Backtrace;
 
 #[derive(Error, Debug)]
 pub enum MessageLogError {
+    #[error("Problem with router: {error}")]
+    Router {
+        #[from]
+        error: RouterError,
+        backtrace: Backtrace,
+    },
+
     #[error("Warning: Message ({{ id: {0} }}) is owned by a webhook, skipping")]
     WebhookMessage(serenity::MessageId),
 
     #[error("Warning: Message ({{ id: {0} }}) is in the #news channel, skipping")]
     NewsMessage(serenity::MessageId),
-
-    #[error("Warning: User ({{ id: {0} }}) is impersonating another user, skipping")]
-    UserImpersonated(serenity::UserId),
 
     #[error("Message ({{ id: {0} }}) not found")]
     NotFound(serenity::MessageId),
@@ -83,6 +87,13 @@ pub enum MemberLogError {
 
     #[error("Member ({{ id: {0} }}) has no color role")]
     NoColorRole(serenity::UserId),
+
+    #[error("Failed to update user settings: {error}")]
+    UpdateUserSettings {
+        #[from]
+        error: UserSettingsLogError,
+        backtrace: Backtrace,
+    },
 }
 
 #[derive(Error, Debug)]
@@ -142,11 +153,43 @@ pub enum ReadyEventError {
     },
 }
 
+#[derive(Error, Debug)]
+pub enum UserSettingsLogError {
+    #[error("Problem with database: {error}")]
+    Database {
+        #[from]
+        error: prisma_error::PrismaError,
+        backtrace: Backtrace,
+    },
+}
+
+#[derive(Error, Debug)]
+pub enum NewsInChatLogError {
+    #[error("Problem with database: {error}")]
+    Database {
+        #[from]
+        error: prisma_error::PrismaError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Failed to create message: {error}")]
+    MessageCreate {
+        #[from]
+        error: MessageLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("News message ({{ id: {0} }}) not found")]
+    NotFound(serenity::MessageId),
+}
+
 prisma_error_convert!(
     CategoryLogError,
     MessageLogError,
     ChannelLogError,
     InteractionLogError,
     MemberLogError,
-    RoleLogError
+    RoleLogError,
+    UserSettingsLogError,
+    NewsInChatLogError
 );

@@ -1,5 +1,6 @@
 use crate::error::*;
 use crate::request::Request;
+use futures::future::BoxFuture;
 use oreo_prelude::*;
 use std::sync::Arc;
 use std::{future::Future, marker::PhantomData};
@@ -9,12 +10,12 @@ use tokio::{
     sync::Mutex,
 };
 
-#[cfg(any(feature = "client", feature = "server"))]
+#[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
 fn make_request(text: String) -> String {
     format!("LEN{},{}", text.len(), text)
 }
 
-#[cfg(any(feature = "client", feature = "server"))]
+#[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
 async fn parse_message(stream: &mut TcpStream) -> Result<String, RouterError> {
     let mut reader = BufReader::new(stream);
 
@@ -71,7 +72,6 @@ where
 }
 
 #[cfg(feature = "server")]
-#[cfg(not(feature = "cache-server"))]
 pub struct Server<Req, Callback, CallbackFut>
 where
     Req: Request,
@@ -84,7 +84,6 @@ where
 }
 
 #[cfg(feature = "server")]
-#[cfg(not(feature = "cache-server"))]
 impl<Req, Callback, CallbackFut> Server<Req, Callback, CallbackFut>
 where
     Req: Request,
@@ -132,12 +131,15 @@ where
 }
 
 #[cfg(feature = "cache-server")]
-#[cfg(not(feature = "server"))]
-pub struct Server<Cache, Req, Callback, CallbackFut>
+pub struct CacheServer<Cache, Req, Callback>
 where
     Req: Request,
-    Callback: Fn(Req, &mut Cache) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
-    CallbackFut: Future<Output = Req::Response> + Send + 'static,
+    Callback: for<'a> Fn(Req, &'a mut Cache) -> BoxFuture<'a, Req::Response>
+        + Send
+        + Sync
+        + Clone
+        + Copy
+        + 'static,
     Cache: Send + 'static,
 {
     _request_type: PhantomData<Req>,
@@ -147,17 +149,19 @@ where
 }
 
 #[cfg(feature = "cache-server")]
-#[cfg(not(feature = "server"))]
-impl<Cache, Req, Callback, CallbackFut> Server<Cache, Req, Callback, CallbackFut>
+impl<Cache, Req, Callback> CacheServer<Cache, Req, Callback>
 where
     Req: Request,
-    Callback: Fn(Req, &mut Cache) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
-    CallbackFut: Future<Output = Req::Response> + Send + 'static,
+    Callback: for<'a> Fn(Req, &'a mut Cache) -> BoxFuture<'a, Req::Response>
+        + Send
+        + Sync
+        + Clone
+        + Copy
+        + 'static,
     Cache: Send + 'static,
 {
     pub async fn new(cache: Cache, callback: Callback) -> Result<Self, RouterError> {
         let port = Req::port();
-
         let stream = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
 
         Ok(Self {
@@ -174,27 +178,19 @@ where
         loop {
             let incoming = self.stream.accept().await?;
             let callback = self.callback;
-            let cache = Arc::clone(&self.cache);
+            let cache_arc = Arc::clone(&self.cache);
 
-            tokio::spawn(async move {
-                let mut cache = cache.lock().await;
+            let mut cache = cache_arc.lock().await;
 
-                let (mut stream, _) = incoming;
+            let (mut stream, _) = incoming;
 
-                let message_str = parse_message(&mut stream).await.unwrap();
-                let message = serde_json::from_str(&message_str).unwrap();
+            let message_str = parse_message(&mut stream).await.unwrap();
+            let message = serde_json::from_str(&message_str).unwrap();
 
-                let response = callback(message, &mut cache).await;
-                let response_str = make_request(serde_json::to_string(&response).unwrap());
+            let response = callback(message, &mut cache).await;
+            let response_str = make_request(serde_json::to_string(&response).unwrap());
 
-                stream.write_all(response_str.as_bytes()).await.unwrap();
-            });
+            stream.write_all(response_str.as_bytes()).await.unwrap();
         }
-    }
-
-    pub async fn listen_on_thread(mut self) {
-        tokio::spawn(async move {
-            self.listen().await.unwrap();
-        });
     }
 }

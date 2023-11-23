@@ -14,23 +14,30 @@ tokio = { version = "1.32.0", features = ["full"], optional = true }
 path = "../router"
 default-features = false
 
+[dependencies.oreo-cache]
+path = "../cache"
+optional = true
+
 [dependencies.oreo-prelude]
 path = "../prelude"
-features = ["serenity"]
+features = ["serenity", "prisma", "user-settings"]
 
 [dependencies.oreo-proc-macros]
 path = "../proc-macros"
 features = ["wire"]
+optional = true
 
 [features]
 default = []
 bin = [
-    "oreo-router/server",
-    "dep:tokio",
-    "oreo-prelude/prisma",
-    "oreo-prelude/nci",
-    "oreo-prelude/log",
-    "oreo-prelude/color",
+	"oreo-router/server",
+	"oreo-router/client",
+	"dep:tokio",
+	"oreo-prelude/nci",
+	"oreo-prelude/log",
+	"oreo-prelude/color",
+	"dep:oreo-proc-macros",
+	"dep:oreo-cache",
 ]
 
 [[bin]]

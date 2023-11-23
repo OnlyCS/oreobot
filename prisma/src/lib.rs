@@ -6,8 +6,8 @@ mod generated;
 
 pub mod prelude {
     pub use super::generated::{
-        attachment, channel, channel_category, interaction, message, message_pin, news_in_chat,
-        role, user, user_settings_data, ChannelType, InteractionType, PrismaClient,
+        attachment, channel, channel_category, interaction, logless_roles, message, message_pin,
+        news_in_chat, role, user, user_settings_data, ChannelType, InteractionType, PrismaClient,
     };
 
     pub mod prisma {

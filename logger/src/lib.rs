@@ -4,10 +4,12 @@ extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate serde;
 
-use oreo_prelude::prisma;
-use oreo_prelude::serenity::*;
-use oreo_router::Request;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use oreo_prelude::serenity::*;
+use oreo_prelude::*;
+use oreo_router::Request;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoggingRequest {
@@ -29,10 +31,17 @@ pub enum LoggingRequest {
     MessageCreate(Message),
     MessageRead(MessageId),
     MessageUpdate(MessageUpdateEvent),
+    MessageSetImpersonation {
+        source: MessageId,
+        impersonated: UserId,
+        clone: MessageId,
+    },
     MessageDelete(MessageId),
 
     RoleCreate(Role),
+    RoleSetBlacklisted(RoleId),
     RoleRead(RoleId),
+    RoleReadAll,
     RoleUpdate(Role),
     RoleDelete(RoleId),
 
@@ -41,7 +50,19 @@ pub enum LoggingRequest {
     MemberUpdate(Member),
     MemberDelete(UserId),
 
-    LogReady,
+    NewsInChatCreate {
+        news: Message,
+        chat: MessageId,
+    },
+    NewsInChatRead(MessageId),
+    NewsInChatReadAll,
+
+    UserSettingsCreate(UserId, UserSettings),
+    UserSettingsRead(UserId),
+    UserSettingsReadAll,
+    UserSettingsUpdate(UserId, UpdateUserSettings),
+
+    LoggerReady,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,12 +72,18 @@ pub enum LoggingResponse {
     UpdateOk,
     Err(String),
 
+    AllRolesOk(HashMap<RoleId, prisma::data::RoleData>),
+    AllUserSettingsOk(HashMap<UserId, UserSettings>),
+    AllNewsInChatOk(HashMap<MessageId, MessageId>),
+
     MemberOk(prisma::data::UserData),
     RoleOk(prisma::data::RoleData),
     MessageOk(prisma::data::MessageData),
     ChannelOk(prisma::data::ChannelData),
     CategoryOk(prisma::data::ChannelCategoryData),
     InteractionOk(prisma::data::InteractionData),
+    NewsInChatOk(MessageId, MessageId),
+    UserSettingsOk(UserSettings),
 }
 
 impl Request for LoggingRequest {

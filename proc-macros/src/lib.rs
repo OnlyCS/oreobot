@@ -3,6 +3,13 @@ use proc_macro2::TokenTree;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
+#[cfg(any(
+    feature = "update-enum",
+    feature = "select-menu-options",
+    feature = "wire"
+))]
+mod common;
+
 #[cfg(feature = "update-enum")]
 mod update_enum;
 
@@ -26,6 +33,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     select_menu_options::proc(data, ident).into()
 }
 
+#[cfg(feature = "wire")]
 #[proc_macro]
 pub fn wire(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as proc_macro2::TokenStream);

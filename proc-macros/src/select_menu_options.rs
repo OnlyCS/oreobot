@@ -1,18 +1,17 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
+use syn::{Data, Variant};
 
 struct SelectMenuMeta {
-    idents: Vec<syn::Ident>,
+    idents: Vec<Ident>,
     labels: Vec<String>,
     values: Vec<String>,
     types: Vec<String>,
 }
 
-fn parse_meta(
-    variants: syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
-    enum_ident: &syn::Ident,
-) -> SelectMenuMeta {
+fn parse_meta(variants: Punctuated<Variant, Comma>, enum_ident: &Ident) -> SelectMenuMeta {
     let mut idents = vec![];
     let mut labels = vec![];
     let mut values = vec![];
@@ -30,8 +29,8 @@ fn parse_meta(
             ident.to_string()
         );
 
-        for thisattr in attrs {
-            match &thisattr.meta {
+        for attr in attrs {
+            match &attr.meta {
                 syn::Meta::NameValue(syn::MetaNameValue {
                     value:
                         syn::Expr::Lit(syn::ExprLit {
@@ -74,7 +73,7 @@ fn parse_meta(
 
 pub(crate) fn proc(data: Data, ident: Ident) -> TokenStream {
     match data {
-        syn::Data::Enum(enu) => {
+        Data::Enum(enu) => {
             let SelectMenuMeta {
                 idents,
                 labels,

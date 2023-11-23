@@ -3,8 +3,8 @@ use crate::prelude::*;
 pub async fn create(mut member: serenity::Member) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
 
-    todo!("Create user's color role (tcp with bot). Should trigger rolecreate event, handled in role.rs");
-    let mut roles = vec![]; /* Should contain color_role.id */
+    let color_role: serenity::Role = todo!("Create user's color role (tcp with bot). Should trigger rolecreate event, handled in role.rs");
+    let mut roles = vec![color_role.id];
 
     if member.user.bot {
         roles.push(nci::roles::BOTS);
@@ -63,8 +63,7 @@ pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
     let mut updates = vec![];
 
-    todo!("Comms: get roles of user");
-    let roles: Vec<serenity::Role> = vec![];
+    let roles: Vec<serenity::Role> = todo!("Comms: get roles of user");
 
     // find user id database, and fetch roles
     let prisma_user = prisma

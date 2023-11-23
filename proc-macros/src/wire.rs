@@ -1,3 +1,4 @@
+use crate::common::snake_to_pascal;
 use itertools::Itertools;
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 use quote::quote;
@@ -104,12 +105,14 @@ fn parse_crud(
     let mut read = None;
     let mut update = None;
     let mut delete = None;
+    let mut all = None;
     let mut ident_lcase = None;
     let mut response = None;
     let mut function_prefix = None;
     let mut request_prefix = None;
     let mut pat_delete = None;
     let mut read_response = None;
+    let mut read_response_all = None;
 
     while let Some(tree) = group_trees.next() {
         let ident = expect_for! {
@@ -128,17 +131,13 @@ fn parse_crud(
                     { i }
                 };
 
-                let ident_first_upper = ident
-                    .to_string()
-                    .chars()
-                    .enumerate()
-                    .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
-                    .join("");
+                let ident_pascal = snake_to_pascal(ident.to_string());
 
-                create = Some(format!("{}Create", ident_first_upper));
-                read = Some(format!("{}Read", ident_first_upper));
-                update = Some(format!("{}Update", ident_first_upper));
-                delete = Some(format!("{}Delete", ident_first_upper));
+                create = Some(format!("{}Create", ident_pascal));
+                read = Some(format!("{}Read", ident_pascal));
+                update = Some(format!("{}Update", ident_pascal));
+                delete = Some(format!("{}Delete", ident_pascal));
+                all = Some(format!("{}ReadAll", ident_pascal));
                 ident_lcase = Some(ident.to_string());
             }
             "response" => {
@@ -191,7 +190,17 @@ fn parse_crud(
 
                 read_response = Some(resp_tt);
             }
-            _ => panic!("Expected one of: item, response, request_prefix, function_prefix"),
+            "read_all_response" => {
+                expect!(group_trees, TokenTree::Punct(p), { p.as_char() == ':' });
+
+                let resp_tt = until(&mut group_trees, |tree| match tree {
+                    TokenTree::Punct(p) if p.as_char() == ',' => true,
+                    _ => false,
+                });
+
+                read_response_all = Some(resp_tt);
+            }
+            _ => panic!("Expected one of: item, response, request_prefix, function_prefix, read_all_response"),
         }
 
         expect!(group_trees, TokenTree::Punct(p), { p.as_char() == ',' });
@@ -216,6 +225,10 @@ fn parse_crud(
             quote! {
                 #request_enum::#variant #pat_delete
             }
+        } else if variant.to_string().ends_with("ReadAll") {
+            quote! {
+                #request_enum::#variant
+            }
         } else {
             quote! {
                 #request_enum::#variant(item)
@@ -238,8 +251,14 @@ fn parse_crud(
             quote!(#ident_lcase_ident::#item_ident)
         };
 
-        quote! {
-            #function(item)
+        if item == "all" {
+            quote! {
+                #function()
+            }
+        } else {
+            quote! {
+                #function(item)
+            }
         }
     };
 
@@ -264,16 +283,19 @@ fn parse_crud(
     let req_read = req(read);
     let req_update = req(update);
     let req_delete = req(delete);
+    let req_all = req(all);
 
     let function_create = function("create");
     let function_read = function("read");
     let function_update = function("update");
     let function_delete = function("delete");
+    let function_all = function("all");
 
     let err_create = format!("Failed to create {}", ident_lcase.as_ref().unwrap());
     let err_read = format!("Failed to read {}", ident_lcase.as_ref().unwrap());
     let err_update = format!("Failed to update {}", ident_lcase.as_ref().unwrap());
     let err_delete = format!("Failed to delete {}", ident_lcase.as_ref().unwrap());
+    let err_all = format!("Failed to read every {}", ident_lcase.as_ref().unwrap());
 
     let arm_create = arm(req_create, function_create, err_create);
     let arm_update = arm(req_update, function_update, err_update);
@@ -292,7 +314,28 @@ fn parse_crud(
         }
     };
 
-    vec![arm_create, arm_read, arm_update, arm_delete]
+    let arm_read_all = if let Some(read_response_all) = read_response_all {
+        Some(quote! {
+            #req_all => {
+                match #function_all.await {
+                    Ok(data) => #read_response_all,
+                    Err(error) => {
+                        let error_string = format!("{}: {}", #err_all, error);
+                        error!("{}", error_string);
+                        LoggingResponse::Err(error_string)
+                    },
+                }
+            }
+        })
+    } else {
+        None
+    };
+
+    if let Some(arm_read_all) = arm_read_all {
+        vec![arm_create, arm_read, arm_update, arm_delete, arm_read_all]
+    } else {
+        vec![arm_create, arm_read, arm_update, arm_delete]
+    }
 }
 
 fn parse_cr(trees: &mut impl Iterator<Item = TokenTree>, request_enum: &Ident) -> Vec<TokenStream> {

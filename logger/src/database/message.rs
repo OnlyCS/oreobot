@@ -1,14 +1,8 @@
 use crate::prelude::*;
 
-pub async fn create(message: serenity::Message) -> Result<(), MessageLogError> {
-    if message.webhook_id.is_some() {
-        bail!(MessageLogError::WebhookMessage(message.id));
-    }
-
-    if message.channel_id == nci::channels::NEWS {
-        bail!(MessageLogError::NewsMessage(message.id));
-    }
-
+pub(in crate::database) async fn create_unchecked(
+    message: serenity::Message,
+) -> Result<serenity::MessageId, MessageLogError> {
     let prisma = prisma::create().await?;
 
     prisma
@@ -40,6 +34,20 @@ pub async fn create(message: serenity::Message) -> Result<(), MessageLogError> {
 
     prisma._batch(attachments).await?;
 
+    Ok(message.id)
+}
+
+pub async fn create(message: serenity::Message) -> Result<(), MessageLogError> {
+    if message.webhook_id.is_some() {
+        bail!(MessageLogError::WebhookMessage(message.id));
+    }
+
+    if message.channel_id == nci::channels::NEWS {
+        bail!(MessageLogError::NewsMessage(message.id));
+    }
+
+    create_unchecked(message).await?;
+
     Ok(())
 }
 
@@ -54,6 +62,27 @@ pub async fn update(message: serenity::MessageUpdateEvent) -> Result<(), Message
                 message::content::set(message.content.unwrap_or("".to_string())),
                 message::edited::set(true),
             ],
+        )
+        .exec()
+        .await?;
+
+    Ok(())
+}
+
+pub async fn update_impersonation(
+    message_id: serenity::MessageId,
+    impersonated_id: serenity::UserId,
+    cloned_id: serenity::MessageId,
+) -> Result<(), MessageLogError> {
+    let prisma = prisma::create().await?;
+
+    prisma
+        .impersonated_message_data()
+        .create(
+            message::id::equals(message_id),
+            user::id::equals(impersonated_id),
+            cloned_id,
+            vec![],
         )
         .exec()
         .await?;

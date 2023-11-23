@@ -4,7 +4,8 @@ use std::collections::{HashMap, HashSet};
 
 async fn roles() -> Result<(), RoleLogError> {
     let prisma = prisma::create().await?;
-    let roles: HashMap<serenity::RoleId, serenity::Role> = todo!("Comms: Get list of roles");
+    let roles: HashMap<serenity::RoleId, serenity::Role> =
+        todo!("Comms: Get list of roles FROM BOT");
 
     let prisma_roles = prisma
         .role()
@@ -55,15 +56,18 @@ async fn members() -> Result<(), MemberLogError> {
         if prisma_members.contains(&id.into()) {
             super::member::update(member).await?;
         } else {
-            super::member::join(member).await?;
+            super::member::create(member).await?;
         }
+
+        // get the user's settings so it will create if dne
+        super::user_settings::read(id).await?;
     }
 
     for id_i64 in prisma_members {
         let id = serenity::UserId::new(id_i64 as u64);
 
         if !members.contains_key(&id) {
-            super::member::leave(id).await?;
+            super::member::delete(id).await?;
         }
     }
 

@@ -24,6 +24,12 @@ path = "../prisma"
 optional = true
 default-features = false
 
+[dependencies.oreo-proc-macros]
+path = "../proc-macros"
+optional = true
+default-features = false
+features = ["update-enum"]
+
 [dependencies.poise]
 git = "https://github.com/serenity-rs/poise"
 branch = "serenity-next"
@@ -38,3 +44,4 @@ nci = ["serenity"]
 log = ["dep:log"]
 color = ["dep:color-name", "dep:serde", "dep:thiserror"]
 color-arg = ["dep:poise", "dep:async-trait", "color", "serenity/rustls_backend"]
+user-settings = ["dep:serde", "dep:oreo-proc-macros", "prisma"]

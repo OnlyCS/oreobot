@@ -151,16 +151,16 @@ model ImpersonatedMessageData {
     source    Message @relation(fields: [source_id], references: [id])
     source_id BigInt  @id
 
-    fake_author    User   @relation(fields: [fake_author_id], references: [id])
-    fake_author_id BigInt
+    impersonated    User   @relation(fields: [impersonated_id], references: [id])
+    impersonated_id BigInt @map("fake_author_id")
 
-    fake_message_id BigInt
+    cloned BigInt @map("fake_message_id")
 }
 
 model NewsInChat {
-    source          Message @relation(fields: [source_id], references: [id])
-    source_id       BigInt  @id
-    fake_message_id BigInt
+    source    Message @relation(fields: [source_id], references: [id])
+    source_id BigInt  @id
+    clone     BigInt  @map("fake_message_id")
 }
 
 model LoglessRoles {

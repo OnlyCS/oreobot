@@ -1,3 +1,4 @@
+use crate::common::snake_to_pascal;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
@@ -5,9 +6,9 @@ use syn::DeriveInput;
 pub(crate) fn proc(input: DeriveInput, args_ts: TokenStream) -> TokenStream {
     let data = &input.data;
     let ident = &input.ident;
-    let mut rewritten_idents = vec![];
-    let mut rewritten_types = vec![];
-    let mut original_idents = vec![];
+    let mut fields_pascal = vec![];
+    let mut field_types = vec![];
+    let mut fields_original = vec![];
 
     let syn::Data::Struct(s) = data else {
         panic!("update_enum can only be derived for structs");
@@ -16,45 +17,39 @@ pub(crate) fn proc(input: DeriveInput, args_ts: TokenStream) -> TokenStream {
     let fields = &s.fields;
 
     for field in fields {
+        fields_original.push(field.ident.as_ref().unwrap().clone());
+
         let ty = &field.ty;
-        original_idents.push(field.ident.as_ref().unwrap().clone());
-        let ident = field.ident.as_ref().unwrap().to_string();
-        let ident_camel = ident
-            .split('_')
-            .map(|spl| {
-                spl.chars()
-                    .enumerate()
-                    .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
-                    .collect::<String>()
-            })
-            .collect::<String>();
+        let ident_pascal = syn::Ident::new(
+            &snake_to_pascal(&field.ident.as_ref().unwrap().to_string()),
+            field.ident.as_ref().unwrap().span(),
+        );
 
-        let new_ident = syn::Ident::new(&ident_camel, field.ident.as_ref().unwrap().span());
-
-        rewritten_idents.push(new_ident.clone());
-        rewritten_types.push(ty.clone());
+        fields_pascal.push(ident_pascal);
+        field_types.push(ty);
     }
 
-    let new_ident = syn::Ident::new(&format!("Update{}", ident.to_string()), ident.span());
+    let update_ident = syn::Ident::new(&format!("Update{}", ident.to_string()), ident.span());
 
     quote! {
         #args_ts
         #input
 
-        pub enum #new_ident {
-            #(#rewritten_idents (#rewritten_types)),*
+        #[derive(Clone, Debug, Serialize, Deserialize)]
+        pub enum #update_ident {
+            #(#fields_pascal (#field_types)),*
         }
 
-        impl #new_ident {
+        impl #update_ident {
             pub fn update_with(self, to_update: &mut #ident) {
                 match self {
-                    #(#new_ident::#rewritten_idents(n) => to_update.#original_idents = n),*
+                    #(#update_ident::#fields_pascal(n) => to_update.#fields_original = n),*
                 }
             }
         }
 
         impl #ident {
-            pub fn update_from(&mut self, update: #new_ident) {
+            pub fn update_from(&mut self, update: #update_ident) {
                 update.update_with(self);
             }
         }
