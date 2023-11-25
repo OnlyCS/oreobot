@@ -20,4 +20,11 @@ pub enum BotServerError {
 }
 
 #[derive(Error, Debug)]
-pub enum CommandError {}
+pub enum CommandError {
+    #[error("Serenity error: {error}")]
+    Serenity {
+        #[from]
+        error: serenity::Error,
+        backtrace: Backtrace,
+    },
+}

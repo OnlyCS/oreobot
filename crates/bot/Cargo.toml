@@ -14,8 +14,6 @@ tokio = "1.34.0"
 [dependencies.poise]
 git = "https://github.com/serenity-rs/poise"
 branch = "serenity-next"
-default-features = false
-optional = true
 
 [dependencies.oreo-prelude]
 path = "../prelude"

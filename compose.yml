@@ -1,16 +1,19 @@
 services:
   cache:
     build: ./crates/cache
+    container_name: cache
     networks:
       - oreonet
 
   logger:
     build: ./crates/logger
+    container_name: logger
     networks:
       - oreonet
 
   bot:
     build: ./crates/bot
+    container_name: bot
     networks:
       - oreonet
 

@@ -4,7 +4,8 @@
     unboxed_closures,
     extract_if,
     associated_type_defaults,
-    error_generic_member_access
+    error_generic_member_access,
+    never_type
 )]
 
 #[macro_use]
@@ -15,6 +16,7 @@ extern crate poise;
 extern crate thiserror;
 extern crate tokio;
 
+mod commands;
 mod error;
 mod features;
 mod prelude;
@@ -30,16 +32,25 @@ async fn main() -> Result<!, BotServerError> {
 
     let framework = poise::FrameworkBuilder::default()
         .options(poise::FrameworkOptions {
-			commands: vec![
-				
-			],
+            commands: vec![commands::ping::ping()],
             ..Default::default()
         })
         .token(dotenv!("BOT_TOKEN"))
         .intents(serenity::GatewayIntents::all())
-        .setup(|ctx, _ready, framework| Box::pin(async move { Ok(Data {}) }));
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                ctx.set_presence(
+                    Some(serenity::ActivityData::playing("with Oppenheimer")),
+                    serenity::OnlineStatus::Online,
+                );
+
+                poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
+
+                Ok(Data {})
+            })
+        });
 
     framework.run().await?;
 
-    Ok(panic!("framework run returned"))
+    panic!("framework run returned (heh?)")
 }

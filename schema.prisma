@@ -5,7 +5,7 @@ datasource db {
 
 generator client {
     provider    = "cargo prisma"
-    output      = "./prisma/src/generated.rs"
+    output      = "./crates/prisma/src/generated.rs"
     module_path = "generated"
 }
 
