@@ -26,11 +26,11 @@
 [workspace]
 resolver = "2"
 members = [
-	"router",
-	"proc-macros",
-	"prisma",
-	"logger",
-	"prelude",
-	"cache",
-	"bot",
+	"crates/router",
+	"crates/proc-macros",
+	"crates/prisma",
+	"crates/logger",
+	"crates/prelude",
+	"crates/cache",
+	"crates/bot",
 ]

@@ -1,16 +1,16 @@
 services:
   cache:
-    build: ./cache
+    build: ./crates/cache
     networks:
       - oreonet
 
   logger:
-    build: ./logger
+    build: ./crates/logger
     networks:
       - oreonet
 
   bot:
-    build: ./bot
+    build: ./crates/bot
     networks:
       - oreonet
 
