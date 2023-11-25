@@ -89,7 +89,6 @@ pub enum LoggingResponse {
 impl Request for LoggingRequest {
     type Response = LoggingResponse;
 
-    fn port() -> u16 {
-        9000
-    }
+    const PORT: u16 = 9000;
+    const HOST: &'static str = "logger";
 }

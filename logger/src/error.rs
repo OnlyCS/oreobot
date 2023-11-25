@@ -183,6 +183,23 @@ pub enum NewsInChatLogError {
     NotFound(serenity::MessageId),
 }
 
+#[derive(Error, Debug)]
+pub enum LoggerServerError {
+    #[error("Problem with router: {error}")]
+    Router {
+        #[from]
+        error: RouterError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Problem starting logger: {error}")]
+    Logger {
+        #[from]
+        error: SetLoggerError,
+        backtrace: Backtrace,
+    },
+}
+
 prisma_error_convert!(
     CategoryLogError,
     MessageLogError,

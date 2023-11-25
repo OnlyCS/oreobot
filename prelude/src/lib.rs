@@ -5,7 +5,10 @@ extern crate color_name;
 extern crate itertools;
 
 #[cfg(feature = "log")]
-extern crate log;
+pub extern crate log;
+
+#[cfg(feature = "log")]
+extern crate simple_logger;
 
 #[cfg(feature = "prisma")]
 extern crate oreo_prisma;
@@ -77,7 +80,10 @@ pub use oreo_prisma::prisma_client_rust;
 pub use oreo_prisma::prisma_error_convert;
 
 #[cfg(feature = "log")]
-pub use log::{debug, error, info, trace, warn};
+pub use log::{debug, error, info, trace, warn, SetLoggerError};
+
+#[cfg(feature = "log")]
+pub use simple_logger::SimpleLogger;
 
 #[cfg(feature = "color")]
 pub use color::{consts as colors, Color, ColorParseError};

@@ -1,4 +1,4 @@
-#![feature(error_generic_member_access, trace_macros)]
+#![feature(error_generic_member_access, trace_macros, never_type)]
 
 extern crate oreo_logger;
 extern crate oreo_prelude;
@@ -179,11 +179,11 @@ async fn on(request: LoggingRequest) -> LoggingResponse {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), RouterError> {
+async fn main() -> Result<!, LoggerServerError> {
+    SimpleLogger::new().init()?;
+
     Server::new(|request| async move { on(request).await })
         .await?
         .listen()
-        .await?;
-
-    Ok(())
+        .await?
 }

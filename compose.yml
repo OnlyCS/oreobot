@@ -1,0 +1,19 @@
+services:
+  cache:
+    build: ./cache
+    networks:
+      - oreonet
+
+  logger:
+    build: ./logger
+    networks:
+      - oreonet
+
+  bot:
+    build: ./bot
+    networks:
+      - oreonet
+
+networks:
+  oreonet:
+    driver: bridge

@@ -16,7 +16,7 @@ default-features = false
 
 [dependencies.oreo-prelude]
 path = "../prelude"
-features = ["serenity", "prisma", "user-settings"]
+features = ["serenity", "prisma", "user-settings", "log"]
 
 [features]
 default = []

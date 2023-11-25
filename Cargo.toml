@@ -25,4 +25,12 @@
 
 [workspace]
 resolver = "2"
-members = ["router", "proc-macros", "prisma", "logger", "prelude", "cache"]
+members = [
+	"router",
+	"proc-macros",
+	"prisma",
+	"logger",
+	"prelude",
+	"cache",
+	"bot",
+]

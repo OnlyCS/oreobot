@@ -12,6 +12,7 @@ color-name = { version = "1.1.0", optional = true }
 serde = { version = "1.0.188", features = ["derive"], optional = true }
 async-trait = { version = "0.1.73", optional = true }
 thiserror = { version = "1.0.49", optional = true }
+simple_logger = { version = "4.3.0", optional = true, features = ["threads"] }
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
@@ -41,7 +42,7 @@ default = []
 serenity = ["dep:serenity"]
 prisma = ["dep:oreo-prisma"]
 nci = ["serenity"]
-log = ["dep:log"]
+log = ["dep:log", "dep:simple_logger"]
 color = ["dep:color-name", "dep:serde", "dep:thiserror"]
 color-arg = ["dep:poise", "dep:async-trait", "color", "serenity/rustls_backend"]
 user-settings = ["dep:serde", "dep:oreo-proc-macros", "prisma"]

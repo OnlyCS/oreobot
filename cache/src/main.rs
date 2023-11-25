@@ -1,3 +1,5 @@
+#![feature(never_type)]
+
 extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate serde;
@@ -7,9 +9,25 @@ extern crate tokio;
 use std::collections::HashMap;
 
 use oreo_cache::{CacheRequest, CacheResponse};
-use oreo_prelude::serenity::UserId;
+use oreo_prelude::{serenity::*, *};
 use oreo_router::error::RouterError;
 use oreo_router::CacheServer;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum CacheServerError {
+    #[error("Problem with router: {error}")]
+    Router {
+        #[from]
+        error: RouterError,
+    },
+
+    #[error("Problem starting logger: {error}")]
+    Logger {
+        #[from]
+        error: SetLoggerError,
+    },
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct Cache {
@@ -33,13 +51,13 @@ async fn on(request: CacheRequest, cache: &mut Cache) -> CacheResponse {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), RouterError> {
+async fn main() -> Result<!, CacheServerError> {
+    SimpleLogger::new().init()?;
+
     CacheServer::new(Cache::default(), |a, b| {
         Box::pin(async move { on(a, b).await })
     })
     .await?
     .listen()
-    .await?;
-
-    Ok(())
+    .await?
 }

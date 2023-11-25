@@ -45,14 +45,12 @@ where
 }
 
 #[cfg(feature = "client")]
-impl<R> Client<R>
+impl<Req> Client<Req>
 where
-    R: Request,
+    Req: Request,
 {
     pub async fn new() -> Result<Self, RouterError> {
-        let port = R::port();
-
-        let stream = TcpStream::connect(format!("127.0.0.1:{}", port)).await?;
+        let stream = TcpStream::connect(format!("{}:{}", Req::HOST, Req::PORT)).await?;
 
         Ok(Self {
             _request_type: std::marker::PhantomData,
@@ -60,7 +58,7 @@ where
         })
     }
 
-    pub async fn send(&mut self, request: R) -> Result<R::Response, RouterError> {
+    pub async fn send(&mut self, request: Req) -> Result<Req::Response, RouterError> {
         let request = make_request(serde_json::to_string(&request)?);
         self.stream.write_all(request.as_bytes()).await?;
 
@@ -91,9 +89,7 @@ where
     CallbackFut: Future<Output = Req::Response> + Send + 'static,
 {
     pub async fn new(callback: Callback) -> Result<Self, RouterError> {
-        let port = Req::port();
-
-        let stream = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
+        let stream = TcpListener::bind(format!("{}:{}", Req::HOST, Req::PORT)).await?;
 
         Ok(Self {
             _request_type: PhantomData,
@@ -102,8 +98,8 @@ where
         })
     }
 
-    pub async fn listen(&mut self) -> Result<(), RouterError> {
-        info!("Listening on port {}", Req::port());
+    pub async fn listen(&mut self) -> Result<!, RouterError> {
+        info!("Listening on {}:{}", Req::HOST, Req::PORT);
 
         loop {
             let incoming = self.stream.accept().await?;
@@ -161,8 +157,7 @@ where
     Cache: Send + 'static,
 {
     pub async fn new(cache: Cache, callback: Callback) -> Result<Self, RouterError> {
-        let port = Req::port();
-        let stream = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
+        let stream = TcpListener::bind(format!("{}:{}", Req::HOST, Req::PORT)).await?;
 
         Ok(Self {
             _request_type: PhantomData,
@@ -172,8 +167,8 @@ where
         })
     }
 
-    pub async fn listen(&mut self) -> Result<(), RouterError> {
-        info!("Listening on port {}", Req::port());
+    pub async fn listen(&mut self) -> Result<!, RouterError> {
+        info!("Listening on port {}:{}", Req::HOST, Req::PORT);
 
         loop {
             let incoming = self.stream.accept().await?;

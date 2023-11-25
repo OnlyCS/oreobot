@@ -26,7 +26,6 @@ pub enum CacheResponse {
 impl Request for CacheRequest {
     type Response = CacheResponse;
 
-    fn port() -> u16 {
-        9001
-    }
+    const PORT: u16 = 9001;
+    const HOST: &'static str = "cache";
 }

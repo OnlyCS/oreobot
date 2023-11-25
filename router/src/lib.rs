@@ -1,3 +1,5 @@
+#![feature(never_type)]
+
 extern crate oreo_prelude;
 extern crate serde;
 extern crate serde_json;
