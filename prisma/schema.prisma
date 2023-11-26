@@ -1,0 +1,115 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "cargo prisma"
+    output   = "../src/prisma/prisma_client.rs"
+}
+
+enum ChannelType {
+    Text
+    News
+    Stage
+    Voice
+}
+
+enum InteractionType {
+    Command
+    ModalSubmission
+    Button
+    TextInput
+    StringSelect
+    UserSelect
+    RoleSelect
+    MentionableSelect
+    ChannelSelect
+}
+
+model User {
+    id       String   @id
+    username String
+    nickname String?
+    role     UserRole @relation(fields: [role_id], references: [id])
+    role_id  String   @unique
+    admin    Boolean  @default(false)
+
+    messages     Message[]
+    interactions Interaction[]
+}
+
+model UserRole {
+    id    String @id
+    name  String
+    color String
+    user  User?
+}
+
+model Message {
+    id         String   @id
+    content    String
+    author     User     @relation(fields: [author_id], references: [id])
+    author_id  String
+    channel    Channel  @relation(fields: [channel_id], references: [id])
+    channel_id String
+    created    DateTime @default(now())
+    updated    DateTime @updatedAt
+}
+
+model Channel {
+    id           String           @id
+    name         String
+    topic        String?
+    nsfw         Boolean
+    kind         ChannelType
+    messages     Message[]
+    interactions Interaction[]
+    category     ChannelCategory? @relation(fields: [category_id], references: [id])
+    category_id  String?
+}
+
+model ChannelCategory {
+    id       String    @id
+    name     String
+    channels Channel[]
+}
+
+model CommandInteractionData {
+    id             String      @id
+    name           String
+    options        Json[]
+    interaction    Interaction @relation(fields: [interaction_id], references: [id])
+    interaction_id String      @unique
+}
+
+model SelectOption {
+    db_id               String                 @id @default(cuid())
+    label               String
+    value               String
+    description         String?
+    default             Boolean                @default(false)
+    interaction_data    SelectInteractionData? @relation(fields: [interaction_data_id], references: [db_id])
+    interaction_data_id String?
+}
+
+model SelectInteractionData {
+    db_id            String         @id @default(cuid())
+    options          SelectOption[]
+    interaction      Interaction    @relation(fields: [interaction_dbid], references: [id])
+    interaction_dbid String         @unique
+}
+
+model Interaction {
+    id         String          @id
+    type       InteractionType
+    channel    Channel         @relation(fields: [channel_id], references: [id])
+    channel_id String
+    invoker    User            @relation(fields: [invoker_id], references: [id])
+    invoker_id String
+    created    DateTime        @default(now())
+
+    command_data CommandInteractionData?
+    select_data  SelectInteractionData?
+    custom_id    String?
+}
