@@ -1,13 +1,15 @@
 #![feature(error_generic_member_access)]
 pub extern crate prisma_client_rust;
+
 mod error;
 #[allow(unused)]
+#[rustfmt::skip]
 mod generated;
 
 pub mod prelude {
     pub use super::generated::{
-        attachment, channel, channel_category, interaction, logless_roles, message, message_pin,
-        news_in_chat, role, user, user_settings_data, ChannelType, InteractionType, PrismaClient,
+        attachment, channel, channel_category, interaction, logless_roles, message, role, user,
+        user_settings_data, ChannelType, InteractionType, MessageCloneReason, PrismaClient,
     };
 
     pub mod prisma {
@@ -24,7 +26,6 @@ pub mod prelude {
                 attachment::Data as AttachmentData, channel::Data as ChannelData,
                 channel_category::Data as ChannelCategoryData,
                 interaction::Data as InteractionData, message::Data as MessageData,
-                message_pin::Data as MessagePinData, news_in_chat::Data as NewsInChatData,
                 role::Data as RoleData, user::Data as UserData,
                 user_settings_data::Data as UserSettingsData,
             };

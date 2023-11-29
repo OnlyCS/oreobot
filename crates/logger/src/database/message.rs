@@ -69,39 +69,22 @@ pub async fn update(message: serenity::MessageUpdateEvent) -> Result<(), Message
     Ok(())
 }
 
-pub async fn update_impersonation(
-    message_id: serenity::MessageId,
-    impersonated_id: serenity::UserId,
-    cloned_id: serenity::MessageId,
-) -> Result<(), MessageLogError> {
-    let prisma = prisma::create().await?;
-
-    prisma
-        .impersonated_message_data()
-        .create(
-            message::id::equals(message_id),
-            user::id::equals(impersonated_id),
-            cloned_id,
-            vec![],
-        )
-        .exec()
-        .await?;
-
-    Ok(())
-}
-
 pub async fn delete(message_id: serenity::MessageId) -> Result<(), MessageLogError> {
     let prisma = prisma::create().await?;
 
     let message = prisma
         .message()
         .find_unique(message::id::equals(message_id))
-        .with(message::impersonated_message::fetch())
+        .with(message::clones::fetch(vec![]))
         .exec()
         .await?
         .make_error(MessageLogError::NotFound(message_id))?;
 
-    if message.impersonated_message.flatten().is_some() {
+    if message
+        .clones()?
+        .into_iter()
+        .any(|clone| clone.reason == MessageCloneReason::Impersonation)
+    {
         bail!(MessageLogError::MessageImpersonated(message_id));
     }
 
@@ -136,9 +119,7 @@ pub async fn read(
         .find_unique(message::id::equals(message_id))
         .with(message::attachments::fetch(vec![]))
         .with(message::channel::fetch())
-        .with(message::pin::fetch())
-        .with(message::impersonated_message::fetch())
-        .with(message::chat_message::fetch())
+        .with(message::clones::fetch(vec![]))
         .with(message::author::fetch())
         .exec()
         .await?

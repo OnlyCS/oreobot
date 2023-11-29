@@ -21,3 +21,4 @@ src/prisma/prisma_client.rs
 crates/bot/oreo-bot*
 crates/cache/oreo-cache*
 crates/logger/oreo-logger*
+crates/prisma/src/generated.rs

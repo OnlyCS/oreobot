@@ -31,11 +31,6 @@ pub enum LoggingRequest {
     MessageCreate(Message),
     MessageRead(MessageId),
     MessageUpdate(MessageUpdateEvent),
-    MessageSetImpersonation {
-        source: MessageId,
-        impersonated: UserId,
-        clone: MessageId,
-    },
     MessageDelete(MessageId),
 
     RoleCreate(Role),
@@ -50,17 +45,19 @@ pub enum LoggingRequest {
     MemberUpdate(Member),
     MemberDelete(UserId),
 
-    NewsInChatCreate {
-        news: Message,
-        chat: MessageId,
-    },
-    NewsInChatRead(MessageId),
-    NewsInChatReadAll,
-
     UserSettingsCreate(UserId, UserSettings),
     UserSettingsRead(UserId),
     UserSettingsReadAll,
     UserSettingsUpdate(UserId, UpdateUserSettings),
+
+    MessageCloneCreate {
+        source: serenity::MessageId,
+        clone: serenity::MessageId,
+        destination: serenity::ChannelId,
+        reason: MessageCloneReason,
+        update: bool,
+        update_delete: bool,
+    },
 
     LoggerReady,
 }

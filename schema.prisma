@@ -32,10 +32,9 @@ model User {
     verified Boolean @default(false)
     bot      Boolean @default(false)
 
-    messages              Message[]
-    impersonated_messages ImpersonatedMessageData[]
-    interactions          Interaction[]
-    settings              UserSettingsData?
+    messages     Message[]
+    interactions Interaction[]
+    settings     UserSettingsData?
 
     removed Boolean @default(false)
 }
@@ -63,6 +62,13 @@ model Attachment {
     deleted Boolean @default(false)
 }
 
+enum MessageCloneReason {
+    NewsInChat
+    Starboard
+    Impersonation
+    Leak
+}
+
 model Message {
     id      BigInt @id
     content String
@@ -81,19 +87,24 @@ model Message {
     deleted Boolean @default(false)
     edited  Boolean @default(false)
 
-    pin                  MessagePin?
-    impersonated_message ImpersonatedMessageData?
-    chat_message         NewsInChat?
+    clones MessageClone[]
 }
 
-model MessagePin {
-    pinned_message_id BigInt @id
+model MessageClone {
+    id BigInt @id
 
-    original    Message @relation(fields: [original_id], references: [id])
-    original_id BigInt  @unique
+    source    Message @relation(fields: [source_id], references: [id])
+    source_id BigInt
 
-    removed        Boolean @default(false)
-    removed_reason String?
+    update        Boolean
+    update_delete Boolean
+
+    destination    Channel @relation(fields: [destination_id], references: [id])
+    destination_id BigInt
+
+    reason MessageCloneReason
+
+    deleted Boolean @default(false)
 }
 
 model Channel {
@@ -103,8 +114,9 @@ model Channel {
     nsfw  Boolean
     kind  ChannelType
 
-    messages     Message[]
-    interactions Interaction[]
+    messages        Message[]
+    interactions    Interaction[]
+    cloned_messages MessageClone[]
 
     category    ChannelCategory? @relation(fields: [category_id], references: [id])
     category_id BigInt?
@@ -145,22 +157,6 @@ model Interaction {
     // custom id for all except for commands, which has extra data
     command_data CommandInteractionData?
     custom_id    String?
-}
-
-model ImpersonatedMessageData {
-    source    Message @relation(fields: [source_id], references: [id])
-    source_id BigInt  @id
-
-    impersonated    User   @relation(fields: [impersonated_id], references: [id])
-    impersonated_id BigInt @map("fake_author_id")
-
-    cloned BigInt @map("fake_message_id")
-}
-
-model NewsInChat {
-    source    Message @relation(fields: [source_id], references: [id])
-    source_id BigInt  @id
-    clone     BigInt  @map("fake_message_id")
 }
 
 model LoglessRoles {

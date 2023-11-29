@@ -184,6 +184,16 @@ pub enum NewsInChatLogError {
 }
 
 #[derive(Error, Debug)]
+pub enum MessageCloneLogError {
+    #[error("Problem with database: {error}")]
+    Database {
+        #[from]
+        error: prisma_error::PrismaError,
+        backtrace: Backtrace,
+    },
+}
+
+#[derive(Error, Debug)]
 pub enum LoggerServerError {
     #[error("Problem with router: {error}")]
     Router {
@@ -208,5 +218,6 @@ prisma_error_convert!(
     MemberLogError,
     RoleLogError,
     UserSettingsLogError,
-    NewsInChatLogError
+    NewsInChatLogError,
+    MessageCloneLogError
 );

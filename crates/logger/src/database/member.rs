@@ -199,7 +199,6 @@ pub async fn read(id: serenity::UserId) -> Result<prisma::data::UserData, Member
         .find_unique(user::id::equals(id))
         .with(user::roles::fetch(vec![]))
         .with(user::messages::fetch(vec![]))
-        .with(user::impersonated_messages::fetch(vec![]))
         .with(user::interactions::fetch(vec![]))
         .with(user::settings::fetch())
         .exec()

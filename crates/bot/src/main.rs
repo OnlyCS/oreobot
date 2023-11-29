@@ -5,12 +5,14 @@
     extract_if,
     associated_type_defaults,
     error_generic_member_access,
-    never_type
+    never_type,
+    const_for
 )]
 
 #[macro_use]
 extern crate dotenvy_macro;
 extern crate dotenvy;
+extern crate futures;
 extern crate oreo_prelude;
 extern crate poise;
 extern crate thiserror;
@@ -20,6 +22,7 @@ mod commands;
 mod error;
 mod features;
 mod prelude;
+mod util;
 
 use error::BotServerError;
 use prelude::*;

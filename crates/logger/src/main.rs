@@ -51,17 +51,6 @@ async fn on(request: LoggingRequest) -> LoggingResponse {
             read_response: LoggingResponse::MessageOk(data),
         },
 
-        custom: LoggingRequest::MessageSetImpersonation { source, impersonated, clone } => {
-            match database::message::update_impersonation(source, impersonated, clone).await {
-                Ok(_) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to update impersionation: {e}");
-                    error!("{err}");
-                    LoggingResponse::Err(err)
-                }
-            }
-        },
-
         crud: {
             item: role,
             function_prefix: database,
@@ -93,39 +82,6 @@ async fn on(request: LoggingRequest) -> LoggingResponse {
                 Ok(_) => LoggingResponse::Ready,
                 Err(e) => {
                     let err = format!("Failed to log ready event: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                },
-            }
-        },
-
-        custom: LoggingRequest::NewsInChatCreate { news, chat } => {
-            match database::news_in_chat::create(news, chat).await {
-                Ok(_) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to log news in chat: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                },
-            }
-        },
-
-        custom: LoggingRequest::NewsInChatRead(news) => {
-            match database::news_in_chat::read(news).await {
-                Ok(data) => LoggingResponse::NewsInChatOk(news, data),
-                Err(e) => {
-                    let err = format!("Failed to get news in chat: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                },
-            }
-        },
-
-        custom: LoggingRequest::NewsInChatReadAll => {
-            match database::news_in_chat::all().await {
-                Ok(data) => LoggingResponse::AllNewsInChatOk(data),
-                Err(e) => {
-                    let err = format!("Failed to get news in chat: {}", e);
                     error!("{}", err);
                     LoggingResponse::Err(err)
                 },
@@ -170,6 +126,17 @@ async fn on(request: LoggingRequest) -> LoggingResponse {
                 Ok(data) => LoggingResponse::AllUserSettingsOk(data),
                 Err(e) => {
                     let err = format!("Failed to read user settings: {}", e);
+                    error!("{}", err);
+                    LoggingResponse::Err(err)
+                }
+            }
+        },
+
+        custom: LoggingRequest::MessageCloneCreate { source, clone, destination, reason, update, update_delete } => {
+            match database::message_clone::create(source, clone, destination, reason, update, update_delete).await {
+                Ok(()) => LoggingResponse::UpdateOk,
+                Err(e) => {
+                    let err = format!("Failed to create message clone: {}", e);
                     error!("{}", err);
                     LoggingResponse::Err(err)
                 }
