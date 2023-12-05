@@ -8,7 +8,7 @@ extern crate tokio;
 
 mod comms;
 pub mod error;
-mod request;
+mod server;
 
 #[cfg(feature = "client")]
 pub use comms::Client;
@@ -17,6 +17,6 @@ pub use comms::Client;
 pub use comms::Server;
 
 #[cfg(feature = "cache-server")]
-pub use comms::CacheServer;
+pub use comms::PersistServer;
 
-pub use request::Request;
+pub use server::ServerMetadata;

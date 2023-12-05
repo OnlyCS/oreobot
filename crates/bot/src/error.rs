@@ -40,10 +40,10 @@ pub enum MessageCloneError {
         backtrace: Backtrace,
     },
 
-    #[error("Router error: {error}")]
+    #[error("Logger error: {error}")]
     Router {
         #[from]
-        error: RouterError,
+        error: RouterError<LoggingServer>,
         backtrace: Backtrace,
     },
 

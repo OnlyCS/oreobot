@@ -108,7 +108,6 @@ fn parse_crud(
     let mut all = None;
     let mut ident_lcase = None;
     let mut response = None;
-    let mut function_prefix = None;
     let mut request_prefix = None;
     let mut pat_delete = None;
     let mut read_response = None;
@@ -159,16 +158,6 @@ fn parse_crud(
                 });
 
                 request_prefix = Some(prefix.to_string());
-            }
-            "function_prefix" => {
-                expect!(group_trees, TokenTree::Punct(p), { p.as_char() == ':' });
-
-                let prefix = until(&mut group_trees, |tree| match tree {
-                    TokenTree::Punct(p) if p.as_char() == ',' => true,
-                    _ => false,
-                });
-
-                function_prefix = Some(prefix.to_string());
             }
             "pat_delete" => {
                 expect!(group_trees, TokenTree::Punct(p), { p.as_char() == ':' });
@@ -238,17 +227,12 @@ fn parse_crud(
 
     let function = |item: &'static str| {
         let item_ident = Ident::new(item, Span::call_site());
+        let function_prefix = Ident::new("database", Span::call_site());
 
-        let function = if function_prefix.is_some() {
-            let function_prefix_ident =
-                Ident::new(function_prefix.as_ref().unwrap(), Span::call_site());
+        let function = {
             let ident_lcase_ident = Ident::new(ident_lcase.as_ref().unwrap(), Span::call_site());
 
-            quote!(#function_prefix_ident::#ident_lcase_ident::#item_ident)
-        } else {
-            let ident_lcase_ident = Ident::new(ident_lcase.as_ref().unwrap(), Span::call_site());
-
-            quote!(#ident_lcase_ident::#item_ident)
+            quote!(#function_prefix::#ident_lcase_ident::#item_ident)
         };
 
         if item == "all" {
@@ -262,17 +246,11 @@ fn parse_crud(
         }
     };
 
-    let arm = |req: TokenStream, func: TokenStream, err: String| {
+    let arm = |req: TokenStream, func: TokenStream| {
         quote! {
             #req => {
-                match #func.await {
-                    Ok(()) => #response,
-                    Err(error) => {
-                        let error_string = format!("{}: {}", #err, error);
-                        error!("{}", error_string);
-                        LoggingResponse::Err(error_string)
-                    },
-                }
+                #func.await?;
+                Ok(#response)
             }
         }
     };
@@ -291,40 +269,22 @@ fn parse_crud(
     let function_delete = function("delete");
     let function_all = function("all");
 
-    let err_create = format!("Failed to create {}", ident_lcase.as_ref().unwrap());
-    let err_read = format!("Failed to read {}", ident_lcase.as_ref().unwrap());
-    let err_update = format!("Failed to update {}", ident_lcase.as_ref().unwrap());
-    let err_delete = format!("Failed to delete {}", ident_lcase.as_ref().unwrap());
-    let err_all = format!("Failed to read every {}", ident_lcase.as_ref().unwrap());
-
-    let arm_create = arm(req_create, function_create, err_create);
-    let arm_update = arm(req_update, function_update, err_update);
-    let arm_delete = arm(req_delete, function_delete, err_delete);
+    let arm_create = arm(req_create, function_create);
+    let arm_update = arm(req_update, function_update);
+    let arm_delete = arm(req_delete, function_delete);
 
     let arm_read = quote! {
         #req_read => {
-            match #function_read.await {
-                Ok(data) => #read_response,
-                Err(error) => {
-                    let error_string = format!("{}: {}", #err_read, error);
-                    error!("{}", error_string);
-                    LoggingResponse::Err(error_string)
-                },
-            }
+            let data = #function_read.await?;
+            Ok(#read_response(data))
         }
     };
 
     let arm_read_all = if let Some(read_response_all) = read_response_all {
         Some(quote! {
             #req_all => {
-                match #function_all.await {
-                    Ok(data) => #read_response_all,
-                    Err(error) => {
-                        let error_string = format!("{}: {}", #err_all, error);
-                        error!("{}", error_string);
-                        LoggingResponse::Err(error_string)
-                    },
-                }
+                let data = #function_all.await?;
+                Ok(#read_response_all(data))
             }
         })
     } else {

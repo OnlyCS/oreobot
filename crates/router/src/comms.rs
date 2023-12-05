@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::request::Request;
+use crate::server::ServerMetadata;
 use futures::future::BoxFuture;
 use oreo_prelude::*;
 use std::sync::Arc;
@@ -12,18 +12,19 @@ use tokio::{
 
 #[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
 fn make_request(text: String) -> String {
-    format!("LEN{},{}", text.len(), text)
+    format!("{},{}", text.len(), text)
 }
 
 #[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
-async fn parse_message(stream: &mut TcpStream) -> Result<String, RouterError> {
+async fn parse_message<Meta: ServerMetadata>(
+    stream: &mut TcpStream,
+) -> Result<String, RouterError<Meta>> {
     let mut reader = BufReader::new(stream);
 
     let mut buf = Vec::new();
-    reader.read_until(b","[0], &mut buf).await?;
+    reader.read_until(b',', &mut buf).await?;
 
     let msg_len = String::from_utf8(buf)?
-        .trim_start_matches("LEN")
         .trim_end_matches(",")
         .parse::<usize>()?;
 
@@ -36,86 +37,119 @@ async fn parse_message(stream: &mut TcpStream) -> Result<String, RouterError> {
 }
 
 #[cfg(feature = "client")]
-pub struct Client<Req>
+pub struct Client<Meta>
 where
-    Req: Request,
+    Meta: ServerMetadata,
 {
-    _request_type: PhantomData<Req>,
+    _metadata: PhantomData<Meta>,
     stream: TcpStream,
 }
 
 #[cfg(feature = "client")]
-impl<Req> Client<Req>
+impl<Meta> Client<Meta>
 where
-    Req: Request,
+    Meta: ServerMetadata,
 {
-    pub async fn new() -> Result<Self, RouterError> {
-        let stream = TcpStream::connect(format!("{}:{}", Req::HOST, Req::PORT)).await?;
+    pub async fn new() -> Result<Self, RouterError<Meta>> {
+        let stream = TcpStream::connect(format!("{}:{}", Meta::HOST, Meta::PORT)).await?;
 
         Ok(Self {
-            _request_type: std::marker::PhantomData,
+            _metadata: std::marker::PhantomData,
             stream,
         })
     }
 
-    pub async fn send(&mut self, request: Req) -> Result<Req::Response, RouterError> {
+    pub async unsafe fn send_unchecked(
+        &mut self,
+        request: Meta::Request,
+    ) -> Result<Meta::Response, RouterError<Meta>> {
         let request = make_request(serde_json::to_string(&request)?);
         self.stream.write_all(request.as_bytes()).await?;
 
         let response_str = parse_message(&mut self.stream).await?;
-        let response = serde_json::from_str(&response_str)?;
+        let response: Result<Meta::Response, Meta::Error> = serde_json::from_str(&response_str)?;
 
-        Ok(response)
+        match response {
+            Ok(response) => Ok(response),
+            Err(err) => Err(RouterError::ServerError(err)),
+        }
+    }
+
+    pub async fn send(
+        &mut self,
+        request: Meta::Request,
+    ) -> Result<Meta::Response, RouterError<Meta>> {
+        let true = self.check_ready().await? else {
+            bail!(RouterError::ServerNotReady)
+        };
+
+        unsafe { self.send_unchecked(request).await }
+    }
+
+    async fn check_ready(&mut self) -> Result<bool, RouterError<Meta>> {
+        match unsafe { self.send_unchecked(Meta::READY_REQUEST).await } {
+            Ok(response) => Ok({
+                if response == Meta::READY_TRUE {
+                    true
+                } else if response == Meta::READY_FALSE {
+                    false
+                } else {
+                    panic!("Invalid response from server")
+                }
+            }),
+            Err(err) => Err(err),
+        }
     }
 }
 
 #[cfg(feature = "server")]
-pub struct Server<Req, Callback, CallbackFut>
+pub struct Server<Meta, Callback, CallbackFut>
 where
-    Req: Request,
-    Callback: Fn(Req) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
-    CallbackFut: Future<Output = Req::Response> + Send + 'static,
+    Meta: ServerMetadata,
+    Callback: Fn(Meta::Request) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
+    CallbackFut: Future<Output = Result<Meta::Response, Meta::Error>> + Send + 'static,
 {
-    _request_type: PhantomData<Req>,
+    _metadata: PhantomData<Meta>,
     stream: TcpListener,
     callback: Callback,
 }
 
 #[cfg(feature = "server")]
-impl<Req, Callback, CallbackFut> Server<Req, Callback, CallbackFut>
+impl<Meta, Callback, CallbackFut> Server<Meta, Callback, CallbackFut>
 where
-    Req: Request,
-    Callback: Fn(Req) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
-    CallbackFut: Future<Output = Req::Response> + Send + 'static,
+    Meta: ServerMetadata,
+    Callback: Fn(Meta::Request) -> CallbackFut + Send + Sync + Clone + Copy + 'static,
+    CallbackFut: Future<Output = Result<Meta::Response, Meta::Error>> + Send + 'static,
 {
-    pub async fn new(callback: Callback) -> Result<Self, RouterError> {
-        let stream = TcpListener::bind(format!("{}:{}", Req::HOST, Req::PORT)).await?;
+    pub async fn new(callback: Callback) -> Result<Self, RouterError<Meta>> {
+        let stream = TcpListener::bind(format!("{}:{}", Meta::HOST, Meta::PORT)).await?;
 
         Ok(Self {
-            _request_type: PhantomData,
+            _metadata: PhantomData,
             stream,
             callback,
         })
     }
 
-    pub async fn listen(&mut self) -> Result<!, RouterError> {
-        info!("Listening on {}:{}", Req::HOST, Req::PORT);
+    pub async fn listen(&mut self) -> Result<!, RouterError<Meta>> {
+        info!("Listening on {}:{}", Meta::HOST, Meta::PORT);
 
         loop {
             let incoming = self.stream.accept().await?;
             let callback = self.callback;
 
-            tokio::spawn(async move {
-                let (mut stream, _) = incoming;
+            let (mut stream, _) = incoming;
 
-                let message_str = parse_message(&mut stream).await.unwrap();
-                let message = serde_json::from_str(&message_str).unwrap();
+            let message_str = parse_message::<Meta>(&mut stream).await?;
+            let message = serde_json::from_str(&message_str)?;
 
-                let response = callback(message).await;
-                let response_str = make_request(serde_json::to_string(&response).unwrap());
+            let response = callback(message)
+                .await
+                .map_err(|err| RouterError::<Meta>::ServerError(err))?;
 
-                stream.write_all(response_str.as_bytes()).await.unwrap();
-            });
+            let response_str = make_request(serde_json::to_string(&response).unwrap());
+
+            stream.write_all(response_str.as_bytes()).await.unwrap();
         }
     }
 
@@ -127,48 +161,50 @@ where
 }
 
 #[cfg(feature = "cache-server")]
-pub struct CacheServer<Cache, Req, Callback>
+pub struct PersistServer<Cache, Meta, Callback>
 where
-    Req: Request,
-    Callback: for<'a> Fn(Req, &'a mut Cache) -> BoxFuture<'a, Req::Response>
+    Meta: ServerMetadata,
+    Callback: for<'a> Fn(
+            Meta::Request,
+            &'a mut Cache,
+        ) -> BoxFuture<'a, Result<Meta::Response, Meta::Error>>
         + Send
-        + Sync
-        + Clone
         + Copy
         + 'static,
     Cache: Send + 'static,
 {
-    _request_type: PhantomData<Req>,
+    _metadata: PhantomData<Meta>,
     stream: TcpListener,
     callback: Callback,
     cache: Arc<Mutex<Cache>>,
 }
 
 #[cfg(feature = "cache-server")]
-impl<Cache, Req, Callback> CacheServer<Cache, Req, Callback>
+impl<Cache, Meta, Callback> PersistServer<Cache, Meta, Callback>
 where
-    Req: Request,
-    Callback: for<'a> Fn(Req, &'a mut Cache) -> BoxFuture<'a, Req::Response>
+    Meta: ServerMetadata,
+    Callback: for<'a> Fn(
+            Meta::Request,
+            &'a mut Cache,
+        ) -> BoxFuture<'a, Result<Meta::Response, Meta::Error>>
         + Send
-        + Sync
-        + Clone
         + Copy
         + 'static,
     Cache: Send + 'static,
 {
-    pub async fn new(cache: Cache, callback: Callback) -> Result<Self, RouterError> {
-        let stream = TcpListener::bind(format!("{}:{}", Req::HOST, Req::PORT)).await?;
+    pub async fn new(cache: Cache, callback: Callback) -> Result<Self, RouterError<Meta>> {
+        let stream = TcpListener::bind(format!("{}:{}", Meta::HOST, Meta::PORT)).await?;
 
         Ok(Self {
-            _request_type: PhantomData,
+            _metadata: PhantomData,
             stream,
             callback,
             cache: Arc::new(Mutex::new(cache)),
         })
     }
 
-    pub async fn listen(&mut self) -> Result<!, RouterError> {
-        info!("Listening on port {}:{}", Req::HOST, Req::PORT);
+    pub async fn listen(&mut self) -> Result<!, RouterError<Meta>> {
+        info!("Listening on port {}:{}", Meta::HOST, Meta::PORT);
 
         loop {
             let incoming = self.stream.accept().await?;
@@ -179,13 +215,19 @@ where
 
             let (mut stream, _) = incoming;
 
-            let message_str = parse_message(&mut stream).await.unwrap();
-            let message = serde_json::from_str(&message_str).unwrap();
+            let message_str = parse_message::<Meta>(&mut stream).await?;
+            let message = serde_json::from_str(&message_str)?;
 
             let response = callback(message, &mut cache).await;
-            let response_str = make_request(serde_json::to_string(&response).unwrap());
+            let response_str = make_request(serde_json::to_string(&response)?);
 
-            stream.write_all(response_str.as_bytes()).await.unwrap();
+            stream.write_all(response_str.as_bytes()).await?;
         }
+    }
+
+    pub async fn listen_on_thread(mut self) {
+        tokio::spawn(async move {
+            self.listen().await.unwrap();
+        });
     }
 }

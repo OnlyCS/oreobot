@@ -14,142 +14,99 @@ use oreo_proc_macros::wire;
 use oreo_router::Server;
 use prelude::*;
 
-async fn on(request: LoggingRequest) -> LoggingResponse {
+async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
     info!("Logging request: {:?}", request);
 
     wire! {
         request,
         LoggingRequest,
 
-        custom: LoggingRequest::IsReady => LoggingResponse::Ready,
+        custom: LoggingRequest::IsReady => Ok(LoggingResponse::Ready),
 
         cr: {
             item: interaction,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::InteractionOk(data),
+            read_response: LoggingResponse::InteractionOk,
         },
 
         crud: {
             item: category,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::CategoryOk(data),
+            read_response: LoggingResponse::CategoryOk,
         },
 
         crud: {
             item: channel,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::ChannelOk(data),
+            read_response: LoggingResponse::ChannelOk,
         },
 
         crud: {
             item: message,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::MessageOk(data),
+            read_response: LoggingResponse::MessageOk,
         },
 
         crud: {
             item: role,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::RoleOk(data),
-            read_all_response: LoggingResponse::AllRolesOk(data),
+            read_response: LoggingResponse::RoleOk,
+            read_all_response: LoggingResponse::AllRolesOk,
         },
 
         custom: LoggingRequest::RoleSetBlacklisted(role_id) => {
-            match database::role::set_blacklisted(role_id).await {
-                Ok(_) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to set role blacklisted: {e}");
-                    error!("{err}");
-                    LoggingResponse::Err(err)
-                }
-            }
+            database::role::set_blacklisted(role_id).await?;
+            Ok(LoggingResponse::UpdateOk)
         },
 
         crud: {
             item: member,
-            function_prefix: database,
             response: LoggingResponse::UpdateOk,
-            read_response: LoggingResponse::MemberOk(data),
+            read_response: LoggingResponse::MemberOk,
         },
 
         custom: LoggingRequest::LoggerReady => {
-            match database::ready::ready().await {
-                Ok(_) => LoggingResponse::Ready,
-                Err(e) => {
-                    let err = format!("Failed to log ready event: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                },
-            }
+            database::ready::ready().await?;
+            Ok(LoggingResponse::UpdateOk)
         },
 
         custom: LoggingRequest::UserSettingsCreate(user_id, settings) => {
-            match database::user_settings::create(user_id, settings).await {
-                Ok(()) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to create user settings: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                }
-            }
+            database::user_settings::create(user_id, settings).await?;
+            Ok(LoggingResponse::UpdateOk)
         },
 
         custom: LoggingRequest::UserSettingsUpdate(user_id, settings_update) => {
-            match database::user_settings::update(user_id, settings_update).await {
-                Ok(()) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to update user settings: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                }
-            }
+            database::user_settings::update(user_id, settings_update).await?;
+            Ok(LoggingResponse::UpdateOk)
         },
 
         custom: LoggingRequest::UserSettingsRead(user_id) => {
-            match database::user_settings::read(user_id).await {
-                Ok(data) => LoggingResponse::UserSettingsOk(data),
-                Err(e) => {
-                    let err = format!("Failed to read user settings: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                }
-            }
+            let data = database::user_settings::read(user_id).await?;
+            Ok(LoggingResponse::UserSettingsOk(data))
         },
 
         custom: LoggingRequest::UserSettingsReadAll => {
-            match database::user_settings::all().await {
-                Ok(data) => LoggingResponse::AllUserSettingsOk(data),
-                Err(e) => {
-                    let err = format!("Failed to read user settings: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                }
-            }
+            let data = database::user_settings::all().await?;
+            Ok(LoggingResponse::AllUserSettingsOk(data))
         },
 
         custom: LoggingRequest::MessageCloneCreate { source, clone, destination, reason, update, update_delete } => {
-            match database::message_clone::create(source, clone, destination, reason, update, update_delete).await {
-                Ok(()) => LoggingResponse::UpdateOk,
-                Err(e) => {
-                    let err = format!("Failed to create message clone: {}", e);
-                    error!("{}", err);
-                    LoggingResponse::Err(err)
-                }
-            }
+            database::message_clone::create(source, clone, destination, reason, update, update_delete).await?;
+            Ok(LoggingResponse::UpdateOk)
         },
     }
+}
+
+async fn on_map(request: LoggingRequest) -> Result<LoggingResponse, serde_error::Error> {
+    let result = on(request).await;
+    result.map_err(|error| serde_error::Error::new(&error))
 }
 
 #[tokio::main]
 async fn main() -> Result<!, LoggerServerError> {
     SimpleLogger::new().init()?;
 
-    Server::new(|request| async move { on(request).await })
+    Server::new(|request| async move { on_map(request).await })
         .await?
         .listen()
         .await?

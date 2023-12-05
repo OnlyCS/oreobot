@@ -17,8 +17,12 @@ extern crate oreo_prelude;
 extern crate poise;
 extern crate thiserror;
 extern crate tokio;
+extern crate automod;
 
-mod commands;
+mod commands {
+    automod::dir!(pub "src/commands");
+}
+
 mod error;
 mod features;
 mod prelude;

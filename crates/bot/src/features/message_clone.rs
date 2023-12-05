@@ -39,12 +39,10 @@ fn create_reply(reply: &serenity::Message) -> Result<String, serenity::Error> {
     let link = reply.link();
 
     let reply_text = format!(
-        "{}{} [@{}: {}]({})\n",
+        "{}{} [@{}: {truncated}]({link})\n",
         emoji::CURVED,
         emoji::STRAIGHT,
         reply.author.name,
-        truncated,
-        link
     );
 
     Ok(reply_text)
@@ -83,14 +81,14 @@ async fn find_wh(
             && wh
                 .name
                 .as_ref()
-                .is_some_and(|name| name == "Oreo v2s Internals")
+                .is_some_and(|name| name == nci::webhook::NAME)
     });
 
     if let Some(webhook) = webhook {
         Ok(webhook)
     } else {
         channel
-            .create_webhook(&ctx, serenity::CreateWebhook::new("Oreo v2s Internals"))
+            .create_webhook(&ctx, serenity::CreateWebhook::new(nci::webhook::NAME))
             .await
     }
 }
@@ -149,9 +147,9 @@ pub async fn message_clone(
     let cloned_message = webhook.execute(&ctx, true, cloned_message).await?.unwrap();
 
     // database
-    let mut client = Client::<LoggingRequest>::new().await?;
+    let mut client = Client::<LoggingServer>::new().await?;
 
-    let response = client
+    client
         .send(LoggingRequest::MessageCloneCreate {
             source: message.id,
             clone: cloned_message.id,
@@ -161,10 +159,6 @@ pub async fn message_clone(
             update_delete: delete,
         })
         .await?;
-
-    if let LoggingResponse::Err(err) = response {
-        bail!(MessageCloneError::LoggingError(err))
-    };
 
     Ok(cloned_message)
 }

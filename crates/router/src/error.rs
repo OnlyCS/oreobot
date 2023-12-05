@@ -1,7 +1,8 @@
+use crate::server::ServerMetadata;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum RouterError {
+pub enum RouterError<Meta: ServerMetadata> {
     #[error("Error with serde: {0}")]
     SerdeError(#[from] serde_json::Error),
 
@@ -13,4 +14,10 @@ pub enum RouterError {
 
     #[error("Error parsing message length: {0}")]
     ParseError(#[from] std::num::ParseIntError),
+
+    #[error("Error with server: {0}")]
+    ServerError(Meta::Error),
+
+    #[error("Server not ready")]
+    ServerNotReady,
 }

@@ -4,12 +4,12 @@ extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate serde;
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 use oreo_prelude::serenity::*;
 use oreo_prelude::*;
-use oreo_router::Request;
+use oreo_router::ServerMetadata;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoggingRequest {
@@ -67,7 +67,6 @@ pub enum LoggingResponse {
     Ready,
     NotReady,
     UpdateOk,
-    Err(String),
 
     AllRolesOk(HashMap<RoleId, prisma::data::RoleData>),
     AllUserSettingsOk(HashMap<UserId, UserSettings>),
@@ -83,9 +82,28 @@ pub enum LoggingResponse {
     UserSettingsOk(UserSettings),
 }
 
-impl Request for LoggingRequest {
-    type Response = LoggingResponse;
+impl PartialEq for LoggingResponse {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Ready, Self::Ready) => true,
+            (Self::NotReady, Self::NotReady) => true,
+            _ => false,
+        }
+    }
+}
 
-    const PORT: u16 = 9000;
+#[derive(Debug)]
+pub struct LoggingServer;
+
+impl ServerMetadata for LoggingServer {
+    type Request = LoggingRequest;
+    type Response = LoggingResponse;
+    type Error = serde_error::Error;
+
     const HOST: &'static str = "logger";
+    const PORT: u16 = 9000;
+
+    const READY_REQUEST: Self::Request = LoggingRequest::IsReady;
+    const READY_TRUE: Self::Response = LoggingResponse::Ready;
+    const READY_FALSE: Self::Response = LoggingResponse::NotReady;
 }

@@ -7,7 +7,7 @@ pub enum MessageLogError {
     #[error("Problem with router: {error}")]
     Router {
         #[from]
-        error: RouterError,
+        error: RouterError<LoggingServer>,
         backtrace: Backtrace,
     },
 
@@ -164,26 +164,6 @@ pub enum UserSettingsLogError {
 }
 
 #[derive(Error, Debug)]
-pub enum NewsInChatLogError {
-    #[error("Problem with database: {error}")]
-    Database {
-        #[from]
-        error: prisma_error::PrismaError,
-        backtrace: Backtrace,
-    },
-
-    #[error("Failed to create message: {error}")]
-    MessageCreate {
-        #[from]
-        error: MessageLogError,
-        backtrace: Backtrace,
-    },
-
-    #[error("News message ({{ id: {0} }}) not found")]
-    NotFound(serenity::MessageId),
-}
-
-#[derive(Error, Debug)]
 pub enum MessageCloneLogError {
     #[error("Problem with database: {error}")]
     Database {
@@ -198,7 +178,7 @@ pub enum LoggerServerError {
     #[error("Problem with router: {error}")]
     Router {
         #[from]
-        error: RouterError,
+        error: RouterError<LoggingServer>,
         backtrace: Backtrace,
     },
 
@@ -206,6 +186,72 @@ pub enum LoggerServerError {
     Logger {
         #[from]
         error: SetLoggerError,
+        backtrace: Backtrace,
+    },
+}
+
+#[derive(Error, Debug)]
+pub enum LoggerError {
+    #[error("Error logging message: {error}")]
+    MessageLogError {
+        #[from]
+        error: MessageLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging category: {error}")]
+    CategoryLogError {
+        #[from]
+        error: CategoryLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging channel: {error}")]
+    ChannelLogError {
+        #[from]
+        error: ChannelLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging interaction: {error}")]
+    InteractionLogError {
+        #[from]
+        error: InteractionLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging role: {error}")]
+    RoleLogError {
+        #[from]
+        error: RoleLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging member: {error}")]
+    MemberLogError {
+        #[from]
+        error: MemberLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging ready event: {error}")]
+    ReadEventError {
+        #[from]
+        error: ReadyEventError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging user settings: {error}")]
+    UserSettingsLogError {
+        #[from]
+        error: UserSettingsLogError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error logging message clone: {error}")]
+    MessageCloneLogError {
+        #[from]
+        error: MessageCloneLogError,
         backtrace: Backtrace,
     },
 }
@@ -218,6 +264,5 @@ prisma_error_convert!(
     MemberLogError,
     RoleLogError,
     UserSettingsLogError,
-    NewsInChatLogError,
     MessageCloneLogError
 );

@@ -1,5 +1,4 @@
 use serenity_rs::model::prelude::*;
-use std::num::NonZeroU64;
 
 // Constants for NCI Server
 pub mod roles {
@@ -30,6 +29,10 @@ pub mod channels {
     pub const CHAT: ChannelId = ChannelId::new(1014256055330549842);
     pub const NEWS: ChannelId = ChannelId::new(997661924546322472);
     pub const STARRED: ChannelId = ChannelId::new(1016113247662919760);
+}
+
+pub mod webhook {
+    pub const NAME: &'static str = "Oreo v2's Internals";
 }
 
 pub const ID: GuildId = GuildId::new(803315311663251537);
