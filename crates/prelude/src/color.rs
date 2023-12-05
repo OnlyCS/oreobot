@@ -184,16 +184,18 @@ impl poise::SlashArgument for Color {
     }
 
     async fn extract(
-        _ctx: &impl serenity::CacheHttp,
-        _interaction: poise::CommandOrAutocompleteInteraction<'_>,
+        _ctx: &serenity::Context,
+        _interaction: &serenity::CommandInteraction,
         value: &serenity::ResolvedValue<'_>,
     ) -> Result<Self, poise::SlashArgError> {
         let serenity::ResolvedValue::String(str) = value else {
-            bail!(poise::SlashArgError::Invalid("expected string"))
+            bail!(poise::SlashArgError::new_command_structure_mismatch(
+                "expected string"
+            ))
         };
 
-        let color =
-            Color::from_str(str).map_err(|_| poise::SlashArgError::Invalid("invalid color"))?;
+        let color = Color::from_str(str)
+            .map_err(|_| poise::SlashArgError::new_command_structure_mismatch("invalid color"))?;
 
         Ok(color)
     }

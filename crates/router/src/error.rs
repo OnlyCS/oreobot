@@ -1,5 +1,4 @@
-use crate::server::ServerMetadata;
-use thiserror::Error;
+use crate::prelude::*;
 
 #[derive(Error, Debug)]
 pub enum RouterError<Meta: ServerMetadata> {

@@ -14,7 +14,7 @@ tokio = { version = "1.32.0", features = ["full"] }
 
 [dependencies.oreo-prelude]
 path = "../prelude"
-features = ["log"]
+features = ["log", "futures"]
 
 [lib]
 

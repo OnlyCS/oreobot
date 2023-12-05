@@ -11,20 +11,19 @@
 
 #[macro_use]
 extern crate dotenvy_macro;
+extern crate async_channel;
+extern crate automod;
 extern crate dotenvy;
 extern crate futures;
 extern crate oreo_prelude;
 extern crate poise;
 extern crate thiserror;
 extern crate tokio;
-extern crate automod;
 
-mod commands {
-    automod::dir!(pub "src/commands");
-}
-
+mod commands;
 mod error;
 mod features;
+mod mpmc;
 mod prelude;
 mod util;
 
@@ -42,8 +41,6 @@ async fn main() -> Result<!, BotServerError> {
             commands: vec![commands::ping::ping()],
             ..Default::default()
         })
-        .token(dotenv!("BOT_TOKEN"))
-        .intents(serenity::GatewayIntents::all())
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 ctx.set_presence(
@@ -55,9 +52,15 @@ async fn main() -> Result<!, BotServerError> {
 
                 Ok(Data {})
             })
-        });
+        })
+        .build();
 
-    framework.run().await?;
+    let mut client =
+        serenity::ClientBuilder::new(dotenv!("BOT_TOKEN"), serenity::GatewayIntents::all())
+            .framework(framework)
+            .await?;
+
+    client.start().await?;
 
     panic!("framework run returned (heh?)")
 }

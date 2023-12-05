@@ -8,16 +8,12 @@ default-run = "oreo-logger"
 [dependencies]
 serde = { version = "1.0.188", features = ["derive"] }
 serde-error = "0.1.2"
-thiserror = "1.0.49"
+thiserror = { version = "1.0.49", optional = true }
 tokio = { version = "1.32.0", features = ["full"], optional = true }
 
 [dependencies.oreo-router]
 path = "../router"
 default-features = false
-
-[dependencies.oreo-cache]
-path = "../cache"
-optional = true
 
 [dependencies.oreo-prelude]
 path = "../prelude"
@@ -32,13 +28,12 @@ optional = true
 default = []
 bin = [
 	"oreo-router/server",
-	"oreo-router/client",
 	"dep:tokio",
 	"oreo-prelude/nci",
 	"oreo-prelude/log",
 	"oreo-prelude/color",
 	"dep:oreo-proc-macros",
-	"dep:oreo-cache",
+	"dep:thiserror",
 ]
 
 [[bin]]

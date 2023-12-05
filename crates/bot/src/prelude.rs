@@ -1,5 +1,13 @@
-pub use crate::error::*;
-pub use crate::util::{embed, emoji, mention};
+pub(crate) use crate::{
+    error::*,
+    features::share,
+    mpmc,
+    util::{
+        embed::{self, EmbedStatus},
+        emoji, mention,
+    },
+};
+
 pub use futures::stream::{self, StreamExt};
 pub use oreo_logger::*;
 pub use oreo_prelude::*;

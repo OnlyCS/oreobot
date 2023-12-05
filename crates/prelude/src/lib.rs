@@ -28,6 +28,9 @@ extern crate poise;
 #[cfg(feature = "color-arg")]
 extern crate async_trait;
 
+#[cfg(feature = "futures")]
+extern crate futures;
+
 mod error;
 
 #[cfg(feature = "nci")]
@@ -90,5 +93,8 @@ pub use color::{consts as colors, Color, ColorParseError};
 
 #[cfg(feature = "user-settings")]
 pub use user_settings::*;
+
+#[cfg(feature = "futures")]
+pub use futures::{future::BoxFuture, prelude::*};
 
 pub use itertools::Itertools;

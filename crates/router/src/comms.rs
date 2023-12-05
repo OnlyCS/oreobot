@@ -1,21 +1,9 @@
-use crate::error::*;
-use crate::server::ServerMetadata;
-use futures::future::BoxFuture;
-use oreo_prelude::*;
-use std::sync::Arc;
-use std::{future::Future, marker::PhantomData};
-use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    net::{TcpListener, TcpStream},
-    sync::Mutex,
-};
+use crate::prelude::*;
 
-#[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
 fn make_request(text: String) -> String {
     format!("{},{}", text.len(), text)
 }
 
-#[cfg(any(feature = "client", feature = "server", feature = "cache-server"))]
 async fn parse_message<Meta: ServerMetadata>(
     stream: &mut TcpStream,
 ) -> Result<String, RouterError<Meta>> {

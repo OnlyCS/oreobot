@@ -3,13 +3,13 @@
 extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate serde;
+extern crate serde_error;
 
 use oreo_prelude::serenity::*;
 use oreo_prelude::*;
 use oreo_router::ServerMetadata;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoggingRequest {
