@@ -13,11 +13,9 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), CommandError> {
         .field("Latency", format!("{latency}ms"), true)
         .field("API Ping", format!("{api_latency}ms"), true);
 
-    let row = share::row();
-
     let reply = poise::CreateReply::default()
         .embed(embed)
-        .components(vec![row])
+        .components(vec![share::row()])
         .ephemeral(true);
 
     ctx.send(reply).await?;

@@ -20,3 +20,4 @@ services:
 networks:
   oreonet:
     driver: bridge
+    name: oreonet

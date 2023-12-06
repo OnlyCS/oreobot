@@ -1,22 +1,56 @@
-pub type Data = String;
-pub type Reciever = async_channel::Receiver<Data>;
-pub type Sender = async_channel::Sender<Data>;
+pub mod event;
 
-static mut CONSUMER_CL: Option<Reciever> = None;
+use crate::prelude::*;
 
-fn _copy() -> Option<Reciever> {
-    let consumer = unsafe { CONSUMER_CL.as_ref().unwrap() };
+pub struct MpmcData {
+    event: serenity::FullEvent,
+    ctx: serenity::Context,
+    data: Data,
+}
+
+type Reciever = async_channel::Receiver<MpmcData>;
+type Sender = async_channel::Sender<MpmcData>;
+
+static mut RECIEVER: Option<Reciever> = None;
+static mut SENDER: Option<Sender> = None;
+
+fn _rcopy() -> Option<Reciever> {
+    let consumer = unsafe { RECIEVER.as_ref()? };
     let consumer = consumer.clone();
     Some(consumer)
 }
 
-pub fn setup() -> Sender {
-    let (s, r) = async_channel::unbounded();
-    unsafe { CONSUMER_CL = Some(r) };
-
-    s
+fn _scopy() -> Option<Sender> {
+    let sender = unsafe { SENDER.as_ref()? };
+    let sender = sender.clone();
+    Some(sender)
 }
 
-pub fn reciever() -> Reciever {
-    _copy().unwrap()
+pub fn setup() {
+    let (s, r) = async_channel::unbounded();
+    unsafe { RECIEVER = Some(r) };
+    unsafe { SENDER = Some(s) };
+}
+
+pub async fn send(event: MpmcData) -> Result<(), async_channel::SendError<MpmcData>> {
+    let sender = _scopy().unwrap();
+    sender.send(event).await
+}
+
+pub fn on<Callback, Fut>(f: Callback)
+where
+    Callback: Fn(serenity::Context, serenity::FullEvent, Data) -> Fut + Send + 'static,
+    Fut: Future<Output = Result<(), EventError>> + Send,
+{
+    let recv = _rcopy().unwrap();
+    tokio::spawn(async move {
+        while let Ok(event) = recv.recv().await {
+            let MpmcData { ctx, event, data } = event;
+
+            match f(ctx, event, data).await {
+                Ok(_) => {}
+                Err(e) => error!("error in event callback: {e}"),
+            }
+        }
+    });
 }

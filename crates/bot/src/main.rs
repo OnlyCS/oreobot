@@ -39,6 +39,7 @@ async fn main() -> Result<!, BotServerError> {
     let framework = poise::FrameworkBuilder::default()
         .options(poise::FrameworkOptions {
             commands: vec![commands::ping::ping()],
+            event_handler: mpmc::event::handler,
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
@@ -50,7 +51,11 @@ async fn main() -> Result<!, BotServerError> {
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
 
-                Ok(Data {})
+                // setup features. mpmc has top prio
+                mpmc::setup();
+                features::share::register();
+
+                Ok(Arc::new(Mutex::new(SharedData {})))
             })
         })
         .build();

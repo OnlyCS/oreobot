@@ -98,9 +98,9 @@ pub async fn message_clone(
     message: &serenity::Message,
     destination: &serenity::ChannelId,
     options: MessageCloneOptions,
-) -> Result<serenity::Message, MessageCloneError> {
+) -> Result<serenity::Message, CloneError> {
     if !message.components.is_empty() {
-        bail!(MessageCloneError::NoComponents)
+        bail!(CloneError::NoComponents)
     }
 
     let MessageCloneOptions {

@@ -29,10 +29,17 @@ pub enum CommandError {
         error: serenity::Error,
         backtrace: Backtrace,
     },
+
+    #[error("Error sending event: {error}")]
+    MpmcSend {
+        #[from]
+        error: async_channel::SendError<mpmc::MpmcData>,
+        backtrace: Backtrace,
+    },
 }
 
 #[derive(Error, Debug)]
-pub enum MessageCloneError {
+pub enum CloneError {
     #[error("Serenity error: {error}")]
     Serenity {
         #[from]
@@ -52,4 +59,14 @@ pub enum MessageCloneError {
 
     #[error("Cannot clone messages containing components")]
     NoComponents,
+}
+
+#[derive(Error, Debug)]
+pub enum EventError {
+    #[error("Serenity error: {error}")]
+    Serenity {
+        #[from]
+        error: serenity::Error,
+        backtrace: Backtrace,
+    },
 }
