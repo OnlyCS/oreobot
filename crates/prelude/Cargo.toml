@@ -40,6 +40,8 @@ branch = "current"
 default-features = false
 optional = true
 
+[lib]
+
 [features]
 default = []
 serenity = ["dep:serenity"]

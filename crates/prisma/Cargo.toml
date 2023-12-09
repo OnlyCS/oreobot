@@ -24,6 +24,8 @@ optional = true
 default = []
 bin = ["dep:prisma-client-rust-cli"]
 
+[lib]
+
 [[bin]]
 name = "prisma-cli"
 path = "src/bin/prisma_cli.rs"
