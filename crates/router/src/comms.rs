@@ -148,7 +148,7 @@ where
     }
 }
 
-#[cfg(feature = "cache-server")]
+#[cfg(feature = "persist-server")]
 pub struct PersistServer<Cache, Meta, Callback>
 where
     Meta: ServerMetadata,
@@ -167,7 +167,7 @@ where
     cache: Arc<Mutex<Cache>>,
 }
 
-#[cfg(feature = "cache-server")]
+#[cfg(feature = "persist-server")]
 impl<Cache, Meta, Callback> PersistServer<Cache, Meta, Callback>
 where
     Meta: ServerMetadata,

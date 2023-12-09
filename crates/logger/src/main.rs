@@ -1,6 +1,5 @@
 #![feature(error_generic_member_access, trace_macros, never_type)]
 
-extern crate oreo_logger;
 extern crate oreo_prelude;
 extern crate oreo_router;
 extern crate tokio;
@@ -9,7 +8,6 @@ mod database;
 mod error;
 mod prelude;
 
-use oreo_logger::{LoggingRequest, LoggingResponse};
 use oreo_proc_macros::wire;
 use oreo_router::Server;
 use prelude::*;

@@ -4,7 +4,8 @@ use syn::{parse_macro_input, DeriveInput};
 #[cfg(any(
     feature = "update-enum",
     feature = "select-menu-options",
-    feature = "wire"
+    feature = "wire",
+    feature = "logger-wire"
 ))]
 mod common;
 
@@ -16,6 +17,9 @@ mod select_menu_options;
 
 #[cfg(feature = "wire")]
 mod wire;
+
+#[cfg(feature = "logger-wire")]
+mod logger_wire;
 
 #[cfg(feature = "update-enum")]
 #[proc_macro_attribute]
@@ -37,4 +41,12 @@ pub fn wire(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as proc_macro2::TokenStream);
 
     wire::proc(input).into()
+}
+
+#[cfg(feature = "logger-wire")]
+#[proc_macro]
+pub fn logger_wire(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as proc_macro2::TokenStream);
+
+    logger_wire::proc(input).into()
 }

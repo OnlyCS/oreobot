@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 futures = "0.3.28"
 serde = { version = "1.0.188", features = ["derive"] }
+serde-error = "0.1.2"
 serde_json = "1.0.107"
 thiserror = "1.0.48"
 tokio = { version = "1.32.0", features = ["full"] }
@@ -19,7 +20,9 @@ features = ["log", "futures"]
 [lib]
 
 [features]
-default = ["client", "server"]
+default = ["client"]
 client = []
 server = []
-cache-server = []
+persist-server = []
+servermeta-logger = ["oreo-prelude/serenity"]
+servermeta-cache = ["oreo-prelude/serenity"]

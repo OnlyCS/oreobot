@@ -23,9 +23,10 @@ branch = "next"
 path = "../prelude"
 features = ["nci", "log", "color", "color-arg", "user-settings"]
 
-[dependencies.oreo-logger]
-path = "../logger"
-
 [dependencies.oreo-router]
 path = "../router"
-features = ["client"]
+features = ["client", "servermeta-cache", "servermeta-logger"]
+
+[dependencies.oreo-proc-macros]
+path = "../proc-macros"
+features = ["logger-wire"]

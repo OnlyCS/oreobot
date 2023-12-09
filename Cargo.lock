@@ -1894,8 +1894,8 @@ dependencies = [
  "dotenvy",
  "dotenvy_macro",
  "futures",
- "oreo-logger",
  "oreo-prelude",
+ "oreo-proc-macros",
  "oreo-router",
  "poise 0.5.7",
  "thiserror",
@@ -1908,7 +1908,6 @@ version = "0.1.0"
 dependencies = [
  "oreo-prelude",
  "oreo-router",
- "serde",
  "thiserror",
  "tokio",
 ]
@@ -1971,6 +1970,7 @@ dependencies = [
  "futures",
  "oreo-prelude",
  "serde",
+ "serde-error",
  "serde_json",
  "thiserror",
  "tokio",

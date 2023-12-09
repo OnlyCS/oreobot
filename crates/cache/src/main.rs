@@ -2,17 +2,13 @@
 
 extern crate oreo_prelude;
 extern crate oreo_router;
-extern crate serde;
 extern crate thiserror;
 extern crate tokio;
 
+use oreo_prelude::{serenity::*, *};
+use oreo_router::*;
 use std::backtrace::Backtrace;
 use std::collections::HashMap;
-
-use oreo_cache::{CacheError, CacheRequest, CacheResponse, CacheServer};
-use oreo_prelude::{serenity::*, *};
-use oreo_router::error::RouterError;
-use oreo_router::PersistServer;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

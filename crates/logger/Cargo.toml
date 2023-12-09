@@ -2,41 +2,21 @@
 name = "oreo-logger"
 version = "0.1.0"
 edition = "2021"
-autobins = false
-default-run = "oreo-logger"
 
 [dependencies]
 serde = { version = "1.0.188", features = ["derive"] }
 serde-error = "0.1.2"
-thiserror = { version = "1.0.49", optional = true }
-tokio = { version = "1.32.0", features = ["full"], optional = true }
+thiserror = "1.0.49"
+tokio = { version = "1.32.0", features = ["full"] }
 
 [dependencies.oreo-router]
 path = "../router"
-default-features = false
+features = ["server", "servermeta-logger"]
 
 [dependencies.oreo-prelude]
 path = "../prelude"
-features = ["serenity", "prisma", "user-settings"]
+features = ["serenity", "prisma", "user-settings", "nci", "log", "color"]
 
 [dependencies.oreo-proc-macros]
 path = "../proc-macros"
 features = ["wire"]
-optional = true
-
-[features]
-default = []
-bin = [
-	"oreo-router/server",
-	"dep:tokio",
-	"oreo-prelude/nci",
-	"oreo-prelude/log",
-	"oreo-prelude/color",
-	"dep:oreo-proc-macros",
-	"dep:thiserror",
-]
-
-[[bin]]
-name = "oreo-logger"
-path = "src/main.rs"
-required-features = ["bin"]

@@ -1,8 +1,5 @@
-use std::backtrace::Backtrace;
-
 use crate::prelude::*;
-
-pub use oreo_router::error::RouterError;
+use std::backtrace::Backtrace;
 
 #[derive(Error, Debug)]
 pub enum BotServerError {

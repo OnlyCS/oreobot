@@ -5,7 +5,7 @@ pub struct MessageCloneOptions {
     pub update: bool,
     pub delete: bool,
     pub button: bool,
-    pub member: Option<serenity::Member>,
+    pub member: Option<Member>,
     pub reason: MessageCloneReason,
 }
 
@@ -23,12 +23,12 @@ impl Default for MessageCloneOptions {
 
 fn copy_user(
     wh: serenity::ExecuteWebhook,
-    author: &serenity::Member,
+    author: &Member,
 ) -> Result<serenity::ExecuteWebhook, serenity::Error> {
     Ok(wh.username(author.display_name()).avatar_url(author.face()))
 }
 
-fn create_reply(reply: &serenity::Message) -> Result<String, serenity::Error> {
+fn create_reply(reply: &Message) -> Result<String, serenity::Error> {
     let truncated = reply
         .content
         .chars()
@@ -50,7 +50,7 @@ fn create_reply(reply: &serenity::Message) -> Result<String, serenity::Error> {
 
 async fn clone_attachments(
     ctx: &impl AsRef<serenity::Http>,
-    message: &serenity::Message,
+    message: &Message,
 ) -> Vec<serenity::CreateAttachment> {
     stream::iter(message.attachments.iter())
         .filter_map(|attachment| async move {
@@ -62,7 +62,7 @@ async fn clone_attachments(
         .await
 }
 
-fn clone_embeds(message: &serenity::Message) -> Vec<serenity::CreateEmbed> {
+fn clone_embeds(message: &Message) -> Vec<serenity::CreateEmbed> {
     message
         .embeds
         .iter()
@@ -95,10 +95,10 @@ async fn find_wh(
 
 pub async fn message_clone(
     ctx: &(impl serenity::CacheHttp + AsRef<serenity::Http>),
-    message: &serenity::Message,
-    destination: &serenity::ChannelId,
+    message: &Message,
+    destination: &ChannelId,
     options: MessageCloneOptions,
-) -> Result<serenity::Message, CloneError> {
+) -> Result<Message, CloneError> {
     if !message.components.is_empty() {
         bail!(CloneError::NoComponents)
     }

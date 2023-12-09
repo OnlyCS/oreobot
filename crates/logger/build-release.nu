@@ -1,2 +1,2 @@
-cargo build --release --bin oreo-logger --features=bin
+cargo build --release
 cp ../../target/release/oreo-logger ./oreo-logger

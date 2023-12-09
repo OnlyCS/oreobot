@@ -1,2 +1,2 @@
-cargo build --release --bin oreo-cache --features=bin
+cargo build --release
 cp ../../target/release/oreo-cache ./oreo-cache
