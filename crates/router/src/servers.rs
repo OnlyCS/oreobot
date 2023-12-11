@@ -141,3 +141,38 @@ pub(crate) mod cache {
         const READY_FALSE: Self::Response = CacheResponse::NotReady;
     }
 }
+
+#[cfg(feature = "servermeta-bot")]
+pub(crate) mod bot {
+    use crate::prelude::*;
+
+    #[derive(Error, Debug, Serialize, Deserialize)]
+    pub enum BotError {}
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub enum BotRequest {
+        IsReady,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    pub enum BotResponse {
+        Ready,
+        NotReady,
+    }
+
+    #[derive(Debug)]
+    pub struct BotServer;
+
+    impl ServerMetadata for BotServer {
+        type Request = BotRequest;
+        type Response = BotResponse;
+        type Error = BotError;
+
+        const HOST: &'static str = "bot";
+        const PORT: u16 = 9002;
+
+        const READY_REQUEST: Self::Request = BotRequest::IsReady;
+        const READY_TRUE: Self::Response = BotResponse::Ready;
+        const READY_FALSE: Self::Response = BotResponse::NotReady;
+    }
+}

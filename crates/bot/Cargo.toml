@@ -26,7 +26,13 @@ features = ["nci", "log", "color", "color-arg", "user-settings"]
 
 [dependencies.oreo-router]
 path = "../router"
-features = ["client", "servermeta-cache", "servermeta-logger"]
+features = [
+	"client",
+	"servermeta-cache",
+	"servermeta-logger",
+	"servermeta-bot",
+	"persist-server",
+]
 
 [dependencies.oreo-proc-macros]
 path = "../proc-macros"

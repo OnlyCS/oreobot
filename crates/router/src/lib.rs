@@ -10,7 +10,11 @@ extern crate tokio;
 #[cfg(any(feature = "client", feature = "server", feature = "persist-server"))]
 mod comms;
 mod error;
-#[cfg(any(feature = "servermeta-logger", feature = "servermeta-cache"))]
+#[cfg(any(
+    feature = "servermeta-logger",
+    feature = "servermeta-cache",
+    feature = "servermeta-bot"
+))]
 mod servers;
 mod prelude {
     pub use crate::{error::*, ServerMetadata};
@@ -54,5 +58,8 @@ pub use servers::logging::*;
 
 #[cfg(feature = "servermeta-cache")]
 pub use servers::cache::*;
+
+#[cfg(feature = "servermeta-bot")]
+pub use servers::bot::*;
 
 pub use error::*;
