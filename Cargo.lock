@@ -1894,6 +1894,7 @@ dependencies = [
  "dotenvy",
  "dotenvy_macro",
  "futures",
+ "lazy_static",
  "oreo-prelude",
  "oreo-proc-macros",
  "oreo-router",

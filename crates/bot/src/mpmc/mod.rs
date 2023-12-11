@@ -11,38 +11,28 @@ pub struct MpmcData {
 type Reciever = async_channel::Receiver<MpmcData>;
 type Sender = async_channel::Sender<MpmcData>;
 
-static mut RECIEVER: Option<Reciever> = None;
-static mut SENDER: Option<Sender> = None;
-
-fn _rcopy() -> Option<Reciever> {
-    let consumer = unsafe { RECIEVER.as_ref()? };
-    let consumer = consumer.clone();
-    Some(consumer)
+lazy_static::lazy_static! {
+    static ref SENDER_RECIEVER: (Sender, Reciever) = async_channel::unbounded();
 }
 
-fn _scopy() -> Option<Sender> {
-    let sender = unsafe { SENDER.as_ref()? };
-    let sender = sender.clone();
-    Some(sender)
+fn _copy_sender() -> Sender {
+    SENDER_RECIEVER.0.clone()
 }
 
-pub fn setup() {
-    let (s, r) = async_channel::unbounded();
-    unsafe { RECIEVER = Some(r) };
-    unsafe { SENDER = Some(s) };
+fn _copy_reciever() -> Reciever {
+    SENDER_RECIEVER.1.clone()
 }
 
 pub async fn send(event: MpmcData) -> Result<(), async_channel::SendError<MpmcData>> {
-    let sender = _scopy().unwrap();
+    let sender = _copy_sender();
     sender.send(event).await
 }
 
-pub fn on<Callback, Fut>(f: Callback)
+pub fn on<Fut>(f: fn(serenity::Context, serenity::FullEvent, Data) -> Fut)
 where
-    Callback: Fn(serenity::Context, serenity::FullEvent, Data) -> Fut + Send + 'static,
-    Fut: Future<Output = Result<(), EventError>> + Send,
+    Fut: Future<Output = Result<(), EventError>> + Send + 'static,
 {
-    let recv = _rcopy().unwrap();
+    let recv = _copy_reciever();
     tokio::spawn(async move {
         while let Ok(event) = recv.recv().await {
             let MpmcData { ctx, event, data } = event;

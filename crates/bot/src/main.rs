@@ -51,8 +51,6 @@ async fn main() -> Result<!, BotServerError> {
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
 
-                // setup features. mpmc has top prio
-                mpmc::setup();
                 features::share::register();
 
                 Ok(Arc::new(Mutex::new(SharedData {})))
