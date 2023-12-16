@@ -19,4 +19,7 @@ pub enum RouterError<Meta: ServerMetadata> {
 
     #[error("Server not ready")]
     ServerNotReady,
+
+    #[error("Invalid response from server")]
+    InvalidResponse,
 }

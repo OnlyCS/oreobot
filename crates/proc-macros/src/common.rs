@@ -22,14 +22,6 @@ pub(crate) fn snake_to_pascal(s: impl Into<String>) -> String {
         .collect::<String>()
 }
 
-pub(crate) fn pascal_to_snake(s: impl Into<String>) -> String {
-    let s = s.into();
-    s.split(|n: char| n.is_ascii_uppercase())
-        .map(|spl| spl.to_ascii_lowercase())
-        .collect::<Vec<String>>()
-        .join("_")
-}
-
 macro_rules! expect_mac {
     ($tree:expr, $expected:pat, $check:block) => {
         match $tree.next().unwrap() {

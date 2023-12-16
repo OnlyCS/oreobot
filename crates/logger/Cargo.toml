@@ -11,7 +11,7 @@ tokio = { version = "1.32.0", features = ["full"] }
 
 [dependencies.oreo-router]
 path = "../router"
-features = ["server", "servermeta-logger"]
+features = ["server", "servermeta-logger", "servermeta-bot", "client"]
 
 [dependencies.oreo-prelude]
 path = "../prelude"

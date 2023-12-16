@@ -32,8 +32,8 @@ mod prelude {
 use prelude::*;
 
 pub trait ServerMetadata: Debug + Send + 'static {
-    type Request: Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static;
-    type Response: Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static + PartialEq;
+    type Request: Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static + Debug;
+    type Response: Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static + PartialEq + Debug;
     type Error: Serialize + for<'de> Deserialize<'de> + Send + Sync + Error + 'static;
 
     const READY_REQUEST: Self::Request;

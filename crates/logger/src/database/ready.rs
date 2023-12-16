@@ -1,11 +1,19 @@
-use crate::prelude::prisma_client_rust;
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
 
 async fn roles() -> Result<(), RoleLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
-    let roles: HashMap<serenity::RoleId, serenity::Role> =
-        todo!("Comms: Get list of roles FROM BOT");
+
+    let roles = {
+        let BotResponse::RolesOk(roles) = bot.send(BotRequest::GetAllRoles).await? else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        roles.into_iter().fold(HashMap::new(), |mut collect, item| {
+            collect.insert(item.id, item);
+            collect
+        })
+    };
 
     let prisma_roles = prisma
         .role()
@@ -17,8 +25,8 @@ async fn roles() -> Result<(), RoleLogError> {
         .collect::<HashSet<_>>();
 
     // for every role in the database
-    for id_i64 in prisma_roles {
-        let id = serenity::RoleId::new(id_i64 as u64);
+    for id_i64 in &prisma_roles {
+        let id = serenity::RoleId::new(*id_i64 as u64);
 
         if let Some(role) = roles.get(&id) {
             super::role::update(role.clone()).await?;
@@ -38,9 +46,21 @@ async fn roles() -> Result<(), RoleLogError> {
 }
 
 async fn members() -> Result<(), MemberLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
 
-    let members: HashMap<serenity::UserId, serenity::Member> = todo!("Comms: get members");
+    let members = {
+        let BotResponse::MembersOk(members) = bot.send(BotRequest::GetAllMembers).await? else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        members
+            .into_iter()
+            .fold(HashMap::new(), |mut collect, item| {
+                collect.insert(item.user.id, item);
+                collect
+            })
+    };
 
     let prisma_members = prisma
         .user()
@@ -52,15 +72,15 @@ async fn members() -> Result<(), MemberLogError> {
         .map(|n| n.id)
         .collect::<HashSet<_>>();
 
-    for (id, member) in members {
-        if prisma_members.contains(&id.into()) {
-            super::member::update(member).await?;
+    for (id, member) in &members {
+        if prisma_members.contains(&i64::from(*id)) {
+            super::member::update(member.clone()).await?;
         } else {
-            super::member::create(member).await?;
+            super::member::create(member.clone()).await?;
         }
 
         // get the user's settings so it will create if dne
-        super::user_settings::read(id).await?;
+        super::user_settings::read(*id).await?;
     }
 
     for id_i64 in prisma_members {
@@ -75,10 +95,22 @@ async fn members() -> Result<(), MemberLogError> {
 }
 
 async fn categories() -> Result<(), CategoryLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
 
-    let categories: HashMap<serenity::ChannelId, serenity::GuildChannel> =
-        todo!("Comms: get categories");
+    let categories = {
+        let BotResponse::CategoriesOk(categories) = bot.send(BotRequest::GetAllCategories).await?
+        else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        categories
+            .into_iter()
+            .fold(HashMap::new(), |mut collect, item| {
+                collect.insert(item.id, item);
+                collect
+            })
+    };
 
     let prisma_categories = prisma
         .channel_category()
@@ -89,11 +121,11 @@ async fn categories() -> Result<(), CategoryLogError> {
         .map(|n| n.id)
         .collect::<HashSet<_>>();
 
-    for (id, category) in categories {
-        if prisma_categories.contains(&id.into()) {
-            super::category::update(category).await?;
+    for (id, category) in &categories {
+        if prisma_categories.contains(&i64::from(*id)) {
+            super::category::update(category.clone()).await?;
         } else {
-            super::category::create(category).await?;
+            super::category::create(category.clone()).await?;
         }
     }
 
@@ -109,10 +141,21 @@ async fn categories() -> Result<(), CategoryLogError> {
 }
 
 async fn channels() -> Result<(), ChannelLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
 
-    let channels: HashMap<serenity::ChannelId, serenity::GuildChannel> =
-        todo!("Comms: get channels");
+    let channels = {
+        let BotResponse::ChannelsOk(channels) = bot.send(BotRequest::GetAllChannels).await? else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        channels
+            .into_iter()
+            .fold(HashMap::new(), |mut collect, item| {
+                collect.insert(item.id, item);
+                collect
+            })
+    };
 
     let prisma_channels = prisma
         .channel()
@@ -123,11 +166,11 @@ async fn channels() -> Result<(), ChannelLogError> {
         .map(|n| n.id)
         .collect::<HashSet<_>>();
 
-    for (id, channel) in channels {
+    for (id, channel) in channels.clone() {
         if prisma_channels.contains(&id.into()) {
-            super::channel::update(channel).await?;
+            super::channel::update(channel.clone()).await?;
         } else {
-            super::channel::create(channel).await?;
+            super::channel::create(channel.clone()).await?;
         }
     }
 

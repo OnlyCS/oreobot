@@ -33,6 +33,13 @@ pub enum CommandError {
         error: async_channel::SendError<mpmc::MpmcData>,
         backtrace: Backtrace,
     },
+
+    #[error("Error starting server: {error}")]
+    Server {
+        #[from]
+        error: RouterError<BotServer>,
+        backtrace: Backtrace,
+    },
 }
 
 #[derive(Error, Debug)]

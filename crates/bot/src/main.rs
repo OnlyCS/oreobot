@@ -44,6 +44,8 @@ async fn main() -> Result<!, BotServerError> {
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
+            let ctx = ctx.clone();
+
             Box::pin(async move {
                 ctx.set_presence(
                     Some(serenity::ActivityData::playing("with Oppenheimer")),
@@ -51,14 +53,8 @@ async fn main() -> Result<!, BotServerError> {
                 );
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
-
                 features::share::register();
-
-                // start bot tcp server, clone ready ctx -- should be ok as long as we don't use ctx.cache
-                let _ctx = ctx.clone();
-                tokio::spawn(async move {
-                    server::begin(_ctx).await.expect("server failed");
-                });
+                server::run(ctx).await?;
 
                 Ok(Arc::new(Mutex::new(SharedData {})))
             })

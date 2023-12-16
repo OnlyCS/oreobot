@@ -1,9 +1,16 @@
 use crate::prelude::*;
 
-pub async fn create(mut member: serenity::Member) -> Result<(), MemberLogError> {
+pub async fn create(member: serenity::Member) -> Result<(), MemberLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
 
-    let color_role: serenity::Role = todo!("Create user's color role (tcp with bot). Should trigger rolecreate event, handled in role.rs");
+    let BotResponse::CreateRoleOk(color_role) = bot
+        .send(BotRequest::CreateColorRole(member.user.id))
+        .await?
+    else {
+        bail!(RouterError::InvalidResponse)
+    };
+
     let mut roles = vec![color_role.id];
 
     if member.user.bot {
@@ -39,7 +46,10 @@ pub async fn create(mut member: serenity::Member) -> Result<(), MemberLogError> 
             .exec()
             .await?;
 
-        todo!("add roles[] to user")
+        for role in roles {
+            bot.send(BotRequest::AddRoleToUser(member.user.id, role))
+                .await?;
+        }
     } else {
         prisma
             .user()
@@ -60,10 +70,19 @@ pub async fn create(mut member: serenity::Member) -> Result<(), MemberLogError> 
 }
 
 pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
     let mut updates = vec![];
 
-    let roles: Vec<serenity::Role> = todo!("Comms: get roles of user");
+    let roles = {
+        let BotResponse::RolesOk(roles) =
+            bot.send(BotRequest::GetRolesOfUser(member.user.id)).await?
+        else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        roles
+    };
 
     // find user id database, and fetch roles
     let prisma_user = prisma
@@ -84,62 +103,93 @@ pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
 
     // if user had removed the color role, just re-add it
     if !roles.iter().any(|role| i64::from(role.id) == color_role.id) {
-        todo!("Comms: user add role");
+        bot.send(BotRequest::AddRoleToUser(
+            member.user.id,
+            serenity::RoleId::new(color_role.id as u64),
+        ))
+        .await?;
     }
 
-    // if user has new roles, add to db
+    // every role out of sync with the database -- to add and remove
     let mut connects = vec![];
-    for role in roles {
-        if !nci::roles::can_log(role.id) {
+    let mut disconnects = vec![];
+
+    // for every role the user has
+    for role in &roles {
+        // both custom and blacklisted roles are ignored
+        if !super::role::log_check(role.id).await {
             continue;
         }
 
+        // if the user is verified, add the verified role
         if role.id == nci::roles::MEMBERS {
             updates.push(user::verified::set(true));
         }
 
+        // if the user is an admin, add the admin role
         if role.id == nci::roles::OVERRIDES {
             updates.push(user::admin::set(true));
         }
 
-        if role.id == nci::roles::BOTS && !member.user.bot {
-            todo!("Comms: user not a bot, may have been added by mistake, remove role from user");
-        }
-
+        // if the database has not registered the role, add it
         if !prisma_user
             .roles()?
             .iter()
-            .filter(|r| !r.color_role)
             .any(|r| i64::from(role.id) == r.id)
         {
             connects.push(role::id::equals(role.id));
         }
     }
-    updates.push(user::roles::connect(connects));
 
     // if user removed roles, add to db
-    let mut disconnects = vec![];
     for role in prisma_user.roles()? {
-        if !nci::roles::can_log(role.id) {
+        if !super::role::log_check(role.id as u64).await {
             continue;
         }
 
+        // if the user is verified, update verified status
         if role.id == i64::from(nci::roles::MEMBERS) {
             updates.push(user::verified::set(false));
         }
 
+        // if the user is an admin, update admin status
         if role.id == i64::from(nci::roles::OVERRIDES) {
             updates.push(user::admin::set(false));
         }
 
-        if role.id == i64::from(nci::roles::BOTS) && member.user.bot {
-            todo!("Comms: user is a bot, may have been removed by mistake, re-add role from user");
-        }
-
+        // if the user no longer has the role, unlink in db
         if !roles.iter().any(|r| i64::from(r.id) == role.id) {
             disconnects.push(role::id::equals(role.id));
         }
     }
+
+    // update user's bot status and role (linked to member.user.bot)
+    if member.user.bot {
+        updates.push(user::bot::set(true));
+        connects.push(role::id::equals(nci::roles::BOTS));
+        bot.send(BotRequest::AddRoleToUser(member.user.id, nci::roles::BOTS))
+            .await?;
+    } else {
+        updates.push(user::bot::set(false));
+
+        if prisma_user
+            .roles()?
+            .iter()
+            .any(|r| r.id == i64::from(nci::roles::BOTS))
+        {
+            disconnects.push(role::id::equals(nci::roles::BOTS));
+        }
+
+        if roles.iter().any(|r| r.id == nci::roles::BOTS) {
+            bot.send(BotRequest::RemoveRoleFromUser(
+                member.user.id,
+                nci::roles::BOTS,
+            ))
+            .await?;
+        }
+    }
+
+    updates.push(user::roles::connect(connects));
     updates.push(user::roles::disconnect(disconnects));
 
     // update other stuff
@@ -161,6 +211,7 @@ pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
 }
 
 pub async fn delete(id: serenity::UserId) -> Result<(), MemberLogError> {
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
 
     let prisma_user = prisma
@@ -171,11 +222,13 @@ pub async fn delete(id: serenity::UserId) -> Result<(), MemberLogError> {
         .await?
         .make_error(MemberLogError::NotFound(id))?;
 
-    let color_role_id = prisma_user
-        .roles()?
-        .first()
-        .make_error(MemberLogError::NoColorRole(id))?
-        .id;
+    let color_role_id = serenity::RoleId::new(
+        prisma_user
+            .roles()?
+            .first()
+            .make_error(MemberLogError::NoColorRole(id))?
+            .id as u64,
+    );
 
     prisma
         .user()
@@ -186,7 +239,7 @@ pub async fn delete(id: serenity::UserId) -> Result<(), MemberLogError> {
         .exec()
         .await?;
 
-    todo!("Comms: delete color role");
+    bot.send(BotRequest::DeleteRole(color_role_id)).await?;
 
     Ok(())
 }

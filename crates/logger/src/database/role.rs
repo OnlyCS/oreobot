@@ -1,8 +1,10 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-async fn log_check(role: serenity::RoleId) -> Result<(), RoleLogError> {
-    if !nci::roles::can_log(role) {
+pub async fn log_check_error(role: impl Into<u64>) -> Result<(), RoleLogError> {
+    let role = serenity::RoleId::new(role.into());
+
+    if nci::roles::in_blacklist(role) {
         bail!(RoleLogError::Blacklisted(role));
     }
 
@@ -21,8 +23,13 @@ async fn log_check(role: serenity::RoleId) -> Result<(), RoleLogError> {
     Ok(())
 }
 
+/// Returns false if log_check_error returns an error
+pub async fn log_check(role: impl Into<u64>) -> bool {
+    log_check_error(role).await.is_ok()
+}
+
 pub async fn create(role: serenity::Role) -> Result<(), RoleLogError> {
-    log_check(role.id).await?;
+    log_check_error(role.id).await?;
 
     let prisma = prisma::create().await?;
 
@@ -59,7 +66,7 @@ pub async fn set_blacklisted(role_id: serenity::RoleId) -> Result<(), RoleLogErr
 }
 
 pub async fn read(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, RoleLogError> {
-    log_check(role_id).await?;
+    log_check_error(role_id).await?;
 
     let prisma = prisma::create().await?;
 
@@ -75,7 +82,7 @@ pub async fn read(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, R
 }
 
 pub async fn update(role: serenity::Role) -> Result<(), RoleLogError> {
-    log_check(role.id).await?;
+    log_check_error(role.id).await?;
 
     let prisma = prisma::create().await?;
 
@@ -96,16 +103,19 @@ pub async fn update(role: serenity::Role) -> Result<(), RoleLogError> {
 
 pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
     // custom roles are handled seperately
-    log_check(role_id).await?;
+    log_check_error(role_id).await?;
 
+    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
     let prisma_role = read(role_id).await?;
 
     // if role is a color role if the user exists
-    if nci::roles::is_color_role(role_id) && todo!("Comms: check user has not left") {
-        let role: serenity::Role = todo!("Comms: create role");
-        todo!("Add role to user");
-
+    if nci::roles::is_color_role(role_id)
+        && let Some(user) = prisma_role.users()?.first()
+        && let uid = serenity::UserId::new(user.id as u64)
+        && let BotResponse::UserExistsOk(true) = bot.send(BotRequest::UserExists(uid)).await?
+        && let BotResponse::CreateRoleOk(role) = bot.send(BotRequest::CreateColorRole(uid)).await?
+    {
         // delete the old role
         prisma
             .role()

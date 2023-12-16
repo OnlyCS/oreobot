@@ -40,6 +40,13 @@ pub enum CategoryLogError {
         backtrace: Backtrace,
     },
 
+    #[error("Problem communicating with bot: {error}")]
+    Bot {
+        #[from]
+        error: RouterError<BotServer>,
+        backtrace: Backtrace,
+    },
+
     #[error("Category ({{ id: {0} }}) not found")]
     NotFound(serenity::ChannelId),
 }
@@ -53,6 +60,13 @@ pub enum ChannelLogError {
     Database {
         #[from]
         error: prisma_error::PrismaError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Problem communicating with bot: {error}")]
+    Bot {
+        #[from]
+        error: RouterError<BotServer>,
         backtrace: Backtrace,
     },
 
@@ -82,6 +96,13 @@ pub enum MemberLogError {
         backtrace: Backtrace,
     },
 
+    #[error("Problem communicating with bot: {error}")]
+    Bot {
+        #[from]
+        error: RouterError<BotServer>,
+        backtrace: Backtrace,
+    },
+
     #[error("Member ({{ id: {0} }}) not found")]
     NotFound(serenity::UserId),
 
@@ -102,6 +123,13 @@ pub enum RoleLogError {
     Database {
         #[from]
         error: prisma_error::PrismaError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Problem communicating with bot: {error}")]
+    Bot {
+        #[from]
+        error: RouterError<BotServer>,
         backtrace: Backtrace,
     },
 

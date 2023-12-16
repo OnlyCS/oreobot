@@ -98,3 +98,4 @@ pub use user_settings::*;
 pub use futures::{future::BoxFuture, prelude::*};
 
 pub use itertools::Itertools;
+pub use std::collections::{HashMap, HashSet};
