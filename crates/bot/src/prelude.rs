@@ -11,8 +11,8 @@ pub(crate) use crate::{
 pub use futures::stream::{self, StreamExt};
 pub use oreo_prelude::{
     serenity::{
-        Channel, ChannelId, FullEvent, Guild, GuildChannel, GuildId, Member, Message, MessageId,
-        Role, RoleId, User, UserId,
+        Channel, ChannelId, ChannelType, FullEvent, Guild, GuildChannel, GuildId, Member, Message,
+        MessageId, Role, RoleId, User, UserId,
     },
     *,
 };

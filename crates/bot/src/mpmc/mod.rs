@@ -37,9 +37,22 @@ where
         while let Ok(event) = recv.recv().await {
             let MpmcData { ctx, event, data } = event;
 
+            let enum_name = {
+                let event_dbg = format!("{:?}", event);
+                let enum_name_braced = event_dbg.split("{").next().unwrap();
+                let enum_name = enum_name_braced.split("(").next().unwrap();
+
+                enum_name.trim().to_string()
+            };
+
             match f(ctx, event, data).await {
                 Ok(_) => {}
-                Err(e) => error!("error in event callback: {e}"),
+                Err(e) => match e {
+                    EventError::UnwantedEvent => {
+                        debug!("{enum_name} was an unwanted event")
+                    }
+                    _ => error!("error in event callback: {e}"),
+                },
             }
         }
     });

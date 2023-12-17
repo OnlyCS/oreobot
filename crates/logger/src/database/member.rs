@@ -69,7 +69,7 @@ pub async fn create(member: serenity::Member) -> Result<(), MemberLogError> {
     Ok(())
 }
 
-pub async fn update(member: serenity::Member) -> Result<(), MemberLogError> {
+pub async fn update(member: serenity::GuildMemberUpdateEvent) -> Result<(), MemberLogError> {
     let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
     let mut updates = vec![];

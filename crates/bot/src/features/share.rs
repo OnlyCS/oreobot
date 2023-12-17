@@ -29,11 +29,11 @@ pub fn register() {
             interaction: serenity::Interaction::Component(mut press),
         } = event
         else {
-            return Ok(());
+            bail!(EventError::UnwantedEvent)
         };
 
         if press.data.custom_id != CUSTOM_ID {
-            return Ok(());
+            bail!(EventError::UnwantedEvent)
         }
 
         press

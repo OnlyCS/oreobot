@@ -50,9 +50,9 @@ fn create_reply(reply: &Message) -> Result<String, serenity::Error> {
 
 async fn clone_attachments(
     ctx: &impl AsRef<serenity::Http>,
-    message: &Message,
+    attachments: &Vec<serenity::Attachment>,
 ) -> Vec<serenity::CreateAttachment> {
-    stream::iter(message.attachments.iter())
+    stream::iter(attachments.iter())
         .filter_map(|attachment| async move {
             let url = &attachment.url;
             let create_attachment = serenity::CreateAttachment::url(&ctx, url).await.ok()?;
@@ -62,9 +62,8 @@ async fn clone_attachments(
         .await
 }
 
-fn clone_embeds(message: &Message) -> Vec<serenity::CreateEmbed> {
-    message
-        .embeds
+fn clone_embeds(embeds: &Vec<serenity::Embed>) -> Vec<serenity::CreateEmbed> {
+    embeds
         .iter()
         .cloned()
         .map(|emb| serenity::CreateEmbed::from(emb))
@@ -73,7 +72,7 @@ fn clone_embeds(message: &Message) -> Vec<serenity::CreateEmbed> {
 
 async fn find_wh(
     ctx: &(impl serenity::CacheHttp + AsRef<serenity::Http>),
-    channel: &serenity::ChannelId,
+    channel: serenity::ChannelId,
 ) -> Result<serenity::Webhook, serenity::Error> {
     let webhooks = channel.webhooks(&ctx).await?;
     let webhook = webhooks.into_iter().find(|wh| {
@@ -91,6 +90,19 @@ async fn find_wh(
             .create_webhook(&ctx, serenity::CreateWebhook::new(nci::webhook::NAME))
             .await
     }
+}
+
+async fn construct_message(referenced_message: &Option<Box<Message>>, content: &String) -> String {
+    let mut cloned_content = "".to_string();
+
+    // build content
+    referenced_message.as_ref().map(|reply| {
+        cloned_content.push_str(&create_reply(reply).unwrap_or_else(|_| "".to_string()));
+    });
+
+    cloned_content.push_str(&content);
+
+    cloned_content
 }
 
 pub async fn message_clone(
@@ -113,7 +125,6 @@ pub async fn message_clone(
 
     let member = member.unwrap_or(message.member(&ctx).await?);
     let mut cloned_message = copy_user(serenity::ExecuteWebhook::new(), &member)?;
-    let mut cloned_content = "".to_string();
 
     // create jump buttons
     if button {
@@ -121,18 +132,9 @@ pub async fn message_clone(
             .button(serenity::CreateButton::new_link(message.link()).label("Original Message"));
     }
 
-    // build content
-    message.referenced_message.as_ref().map(|reply| {
-        cloned_content.push_str(&create_reply(reply).unwrap_or_else(|_| "".to_string()));
-    });
-
-    cloned_content.push_str(&message.content);
-
-    // create attachments
-    let attachments = clone_attachments(&ctx, &message).await;
-
-    // create embeds
-    let embeds = clone_embeds(&message);
+    let cloned_content = construct_message(&message.referenced_message, &message.content).await;
+    let embeds = clone_embeds(&message.embeds);
+    let attachments = clone_attachments(&ctx, &message.attachments).await;
 
     // build executor
     cloned_message = cloned_message
@@ -141,7 +143,7 @@ pub async fn message_clone(
         .add_files(attachments);
 
     // find webhook
-    let webhook = find_wh(&ctx, &destination).await?;
+    let webhook = find_wh(&ctx, *destination).await?;
 
     // send message
     let cloned_message = webhook.execute(&ctx, true, cloned_message).await?.unwrap();
@@ -161,4 +163,92 @@ pub async fn message_clone(
         .await?;
 
     Ok(cloned_message)
+}
+
+pub fn register() {
+    mpmc::on(|ctx, event, _| async move {
+        let mut logger = Client::<LoggingServer>::new().await?;
+
+        let FullEvent::MessageUpdate { event: message, .. } = event else {
+            bail!(EventError::UnwantedEvent);
+        };
+
+        let LoggingResponse::AllMessageClonesOk(list) =
+            logger.send(LoggingRequest::MessageCloneReadAll).await?
+        else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        let to_update = list
+            .into_values()
+            .filter(|n| n.source_id == i64::from(message.id))
+            .filter(|n| n.update)
+            .collect_vec();
+
+        for update in to_update {
+            let channel = ChannelId::new(update.destination_id as u64);
+            let clone_id = MessageId::new(update.id as u64);
+            let clone = channel.message(&ctx, clone_id).await?;
+            let webhook = find_wh(&ctx, channel).await?;
+            let had_button = !clone.components.is_empty();
+
+            let cloned_content = construct_message(
+                message.referenced_message.as_ref().unwrap(),
+                message.content.as_ref().unwrap(),
+            )
+            .await;
+
+            let embeds = clone_embeds(message.embeds.as_ref().unwrap());
+            let mut edit = serenity::EditWebhookMessage::default()
+                .content(cloned_content)
+                .embeds(embeds);
+
+            if had_button {
+                edit = edit.components(vec![serenity::CreateActionRow::Buttons(vec![
+                    serenity::CreateButton::new_link(
+                        message.id.link(message.channel_id, message.guild_id),
+                    )
+                    .label("Original Message"),
+                ])]);
+            }
+
+            webhook.edit_message(&ctx, clone_id, edit).await?;
+        }
+
+        Ok(())
+    });
+
+    mpmc::on(|ctx, event, _| async move {
+        let mut logger = Client::<LoggingServer>::new().await?;
+
+        let FullEvent::MessageDelete {
+            deleted_message_id: id,
+            ..
+        } = event
+        else {
+            bail!(EventError::UnwantedEvent);
+        };
+
+        let LoggingResponse::AllMessageClonesOk(list) =
+            logger.send(LoggingRequest::MessageCloneReadAll).await?
+        else {
+            bail!(RouterError::InvalidResponse)
+        };
+
+        let to_delete = list
+            .into_values()
+            .filter(|n| n.source_id == i64::from(id))
+            .filter(|n| n.update_delete)
+            .collect_vec();
+
+        for delete in to_delete {
+            let channel = ChannelId::new(delete.destination_id as u64);
+            let clone_id = MessageId::new(delete.id as u64);
+            let webhook = find_wh(&ctx, channel).await?;
+
+            webhook.delete_message(&ctx, None, clone_id).await?;
+        }
+
+        Ok(())
+    });
 }

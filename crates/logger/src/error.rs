@@ -199,6 +199,9 @@ pub enum MessageCloneLogError {
         error: prisma_error::PrismaError,
         backtrace: Backtrace,
     },
+
+    #[error("No message clone found with clone id {0}")]
+    NotFound(serenity::MessageId),
 }
 
 #[derive(Error, Debug)]

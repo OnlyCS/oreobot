@@ -1922,6 +1922,7 @@ dependencies = [
  "oreo-router",
  "serde",
  "serde-error",
+ "serde_json",
  "thiserror",
  "tokio",
 ]

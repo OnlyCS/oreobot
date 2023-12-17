@@ -74,7 +74,10 @@ async fn members() -> Result<(), MemberLogError> {
 
     for (id, member) in &members {
         if prisma_members.contains(&i64::from(*id)) {
-            super::member::update(member.clone()).await?;
+            let member_str = serde_json::to_string(&member).unwrap();
+            let event = serde_json::from_str(&member_str).unwrap(); /* same fields */
+
+            super::member::update(event).await?;
         } else {
             super::member::create(member.clone()).await?;
         }

@@ -31,7 +31,7 @@ pub enum LoggingRequest {
 
     MemberCreate(Member),
     MemberRead(UserId),
-    MemberUpdate(Member),
+    MemberUpdate(GuildMemberUpdateEvent),
     MemberDelete(UserId),
 
     UserSettingsCreate(UserId, UserSettings),
@@ -47,6 +47,10 @@ pub enum LoggingRequest {
         update: bool,
         update_delete: bool,
     },
+    MessageCloneRead {
+        clone: serenity::MessageId,
+    },
+    MessageCloneReadAll,
 
     LoggerReady,
 }
@@ -60,6 +64,7 @@ pub enum LoggingResponse {
     AllRolesOk(HashMap<RoleId, prisma::data::RoleData>),
     AllUserSettingsOk(HashMap<UserId, UserSettings>),
     AllNewsInChatOk(HashMap<MessageId, MessageId>),
+    AllMessageClonesOk(HashMap<MessageId, prisma::data::MessageCloneData>),
 
     MemberOk(prisma::data::UserData),
     RoleOk(prisma::data::RoleData),
@@ -69,6 +74,7 @@ pub enum LoggingResponse {
     InteractionOk(prisma::data::InteractionData),
     NewsInChatOk(MessageId, MessageId),
     UserSettingsOk(UserSettings),
+    MessageCloneOk(prisma::data::MessageCloneData),
 }
 
 impl PartialEq for LoggingResponse {

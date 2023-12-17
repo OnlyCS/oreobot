@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use proc_macro::{self, TokenStream};
 use syn::{parse_macro_input, DeriveInput};
 

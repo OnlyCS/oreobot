@@ -8,8 +8,9 @@ mod generated;
 
 pub mod prelude {
     pub use super::generated::{
-        attachment, channel, channel_category, interaction, logless_roles, message, role, user,
-        user_settings_data, ChannelType, InteractionType, MessageCloneReason, PrismaClient,
+        attachment, channel, channel_category, interaction, logless_roles, message, message_clone,
+        role, user, user_settings_data, ChannelType, InteractionType, MessageCloneReason,
+        PrismaClient,
     };
 
     pub mod prisma {
@@ -26,8 +27,8 @@ pub mod prelude {
                 attachment::Data as AttachmentData, channel::Data as ChannelData,
                 channel_category::Data as ChannelCategoryData,
                 interaction::Data as InteractionData, message::Data as MessageData,
-                role::Data as RoleData, user::Data as UserData,
-                user_settings_data::Data as UserSettingsData,
+                message_clone::Data as MessageCloneData, role::Data as RoleData,
+                user::Data as UserData, user_settings_data::Data as UserSettingsData,
             };
         }
     }

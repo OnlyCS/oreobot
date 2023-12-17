@@ -1,3 +1,5 @@
+use oreo_prelude::prisma_error::PrismaError;
+
 use crate::prelude::*;
 use std::backtrace::Backtrace;
 
@@ -58,9 +60,6 @@ pub enum CloneError {
         backtrace: Backtrace,
     },
 
-    #[error("Error from logging server: {0}")]
-    LoggingError(String),
-
     #[error("Cannot clone messages containing components")]
     NoComponents,
 }
@@ -73,4 +72,23 @@ pub enum EventError {
         error: serenity::Error,
         backtrace: Backtrace,
     },
+
+    #[error("Error communicating with logging server: {error}")]
+    LoggingServerError {
+        #[from]
+        error: RouterError<LoggingServer>,
+        backtrace: Backtrace,
+    },
+
+    #[error("Prisma error: {error}")]
+    Prisma {
+        #[from]
+        error: PrismaError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Unwanted Event")]
+    UnwantedEvent,
 }
+
+prisma_error_convert!(EventError);

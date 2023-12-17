@@ -54,6 +54,9 @@ async fn main() -> Result<!, BotServerError> {
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
                 features::share::register();
+                features::logger::register();
+                features::message_clone::register();
+
                 server::run(ctx).await?;
 
                 Ok(Arc::new(Mutex::new(SharedData {})))
