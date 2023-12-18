@@ -5,6 +5,22 @@ macro_rules! bail {
     };
 }
 
+#[macro_export]
+macro_rules! bail_assert {
+    ($cond:expr, $err:expr) => {
+        if !$cond {
+            bail!($err)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! bail_assert_eq {
+    ($left:expr, $right:expr, $err:expr) => {
+        bail_assert!($left == $right, $err)
+    };
+}
+
 pub trait MakeError<T, E> {
     fn make_error(self, error: E) -> Result<T, E>;
 }

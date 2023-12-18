@@ -1,6 +1,6 @@
 pub(crate) use crate::{
     error::*,
-    features::share,
+    features::*,
     mpmc,
     util::{
         embed::{self, EmbedStatus},

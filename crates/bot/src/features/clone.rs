@@ -106,13 +106,13 @@ async fn construct_message(referenced_message: &Option<Box<Message>>, content: &
 }
 
 pub async fn message_clone(
-    ctx: &(impl serenity::CacheHttp + AsRef<serenity::Http>),
+    ctx: impl serenity::CacheHttp + AsRef<serenity::Http>,
     message: &Message,
-    destination: &ChannelId,
+    destination: ChannelId,
     options: MessageCloneOptions,
-) -> Result<Message, CloneError> {
+) -> Result<Message, MessageCloneError> {
     if !message.components.is_empty() {
-        bail!(CloneError::NoComponents)
+        bail!(MessageCloneError::NoComponents)
     }
 
     let MessageCloneOptions {
@@ -143,7 +143,7 @@ pub async fn message_clone(
         .add_files(attachments);
 
     // find webhook
-    let webhook = find_wh(&ctx, *destination).await?;
+    let webhook = find_wh(&ctx, destination).await?;
 
     // send message
     let cloned_message = webhook.execute(&ctx, true, cloned_message).await?.unwrap();
@@ -155,7 +155,7 @@ pub async fn message_clone(
         .send(LoggingRequest::MessageCloneCreate {
             source: message.id,
             clone: cloned_message.id,
-            destination: *destination,
+            destination,
             reason,
             update,
             update_delete: delete,

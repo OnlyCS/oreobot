@@ -31,4 +31,11 @@ pub mod webhook {
     pub const NAME: &'static str = "Oreo v2's Internals";
 }
 
+pub mod smarty {
+    use super::*;
+
+    pub const ID: UserId = UserId::new(809111302198001724);
+    pub const WEBHOOK_CHAT: WebhookId = WebhookId::new(1142657223017910394);
+}
+
 pub const ID: GuildId = GuildId::new(803315311663251537);

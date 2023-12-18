@@ -40,7 +40,7 @@ async fn server(req: BotRequest, ctx: &serenity::Context) -> Result<BotResponse,
                 .channels(&ctx)
                 .await?
                 .into_values()
-                .filter(|channel| channel.kind == serenity::ChannelType::Category)
+                .filter(|channel| channel.kind == ChannelType::Category)
                 .collect_vec();
 
             BotResponse::CategoriesOk(categories)
@@ -51,7 +51,7 @@ async fn server(req: BotRequest, ctx: &serenity::Context) -> Result<BotResponse,
                 .channels(&ctx)
                 .await?
                 .into_values()
-                .filter(|channel| channel.kind != serenity::ChannelType::Category)
+                .filter(|channel| channel.kind != ChannelType::Category)
                 .collect_vec();
 
             BotResponse::ChannelsOk(channels)
@@ -99,12 +99,12 @@ async fn server(req: BotRequest, ctx: &serenity::Context) -> Result<BotResponse,
 
             BotResponse::UserExistsOk(member.is_ok())
         }
-		BotRequest::GetMember(user_id) => {
-			let nci = ctx.http.get_guild(nci::ID).await?;
+        BotRequest::GetMember(user_id) => {
+            let nci = ctx.http.get_guild(nci::ID).await?;
             let member = nci.member(&ctx, user_id).await?;
 
-			BotResponse::MemberOk(member)
-		}
+            BotResponse::MemberOk(member)
+        }
     };
 
     Ok(response)

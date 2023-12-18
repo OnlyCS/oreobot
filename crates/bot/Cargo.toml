@@ -38,3 +38,7 @@ features = [
 [dependencies.oreo-proc-macros]
 path = "../proc-macros"
 features = ["logger-wire"]
+
+[features]
+smarty-integration = []
+default = ["smarty-integration"]

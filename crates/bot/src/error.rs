@@ -52,7 +52,7 @@ pub enum CommandError {
 }
 
 #[derive(Error, Debug)]
-pub enum CloneError {
+pub enum MessageCloneError {
     #[error("Serenity error: {error}")]
     Serenity {
         #[from]
@@ -94,8 +94,35 @@ pub enum EventError {
         backtrace: Backtrace,
     },
 
+    #[error("Error cloning message: {error}")]
+    MessageClone {
+        #[from]
+        error: MessageCloneError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error cloning news message: {error}")]
+    NewsClone {
+        #[from]
+        error: NewsCloneError,
+        backtrace: Backtrace,
+    },
+
     #[error("Unwanted Event")]
     UnwantedEvent,
+}
+
+#[derive(Error, Debug)]
+pub enum NewsCloneError {
+    #[error("Provided message not in news channel")]
+    IncorrectChannel,
+
+    #[error("Error cloning message: {error}")]
+    MessageClone {
+        #[from]
+        error: MessageCloneError,
+        backtrace: Backtrace,
+    },
 }
 
 prisma_error_convert!(EventError);

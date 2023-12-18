@@ -5,7 +5,7 @@ use crate::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct MpmcData {
-    event: serenity::FullEvent,
+    event: FullEvent,
     ctx: serenity::Context,
     data: Data,
 }
@@ -19,7 +19,7 @@ pub async fn send(event: MpmcData) -> Result<(), EventError> {
     emitter.send(event).await
 }
 
-pub async fn on<Fut>(f: fn(serenity::Context, serenity::FullEvent, Data) -> Fut)
+pub async fn on<Fut>(f: fn(serenity::Context, FullEvent, Data) -> Fut)
 where
     Fut: Future<Output = Result<(), EventError>> + Send + 'static,
 {

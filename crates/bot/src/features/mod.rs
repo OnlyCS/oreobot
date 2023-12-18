@@ -1,3 +1,4 @@
+pub mod clone;
 pub mod logger;
-pub mod message_clone;
+pub mod news_clone;
 pub mod share;

@@ -57,9 +57,16 @@ async fn main() -> Result<!, BotServerError> {
                 );
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
+
                 features::share::register().await;
                 features::logger::register().await;
-                features::message_clone::register().await;
+                features::clone::register().await;
+
+                #[cfg(not(feature = "smarty-integration"))]
+                features::news_clone::register().await;
+
+                #[cfg(feature = "smarty-integration")]
+                integrations::smarty::register().await;
 
                 server::run(ctx).await?;
 

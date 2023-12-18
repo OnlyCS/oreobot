@@ -4,7 +4,7 @@ use super::MpmcData;
 
 async fn _handler(
     ctx: &serenity::Context,
-    event: &serenity::FullEvent,
+    event: &FullEvent,
     _fw_ctx: FrameworkContext<'_>,
     data: &Data,
 ) -> Result<(), CommandError> {
@@ -20,7 +20,7 @@ async fn _handler(
 
 pub fn handler<'a>(
     ctx: &'a serenity::Context,
-    event: &'a serenity::FullEvent,
+    event: &'a FullEvent,
     fw_ctx: FrameworkContext<'a>,
     data: &'a Data,
 ) -> BoxFuture<'a, Result<(), CommandError>> {
