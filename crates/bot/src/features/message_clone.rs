@@ -165,7 +165,7 @@ pub async fn message_clone(
     Ok(cloned_message)
 }
 
-pub fn register() {
+pub async fn register() {
     mpmc::on(|ctx, event, _| async move {
         let mut logger = Client::<LoggingServer>::new().await?;
 
@@ -216,7 +216,8 @@ pub fn register() {
         }
 
         Ok(())
-    });
+    })
+    .await;
 
     mpmc::on(|ctx, event, _| async move {
         let mut logger = Client::<LoggingServer>::new().await?;
@@ -250,5 +251,6 @@ pub fn register() {
         }
 
         Ok(())
-    });
+    })
+    .await;
 }

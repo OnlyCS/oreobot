@@ -99,6 +99,12 @@ async fn server(req: BotRequest, ctx: &serenity::Context) -> Result<BotResponse,
 
             BotResponse::UserExistsOk(member.is_ok())
         }
+		BotRequest::GetMember(user_id) => {
+			let nci = ctx.http.get_guild(nci::ID).await?;
+            let member = nci.member(&ctx, user_id).await?;
+
+			BotResponse::MemberOk(member)
+		}
     };
 
     Ok(response)

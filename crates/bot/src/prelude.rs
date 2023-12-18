@@ -17,10 +17,12 @@ pub use oreo_prelude::{
     *,
 };
 pub use oreo_router::*;
-pub use std::sync::Arc;
+pub use rayon::prelude::*;
+pub use std::{fmt, sync::Arc};
 pub use thiserror::Error;
 pub use tokio::sync::Mutex;
 
+#[derive(Debug)]
 pub struct SharedData {}
 
 pub type Data = Arc<Mutex<SharedData>>;

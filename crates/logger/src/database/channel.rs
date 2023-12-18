@@ -4,7 +4,7 @@ pub async fn create(channel: serenity::GuildChannel) -> Result<(), ChannelLogErr
     let prisma = prisma::create().await?;
 
     // to hell with all threads
-    if channel.parent_id.is_some() {
+    if channel.thread_metadata.is_some() {
         bail!(ChannelLogError::Thread(channel.id));
     }
 

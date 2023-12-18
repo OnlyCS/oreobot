@@ -1,17 +1,45 @@
 use crate::prelude::*;
 
-pub async fn create(member: serenity::Member) -> Result<(), MemberLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+pub async fn create(
+    member: serenity::Member,
+    bot: &mut Client<BotServer>,
+) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
 
-    let BotResponse::CreateRoleOk(color_role) = bot
-        .send(BotRequest::CreateColorRole(member.user.id))
-        .await?
-    else {
-        bail!(RouterError::InvalidResponse)
+    let color_role = {
+        let proles = prisma
+            .role()
+            .find_many(vec![])
+            .exec()
+            .await?
+            .into_iter()
+            .filter(|r| r.color_role)
+            .fold(HashMap::new(), |mut collect, item| {
+                collect.insert(serenity::RoleId::new(item.id as u64), item);
+                collect
+            });
+
+        let roles = member
+            .roles
+            .into_iter()
+            .filter(|item| proles.get(&item).is_some())
+            .collect_vec();
+
+        if roles.is_empty() {
+            let BotResponse::CreateRoleOk(role) = bot
+                .send(BotRequest::CreateColorRole(member.user.id))
+                .await?
+            else {
+                bail!(RouterError::InvalidResponse)
+            };
+
+            role.id
+        } else {
+            roles[0]
+        }
     };
 
-    let mut roles = vec![color_role.id];
+    let mut roles = vec![color_role];
 
     if member.user.bot {
         roles.push(nci::roles::BOTS);
@@ -58,7 +86,7 @@ pub async fn create(member: serenity::Member) -> Result<(), MemberLogError> {
                 member.user.name,
                 vec![
                     user::nickname::set(member.nick),
-                    user::roles::set(roles.iter().map(|n| role::id::equals(*n)).collect_vec()),
+                    user::roles::connect(roles.iter().map(|n| role::id::equals(*n)).collect_vec()),
                     user::bot::set(member.user.bot),
                 ],
             )
@@ -69,8 +97,10 @@ pub async fn create(member: serenity::Member) -> Result<(), MemberLogError> {
     Ok(())
 }
 
-pub async fn update(member: serenity::GuildMemberUpdateEvent) -> Result<(), MemberLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+pub async fn update(
+    member: serenity::GuildMemberUpdateEvent,
+    bot: &mut Client<BotServer>,
+) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
     let mut updates = vec![];
 
@@ -210,8 +240,10 @@ pub async fn update(member: serenity::GuildMemberUpdateEvent) -> Result<(), Memb
     Ok(())
 }
 
-pub async fn delete(id: serenity::UserId) -> Result<(), MemberLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+pub async fn delete(
+    id: serenity::UserId,
+    bot: &mut Client<BotServer>,
+) -> Result<(), MemberLogError> {
     let prisma = prisma::create().await?;
 
     let prisma_user = prisma

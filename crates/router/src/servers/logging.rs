@@ -52,7 +52,7 @@ pub enum LoggingRequest {
     },
     MessageCloneReadAll,
 
-    LoggerReady,
+    ReadyEvent,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,7 +95,7 @@ impl ServerMetadata for LoggingServer {
     type Response = LoggingResponse;
     type Error = serde_error::Error;
 
-    const HOST: &'static str = "logger";
+    const HOST: &'static str = "logging";
     const PORT: u16 = 9000;
 
     const READY_REQUEST: Self::Request = LoggingRequest::IsReady;

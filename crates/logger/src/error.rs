@@ -285,6 +285,13 @@ pub enum LoggerError {
         error: MessageCloneLogError,
         backtrace: Backtrace,
     },
+
+    #[error("Problem communicating with bot: {error}")]
+    Bot {
+        #[from]
+        error: RouterError<BotServer>,
+        backtrace: Backtrace,
+    },
 }
 
 prisma_error_convert!(

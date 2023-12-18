@@ -23,7 +23,7 @@ fn _row_disabled() -> serenity::CreateActionRow {
     serenity::CreateActionRow::Buttons(vec![_button_disabled()])
 }
 
-pub fn register() {
+pub async fn register() {
     mpmc::on(|ctx, event, _data| async move {
         let FullEvent::InteractionCreate {
             interaction: serenity::Interaction::Component(mut press),
@@ -63,4 +63,5 @@ pub fn register() {
 
         Ok(())
     })
+    .await
 }

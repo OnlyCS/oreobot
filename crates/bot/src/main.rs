@@ -23,6 +23,7 @@ extern crate tokio;
 mod commands;
 mod error;
 mod features;
+mod integrations;
 mod mpmc;
 mod prelude;
 mod server;
@@ -34,7 +35,10 @@ use prelude::*;
 #[tokio::main]
 async fn main() -> Result<!, BotServerError> {
     SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
+        .with_level(log::LevelFilter::Warn)
+        .with_threads(true)
+        .with_module_level("oreo_bot", log::LevelFilter::Debug)
+        .with_module_level("oreo_router", log::LevelFilter::Debug)
         .init()?;
 
     let framework = poise::FrameworkBuilder::default()
@@ -53,9 +57,9 @@ async fn main() -> Result<!, BotServerError> {
                 );
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
-                features::share::register();
-                features::logger::register();
-                features::message_clone::register();
+                features::share::register().await;
+                features::logger::register().await;
+                features::message_clone::register().await;
 
                 server::run(ctx).await?;
 

@@ -42,6 +42,13 @@ pub enum CommandError {
         error: RouterError<BotServer>,
         backtrace: Backtrace,
     },
+
+    #[error("Event error: {error}")]
+    EventError {
+        #[from]
+        error: EventError,
+        backtrace: Backtrace,
+    },
 }
 
 #[derive(Error, Debug)]

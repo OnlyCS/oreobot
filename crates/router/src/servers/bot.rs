@@ -21,6 +21,7 @@ pub enum BotRequest {
     GetRolesOfUser(UserId),
     RemoveRoleFromUser(UserId, RoleId),
     DeleteRole(RoleId),
+    GetMember(UserId),
 
     GetAllRoles,
     GetAllMembers,
@@ -36,6 +37,8 @@ pub enum BotResponse {
     NotReady,
 
     CreateRoleOk(Role),
+    MemberOk(Member),
+
     RolesOk(Vec<Role>),
     MembersOk(Vec<Member>),
     CategoriesOk(Vec<GuildChannel>),

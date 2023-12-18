@@ -35,14 +35,26 @@ Oreo is designed to be as modular as possible, with a focus on extensibility. Th
     DATABASE_URL="the connection string for your database"
     ```
 
-4. Use `run.nu` to run the bot:
+4. Use `scripts/build.nu` to build bot bins:
 
     ```sh
-    nu run.nu # --release for release build
+    nu scripts/build.nu # --release for release build
     ```
 
-5. Stop the bot with:
+5. Start the bot with:
+
+    ```sh
+    docker compose up
+    ```
+
+6. Stop the bot with:
 
     ```sh
     docker compose down
+    ```
+
+7. Cleanup with:
+
+    ```sh
+    nu scripts/clean.nu
     ```

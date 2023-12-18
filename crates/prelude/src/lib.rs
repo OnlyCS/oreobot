@@ -99,3 +99,14 @@ pub use futures::{future::BoxFuture, prelude::*};
 
 pub use itertools::Itertools;
 pub use std::collections::{HashMap, HashSet};
+
+pub fn debug_truncated(value: impl std::fmt::Debug) -> String {
+    let mut value = format!("{:?}", value);
+
+    if value.len() > 100 {
+        value.truncate(100);
+        value.push_str("...");
+    }
+
+    value
+}

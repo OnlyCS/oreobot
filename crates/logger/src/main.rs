@@ -16,7 +16,7 @@ use oreo_proc_macros::wire;
 use prelude::*;
 
 async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
-    info!("Logging request: {:?}", request);
+    let mut bot = Client::<BotServer>::new().await?;
 
     wire! {
         request,
@@ -51,13 +51,13 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
         RoleRead(r) => role::read(r) => LoggingResponse::RoleOk(out),
         RoleReadAll => role::all() => LoggingResponse::AllRolesOk(out),
         RoleUpdate(r) => role::update(r) => LoggingResponse::UpdateOk,
-        RoleDelete(r) => role::delete(r) => LoggingResponse::UpdateOk,
+        RoleDelete(r) => role::delete(r, &mut bot) => LoggingResponse::UpdateOk,
 
         // member
-        MemberCreate(m) => member::create(m) => LoggingResponse::UpdateOk,
+        MemberCreate(m) => member::create(m, &mut bot) => LoggingResponse::UpdateOk,
         MemberRead(m) => member::read(m) => LoggingResponse::MemberOk(out),
-        MemberUpdate(m) => member::update(m) => LoggingResponse::UpdateOk,
-        MemberDelete(m) => member::delete(m) => LoggingResponse::UpdateOk,
+        MemberUpdate(m) => member::update(m, &mut bot) => LoggingResponse::UpdateOk,
+        MemberDelete(m) => member::delete(m, &mut bot) => LoggingResponse::UpdateOk,
 
         // user settings
         UserSettingsCreate(u, s) => user_settings::create(u, s) => LoggingResponse::UpdateOk,
@@ -72,7 +72,7 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
         MessageCloneRead { clone } => message_clone::read(clone) => LoggingResponse::MessageCloneOk(out),
         MessageCloneReadAll => message_clone::all() => LoggingResponse::AllMessageClonesOk(out),
 
-        LoggerReady => ready::ready() => LoggingResponse::UpdateOk
+        ReadyEvent => ready::ready(&mut bot) => LoggingResponse::UpdateOk
     }
 }
 
@@ -83,7 +83,12 @@ async fn on_map(request: LoggingRequest) -> Result<LoggingResponse, serde_error:
 
 #[tokio::main]
 async fn main() -> Result<!, LoggerServerError> {
-    SimpleLogger::new().init()?;
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Warn)
+        .with_threads(true)
+        .with_module_level("oreo_logger", log::LevelFilter::Debug)
+        .with_module_level("oreo_router", log::LevelFilter::Debug)
+        .init()?;
 
     Server::new(|request| async move { on_map(request).await })
         .await?

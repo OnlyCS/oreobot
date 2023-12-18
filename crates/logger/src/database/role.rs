@@ -101,11 +101,13 @@ pub async fn update(role: serenity::Role) -> Result<(), RoleLogError> {
     Ok(())
 }
 
-pub async fn delete(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
+pub async fn delete(
+    role_id: serenity::RoleId,
+    bot: &mut Client<BotServer>,
+) -> Result<(), RoleLogError> {
     // custom roles are handled seperately
     log_check_error(role_id).await?;
 
-    let mut bot = Client::<BotServer>::new().await?;
     let prisma = prisma::create().await?;
     let prisma_role = read(role_id).await?;
 

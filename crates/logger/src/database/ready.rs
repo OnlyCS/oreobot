@@ -1,7 +1,6 @@
 use crate::prelude::*;
 
-async fn roles() -> Result<(), RoleLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+async fn roles(bot: &mut Client<BotServer>) -> Result<(), RoleLogError> {
     let prisma = prisma::create().await?;
 
     let roles = {
@@ -31,12 +30,16 @@ async fn roles() -> Result<(), RoleLogError> {
         if let Some(role) = roles.get(&id) {
             super::role::update(role.clone()).await?;
         } else {
-            super::role::delete(id).await?;
+            super::role::delete(id, bot).await?;
         }
     }
 
     // for every role in the guild
     for (id, role) in roles {
+        if !super::role::log_check(id).await {
+            continue;
+        }
+
         if !prisma_roles.contains(&id.into()) {
             super::role::create(role).await?;
         }
@@ -45,8 +48,9 @@ async fn roles() -> Result<(), RoleLogError> {
     Ok(())
 }
 
-async fn members() -> Result<(), MemberLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
+	debug!("got here");
+
     let prisma = prisma::create().await?;
 
     let members = {
@@ -77,9 +81,9 @@ async fn members() -> Result<(), MemberLogError> {
             let member_str = serde_json::to_string(&member).unwrap();
             let event = serde_json::from_str(&member_str).unwrap(); /* same fields */
 
-            super::member::update(event).await?;
+            super::member::update(event, bot).await?;
         } else {
-            super::member::create(member.clone()).await?;
+            super::member::create(member.clone(), bot).await?;
         }
 
         // get the user's settings so it will create if dne
@@ -90,16 +94,15 @@ async fn members() -> Result<(), MemberLogError> {
         let id = serenity::UserId::new(id_i64 as u64);
 
         if !members.contains_key(&id) {
-            super::member::delete(id).await?;
+            super::member::delete(id, bot).await?;
         }
     }
 
     Ok(())
 }
 
-async fn categories() -> Result<(), CategoryLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
-    let prisma = prisma::create().await?;
+async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError> {
+	let prisma = prisma::create().await?;
 
     let categories = {
         let BotResponse::CategoriesOk(categories) = bot.send(BotRequest::GetAllCategories).await?
@@ -132,6 +135,8 @@ async fn categories() -> Result<(), CategoryLogError> {
         }
     }
 
+	debug!("checkpoint1");
+
     for id_i64 in prisma_categories {
         let id = serenity::ChannelId::new(id_i64 as u64);
 
@@ -140,11 +145,12 @@ async fn categories() -> Result<(), CategoryLogError> {
         }
     }
 
+	debug!("checkpoint2");
+
     Ok(())
 }
 
-async fn channels() -> Result<(), ChannelLogError> {
-    let mut bot = Client::<BotServer>::new().await?;
+async fn channels(bot: &mut Client<BotServer>) -> Result<(), ChannelLogError> {
     let prisma = prisma::create().await?;
 
     let channels = {
@@ -177,6 +183,8 @@ async fn channels() -> Result<(), ChannelLogError> {
         }
     }
 
+	debug!("checkpoint3");
+
     for id_i64 in prisma_channels {
         let id = serenity::ChannelId::new(id_i64 as u64);
 
@@ -185,14 +193,27 @@ async fn channels() -> Result<(), ChannelLogError> {
         }
     }
 
+	debug!("checkpoint4");
+
     Ok(())
 }
 
-pub async fn ready() -> Result<(), ReadyEventError> {
-    roles().await?;
-    members().await?;
-    categories().await?;
-    channels().await?;
+pub async fn ready(bot: &mut Client<BotServer>) -> Result<(), ReadyEventError> {
+    roles(bot).await?;
+
+    debug!("Roles done");
+
+    members(bot).await?;
+
+    debug!("Members done");
+
+    categories(bot).await?;
+
+    debug!("Categories done");
+
+    channels(bot).await?;
+
+    debug!("Channels done");
 
     Ok(())
 }

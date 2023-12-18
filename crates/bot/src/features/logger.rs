@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use oreo_proc_macros::logger_wire;
 
-pub fn register() {
+pub async fn register() {
     mpmc::on(|_, event, _| async move {
         let mut logger = Client::<LoggingServer>::new().await?;
 
@@ -37,9 +37,12 @@ pub fn register() {
             GuildMemberUpdate { event, .. } => MemberUpdate(event),
             GuildMemberRemoval { user, .. } => MemberDelete(user.id),
 
+            // ready
+            Ready { .. } => ReadyEvent,
+
             _ => bail!(EventError::UnwantedEvent)
         };
 
         Ok(())
-    })
+    }).await
 }
