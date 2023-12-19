@@ -42,10 +42,6 @@ pub async fn create(message: serenity::Message) -> Result<(), MessageLogError> {
         bail!(MessageLogError::WebhookMessage(message.id));
     }
 
-    if message.channel_id == nci::channels::NEWS {
-        bail!(MessageLogError::NewsMessage(message.id));
-    }
-
     create_unchecked(message).await?;
 
     Ok(())

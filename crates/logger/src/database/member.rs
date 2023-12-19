@@ -178,13 +178,19 @@ pub async fn update(
         }
 
         // if the user is verified, update verified status
-        if role.id == i64::from(nci::roles::MEMBERS) {
+        if role.id == i64::from(nci::roles::MEMBERS)
+            && !roles.iter().any(|role| role.id == nci::roles::MEMBERS)
+        {
             updates.push(user::verified::set(false));
+            disconnects.push(role::id::equals(role.id));
         }
 
         // if the user is an admin, update admin status
-        if role.id == i64::from(nci::roles::OVERRIDES) {
+        if role.id == i64::from(nci::roles::OVERRIDES)
+            && !roles.iter().any(|role| role.id == nci::roles::OVERRIDES)
+        {
             updates.push(user::admin::set(false));
+            disconnects.push(role::id::equals(role.id));
         }
 
         // if the user no longer has the role, unlink in db
@@ -195,12 +201,26 @@ pub async fn update(
 
     // update user's bot status and role (linked to member.user.bot)
     if member.user.bot {
-        updates.push(user::bot::set(true));
-        connects.push(role::id::equals(nci::roles::BOTS));
-        bot.send(BotRequest::AddRoleToUser(member.user.id, nci::roles::BOTS))
-            .await?;
+        if !prisma_user.bot {
+            updates.push(user::bot::set(true));
+        }
+
+        if !prisma_user
+            .roles()?
+            .iter()
+            .any(|r| r.id == i64::from(nci::roles::BOTS))
+        {
+            connects.push(role::id::equals(nci::roles::BOTS));
+        }
+
+        if !member.roles.iter().any(|r| *r == nci::roles::BOTS) {
+            bot.send(BotRequest::AddRoleToUser(member.user.id, nci::roles::BOTS))
+                .await?;
+        }
     } else {
-        updates.push(user::bot::set(false));
+        if prisma_user.bot {
+            updates.push(user::bot::set(false));
+        }
 
         if prisma_user
             .roles()?

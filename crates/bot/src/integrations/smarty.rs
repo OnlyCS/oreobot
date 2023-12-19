@@ -38,10 +38,10 @@ pub async fn register() {
             bail!(EventError::UnwantedEvent)
         };
 
-        if message.channel_id != nci::channels::CHAT
+        if !(message.channel_id == nci::channels::CHAT
             && message
                 .webhook_id
-                .is_some_and(|id| id == nci::smarty::WEBHOOK_CHAT)
+                .is_some_and(|id| id == nci::smarty::WEBHOOK_CHAT))
         {
             bail!(EventError::UnwantedEvent)
         }

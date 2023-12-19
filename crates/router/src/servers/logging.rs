@@ -95,7 +95,7 @@ impl ServerMetadata for LoggingServer {
     type Response = LoggingResponse;
     type Error = serde_error::Error;
 
-    const HOST: &'static str = "logging";
+    const HOST: &'static str = "logger";
     const PORT: u16 = 9000;
 
     const READY_REQUEST: Self::Request = LoggingRequest::IsReady;

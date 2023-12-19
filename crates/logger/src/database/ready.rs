@@ -49,7 +49,7 @@ async fn roles(bot: &mut Client<BotServer>) -> Result<(), RoleLogError> {
 }
 
 async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
-	debug!("got here");
+    debug!("got here");
 
     let prisma = prisma::create().await?;
 
@@ -102,7 +102,7 @@ async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
 }
 
 async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError> {
-	let prisma = prisma::create().await?;
+    let prisma = prisma::create().await?;
 
     let categories = {
         let BotResponse::CategoriesOk(categories) = bot.send(BotRequest::GetAllCategories).await?
@@ -135,7 +135,7 @@ async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError>
         }
     }
 
-	debug!("checkpoint1");
+    debug!("checkpoint1");
 
     for id_i64 in prisma_categories {
         let id = serenity::ChannelId::new(id_i64 as u64);
@@ -145,7 +145,7 @@ async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError>
         }
     }
 
-	debug!("checkpoint2");
+    debug!("checkpoint2");
 
     Ok(())
 }
@@ -183,7 +183,7 @@ async fn channels(bot: &mut Client<BotServer>) -> Result<(), ChannelLogError> {
         }
     }
 
-	debug!("checkpoint3");
+    debug!("checkpoint3");
 
     for id_i64 in prisma_channels {
         let id = serenity::ChannelId::new(id_i64 as u64);
@@ -193,7 +193,7 @@ async fn channels(bot: &mut Client<BotServer>) -> Result<(), ChannelLogError> {
         }
     }
 
-	debug!("checkpoint4");
+    debug!("checkpoint4");
 
     Ok(())
 }

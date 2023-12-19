@@ -14,9 +14,6 @@ pub enum MessageLogError {
     #[error("Warning: Message ({{ id: {0} }}) is owned by a webhook, skipping")]
     WebhookMessage(serenity::MessageId),
 
-    #[error("Warning: Message ({{ id: {0} }}) is in the #news channel, skipping")]
-    NewsMessage(serenity::MessageId),
-
     #[error("Message ({{ id: {0} }}) not found")]
     NotFound(serenity::MessageId),
 

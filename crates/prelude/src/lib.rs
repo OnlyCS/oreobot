@@ -110,3 +110,14 @@ pub fn debug_truncated(value: impl std::fmt::Debug) -> String {
 
     value
 }
+
+pub fn string_truncated_dbg(value: impl ToString) -> String {
+    let mut value = value.to_string();
+
+    if value.len() > 100 {
+        value.truncate(100);
+        value.push_str("...");
+    }
+
+    value
+}

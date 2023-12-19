@@ -8,6 +8,9 @@ services:
   logger:
     build: ./crates/logger
     container_name: logger
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      BOT_TOKEN: "${BOT_TOKEN}"
     networks:
       - oreonet
 
