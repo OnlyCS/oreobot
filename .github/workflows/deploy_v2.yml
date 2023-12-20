@@ -11,18 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Copy DotEnv to root
-        run: echo "${{ secrets.DOTENV_V2 }}" > .env
-
       - name: Install Mold Linker
         uses: rui314/setup-mold@v1
+
+      - name: Copy DotEnv to root
+        run: |
+          echo "${{ secrets.DOTENV_V2 }}" > .env
+          sudo ln -s /usr/local/bin/mold /usr/bin/mold
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
 
-      - name: Run sccache-cache
+      - name: Run sccache
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Install nushell
