@@ -1,7 +1,7 @@
 #[cfg(feature = "client")]
 pub mod client;
 
-#[cfg(any(feature = "client", feature = "server", feature = "persist_server"))]
+#[cfg(any(feature = "client", feature = "server", feature = "persist-server"))]
 pub mod common;
 
 #[cfg(feature = "persist-server")]
