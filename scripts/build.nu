@@ -28,6 +28,7 @@ def main [
 				| where $it == "[lib]"
 				| length
 		) == 0
+		| where $it.name != "prisma-cli"
 		| get name
 		| each { |dir| 
 			cd $dir

@@ -1,6 +1,6 @@
 [alias]
-prisma = "run -p oreo-prisma --bin prisma-cli --features=bin --"
-prisma-release = "run -p oreo-prisma --bin prisma-cli --features=bin --release --"
+prisma = "run -p prisma-cli --"
+prisma-release = "run -p prisma-cli --release --"
 
 [registries.crates-io]
 protocol = "sparse"
