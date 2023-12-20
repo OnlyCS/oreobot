@@ -2,12 +2,14 @@ services:
   cache:
     build: ./crates/cache
     container_name: cache
+    image: onlycs/oreobot:v2-cache
     networks:
       - oreonet
 
   logger:
     build: ./crates/logger
     container_name: logger
+    image: onlycs/oreobot:v2-logger
     environment:
       DATABASE_URL: "${DATABASE_URL}"
       BOT_TOKEN: "${BOT_TOKEN}"
@@ -17,6 +19,7 @@ services:
   bot:
     build: ./crates/bot
     container_name: bot
+    image: onlycs/oreobot:v2-bot
     networks:
       - oreonet
 

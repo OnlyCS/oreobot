@@ -6,3 +6,9 @@
 [workspace]
 resolver = "2"
 members = ["crates/*"]
+
+[profile.release]
+incremental = false
+
+[profile.dev]
+incremental = false

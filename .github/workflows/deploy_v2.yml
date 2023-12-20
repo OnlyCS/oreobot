@@ -1,0 +1,69 @@
+name: Deploy v2
+
+on:
+  push:
+    branches:
+      - schism
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy DotEnv to root
+        run: echo "${{ secrets.DOTENV_V2 }}" > .env
+
+      - name: Install Mold Linker
+        uses: rui314/setup-mold@v1
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Install nushell
+        uses: hustcer/setup-nu@v3.8
+        with:
+          version: "*"
+
+      - name: Run build script
+        run: nu scripts/build.nu --release
+        env:
+          SCCACHE_AZURE_CONNECTION_STRING: "${{ secrets.SCCACHE_AZ_CONN }}"
+          SCCACHE_AZURE_BLOB_CONTAINER: "${{ secrets.SCCACHE_AZ_CONT }}"
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
+
+      - name: Login to docker hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push dockerfiles
+        run: |
+          docker compose build
+          docker compose push
+
+      - name: Save ssh keys
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > ssh_key
+          chmod 600 ssh_key
+          echo "ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR" >> do_ssh
+          chmod +x do_ssh
+
+      - name: Kill and remove old docker container
+        continue-on-error: true
+        run: |
+          ./do_ssh docker kill bot
+          ./do_ssh docker kill logger
+          ./do_ssh docker kill cache
+
+      - name: Save and run compose
+        continue-on-error: true
+        run: |
+          export COMPOSE=`cat compose.yml`
+          ./do_ssh "echo \"$COMPOSE\" > compose.yml"
+          ./do_ssh "docker compose up -d"
+          ./do_ssh "rm compose.yml"
