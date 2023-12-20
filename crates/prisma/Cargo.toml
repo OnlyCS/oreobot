@@ -24,6 +24,9 @@ optional = true
 default = []
 bin = ["dep:prisma-client-rust-cli"]
 
+[dependencies.socket2]
+features = ["all"]
+
 [lib]
 
 [[bin]]
