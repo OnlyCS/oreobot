@@ -11,20 +11,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Copy DotEnv to root
+        run: echo "${{ secrets.DOTENV_V2 }}" > .env
+
       - name: Install Mold Linker
         uses: rui314/setup-mold@v1
 
-      - name: Copy DotEnv to root
-        run: |
-          echo "${{ secrets.DOTENV_V2 }}" > .env
-          sudo ln -s /usr/local/bin/mold /usr/bin/mold
+      - name: Post install Mold Linker
+        run: sudo ln -s /usr/local/bin/mold /usr/bin/mold
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
 
-      - name: Run sccache
+      - name: Install sccache
         uses: mozilla-actions/sccache-action@v0.0.3
 
       - name: Install nushell
@@ -35,34 +36,30 @@ jobs:
       - name: Run build script
         run: nu scripts/build.nu --release
         env:
-          SCCACHE_AZURE_CONNECTION_STRING: "${{ secrets.SCCACHE_AZ_CONN }}"
-          SCCACHE_AZURE_BLOB_CONTAINER: "${{ secrets.SCCACHE_AZ_CONT }}"
+          SCCACHE_AZURE_CONNECTION_STRING: "${{ secrets.AZCACHE_URL }}"
+          SCCACHE_AZURE_BLOB_CONTAINER: "sccache"
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
 
       - name: Login to docker hub
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u onlycs -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push dockerfiles
-        run: |
-          docker compose build
-          docker compose push
+        run: docker compose build --push
 
       - name: Save ssh keys
         run: |
           echo "${{ secrets.SSH_KEY }}" > ssh_key
           chmod 600 ssh_key
+          echo "DO_SSH=ssh -i ssh_key onlycs@${{ secrets.SSH_HOST }} -p 22 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR" >> $GITHUB_ENV
 
       - name: Kill and remove old docker container
         continue-on-error: true
         run: |
-          export DO_SSH="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
           $DO_SSH docker kill bot
           $DO_SSH docker kill logger
           $DO_SSH docker kill cache
 
       - name: Save and run compose
         continue-on-error: true
-        run: |   
-          export DO_SSH="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
-          $DO_SSH "cd ~/.oreo2; docker compose up -d"
+        run: $DO_SSH "cd ~/.oreo2; docker compose up -d"
