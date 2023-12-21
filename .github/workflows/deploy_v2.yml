@@ -52,18 +52,19 @@ jobs:
         run: |
           echo "${{ secrets.SSH_KEY }}" > ssh_key
           chmod 600 ssh_key
-          alias do_ssh="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
 
       - name: Kill and remove old docker container
         continue-on-error: true
         run: |
+          alias do_ssh="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
           do_ssh docker kill bot
           do_ssh docker kill logger
           do_ssh docker kill cache
 
       - name: Save and run compose
         continue-on-error: true
-        run: |
+        run: |   
+          alias do_ssh="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
           export COMPOSE=`cat compose.yml`
           do_ssh "echo \"$COMPOSE\" > compose.yml"
           do_ssh "docker compose up -d"
