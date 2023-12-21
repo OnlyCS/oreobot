@@ -1,1 +1,1 @@
-automod::dir!(pub "src/commands");
+oreo_proc_macros::autocommand!();

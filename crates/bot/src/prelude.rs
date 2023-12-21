@@ -4,7 +4,8 @@ pub(crate) use crate::{
     mpmc,
     util::{
         embed::{self, EmbedStatus},
-        emoji, mention,
+        emoji,
+        mention::{self, MentionType},
     },
 };
 

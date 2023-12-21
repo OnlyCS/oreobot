@@ -2144,11 +2144,9 @@ dependencies = [
 name = "oreo-logger"
 version = "0.1.0"
 dependencies = [
- "async-std",
  "oreo-prelude",
  "oreo-proc-macros",
  "oreo-router",
- "serde",
  "serde-error",
  "serde_json",
  "thiserror",
@@ -2198,7 +2196,6 @@ name = "oreo-router"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "futures",
  "oreo-prelude",
  "serde",
  "serde-error",

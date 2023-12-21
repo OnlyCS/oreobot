@@ -49,6 +49,16 @@ pub enum CommandError {
         error: EventError,
         backtrace: Backtrace,
     },
+
+    #[error("Illegal argument: {0}")]
+    IllegalArgument(String),
+
+    #[error("Error communicating with cache server: {error}")]
+    CacheServerError {
+        #[from]
+        error: RouterError<CacheServer>,
+        backtrace: Backtrace,
+    },
 }
 
 #[derive(Error, Debug)]
@@ -87,6 +97,13 @@ pub enum EventError {
         backtrace: Backtrace,
     },
 
+    #[error("Error communicating with cache server: {error}")]
+    CacheServerError {
+        #[from]
+        error: RouterError<CacheServer>,
+        backtrace: Backtrace,
+    },
+
     #[error("Prisma error: {error}")]
     Prisma {
         #[from]
@@ -121,6 +138,13 @@ pub enum NewsCloneError {
     MessageClone {
         #[from]
         error: MessageCloneError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Serenity error: {error}")]
+    Serenity {
+        #[from]
+        error: serenity::Error,
         backtrace: Backtrace,
     },
 }

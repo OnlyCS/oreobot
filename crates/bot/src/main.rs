@@ -43,7 +43,7 @@ async fn main() -> Result<!, BotServerError> {
 
     let framework = poise::FrameworkBuilder::default()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping::ping()],
+            commands: commands::all(),
             event_handler: mpmc::event::handler,
             ..Default::default()
         })
@@ -61,6 +61,7 @@ async fn main() -> Result<!, BotServerError> {
                 features::share::register().await;
                 features::logger::register().await;
                 features::clone::register().await;
+                features::impersonate::register().await;
 
                 #[cfg(not(feature = "smarty-integration"))]
                 features::news_clone::register().await;

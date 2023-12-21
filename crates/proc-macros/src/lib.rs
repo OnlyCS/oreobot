@@ -1,4 +1,4 @@
-#![feature(let_chains)]
+#![feature(let_chains, proc_macro_span)]
 
 use proc_macro::{self, TokenStream};
 use syn::{parse_macro_input, DeriveInput};
@@ -51,4 +51,43 @@ pub fn logger_wire(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as proc_macro2::TokenStream);
 
     logger_wire::proc(input).into()
+}
+
+#[cfg(feature = "autocommand")]
+#[proc_macro]
+pub fn autocommand(_: TokenStream) -> TokenStream {
+    let file = proc_macro::Span::call_site().source_file();
+    let path = file.path();
+
+    // get filenames of every file inside dir
+    let files = std::fs::read_dir(path.parent().unwrap())
+        .unwrap()
+        .map(|res| {
+            res.map(|e| {
+                e.path()
+                    .to_str()
+                    .unwrap()
+                    .split("/")
+                    .last()
+                    .unwrap()
+                    .trim()
+                    .trim_end_matches(".rs")
+                    .to_owned()
+            })
+        })
+        .filter_map(|res| res.ok())
+        .filter(|file| file != "mod")
+        .map(|n| proc_macro2::Ident::new(&n, proc_macro2::Span::call_site()))
+        .collect::<Vec<_>>();
+
+    quote::quote! {
+        #(mod #files;)*
+
+        pub fn all() -> Vec<poise::Command<crate::prelude::Data, crate::prelude::CommandError>> {
+            vec![
+                #(#files::#files()),*
+            ]
+        }
+    }
+    .into()
 }

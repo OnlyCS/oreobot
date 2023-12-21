@@ -176,7 +176,7 @@ pub async fn register() {
         let LoggingResponse::AllMessageClonesOk(list) =
             logger.send(LoggingRequest::MessageCloneReadAll).await?
         else {
-            bail!(RouterError::InvalidResponse)
+            bail!(RouterError::<LoggingServer>::InvalidResponse)
         };
 
         let to_update = list
@@ -233,7 +233,7 @@ pub async fn register() {
         let LoggingResponse::AllMessageClonesOk(list) =
             logger.send(LoggingRequest::MessageCloneReadAll).await?
         else {
-            bail!(RouterError::InvalidResponse)
+            bail!(RouterError::<LoggingServer>::InvalidResponse)
         };
 
         let to_delete = list
