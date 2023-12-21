@@ -65,7 +65,4 @@ jobs:
         continue-on-error: true
         run: |   
           export DO_SSH="ssh -i ssh_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
-          export COMPOSE=`cat compose.yml`
-          $DO_SSH "echo \"$COMPOSE\" > compose.yml"
-          $DO_SSH "docker compose up -d"
-          $DO_SSH "rm compose.yml"
+          $DO_SSH "cd ~/.oreo2; docker compose up -d"
