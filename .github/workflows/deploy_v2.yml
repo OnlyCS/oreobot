@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo ln -s /usr/local/bin/mold /usr/bin/mold
           echo "${{ secrets.DOTENV_V2 }}" > .env
-          sccache --show-status
+          sccache --show-stats
 
       - name: Run build script
         run: nu scripts/build.nu --release
