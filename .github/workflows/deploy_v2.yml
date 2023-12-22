@@ -33,6 +33,13 @@ jobs:
         with:
           version: "*"
 
+      - name: Grab target cache
+        id: target-cache
+        uses: actions/cache@v3
+        with:
+          key: target-cache-${{ runner.os }}
+          path: target
+
       - name: Run build script
         run: nu scripts/build.nu --release
         env:
@@ -56,10 +63,8 @@ jobs:
       - name: Kill and remove old docker container
         continue-on-error: true
         run: |
-          $DO_SSH docker kill bot
-          $DO_SSH docker kill logger
-          $DO_SSH docker kill cache
+          $DO_SSH "cd ~/.oreo2; docker compose down"
 
       - name: Save and run compose
         continue-on-error: true
-        run: $DO_SSH "cd ~/.oreo2; docker compose up -d"
+        run: $DO_SSH "cd ~/.oreo2; docker compose up --pull always -d"
