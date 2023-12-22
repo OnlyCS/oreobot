@@ -36,16 +36,20 @@ jobs:
 
       - name: Pre-build GHA Scripts
         run: |
+          echo SCCACHE_AZURE_CONNECTION_STRING=${{ env.SCCACHE_AZURE_CONNECTION_STRING }} >> $GITHUB_ENV
+          echo SCCACHE_AZURE_BLOB_CONTAINER=${{ env.SCCACHE_AZURE_BLOB_CONTAINER }} >> $GITHUB_ENV
+          echo RUSTC_WRAPPER=${{ env.RUSTC_WRAPPER }} >> $GITHUB_ENV
+
           sudo ln -s /usr/local/bin/mold /usr/bin/mold
           echo "${{ secrets.DOTENV_V2 }}" > .env
           sccache --show-stats
-
-      - name: Run build script
-        run: nu scripts/build.nu --release
         env:
           SCCACHE_AZURE_CONNECTION_STRING: "${{ secrets.AZCACHE_URL }}"
           SCCACHE_AZURE_BLOB_CONTAINER: "sccache"
           RUSTC_WRAPPER: "sccache"
+
+      - name: Run build script
+        run: nu scripts/build.nu --release
 
       - name: Login to docker hub
         run: docker login -u onlycs -p ${{ secrets.DOCKER_PASSWORD }}
