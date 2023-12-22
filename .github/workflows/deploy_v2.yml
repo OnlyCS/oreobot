@@ -11,14 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Copy DotEnv to root
-        run: echo "${{ secrets.DOTENV_V2 }}" > .env
-
       - name: Install Mold Linker
         uses: rui314/setup-mold@v1
-
-      - name: Post install Mold Linker
-        run: sudo ln -s /usr/local/bin/mold /usr/bin/mold
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -33,12 +27,18 @@ jobs:
         with:
           version: "*"
 
-      - name: Grab target cache
+      - name: Setup Rust Cache
         id: target-cache
         uses: actions/cache@v3
         with:
           key: target-cache-${{ runner.os }}
           path: target
+
+      - name: Pre-build GHA Scripts
+        run: |
+          sudo ln -s /usr/local/bin/mold /usr/bin/mold
+          echo "${{ secrets.DOTENV_V2 }}" > .env
+          sccache --show-status
 
       - name: Run build script
         run: nu scripts/build.nu --release
