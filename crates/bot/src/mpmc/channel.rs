@@ -51,15 +51,15 @@ where
                             debug_truncated(&event_cl)
                         );
 
+                        None
+                    }
+                    _ => {
+                        error!("event callback: {err}");
                         Some(crate::error::handle(
                             ctx.clone(),
                             err.into(),
                             nci::channels::LOGGING,
                         ))
-                    }
-                    _ => {
-                        error!("event callback: {err}");
-                        None
                     }
                 },
             })
