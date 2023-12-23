@@ -2,25 +2,25 @@ use crate::prelude::*;
 
 const CUSTOM_ID: &'static str = "oreo2_share";
 
-pub fn button() -> serenity::CreateButton {
-    serenity::CreateButton::new(CUSTOM_ID)
+pub fn button() -> CreateButton {
+    CreateButton::new(CUSTOM_ID)
         .label("Share")
-        .style(serenity::ButtonStyle::Secondary)
+        .style(ButtonStyle::Secondary)
 }
 
-fn _button_disabled() -> serenity::CreateButton {
-    serenity::CreateButton::new(CUSTOM_ID)
+fn _button_disabled() -> CreateButton {
+    CreateButton::new(CUSTOM_ID)
         .label("Share")
-        .style(serenity::ButtonStyle::Secondary)
+        .style(ButtonStyle::Secondary)
         .disabled(true)
 }
 
-pub fn row() -> serenity::CreateActionRow {
-    serenity::CreateActionRow::Buttons(vec![button()])
+pub fn row() -> CreateActionRow {
+    CreateActionRow::Buttons(vec![button()])
 }
 
-fn _row_disabled() -> serenity::CreateActionRow {
-    serenity::CreateActionRow::Buttons(vec![_button_disabled()])
+fn _row_disabled() -> CreateActionRow {
+    CreateActionRow::Buttons(vec![_button_disabled()])
 }
 
 pub async fn register() {
@@ -46,7 +46,7 @@ pub async fn register() {
                             .embeds
                             .iter()
                             .cloned()
-                            .map(serenity::CreateEmbed::from)
+                            .map(CreateEmbed::from)
                             .collect_vec(),
                     ),
                 ),

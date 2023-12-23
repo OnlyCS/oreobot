@@ -21,10 +21,7 @@ impl Default for MessageCloneOptions {
     }
 }
 
-fn copy_user(
-    wh: serenity::ExecuteWebhook,
-    author: &Member,
-) -> Result<serenity::ExecuteWebhook, serenity::Error> {
+fn copy_user(wh: ExecuteWebhook, author: &Member) -> Result<ExecuteWebhook, serenity::Error> {
     Ok(wh.username(author.display_name()).avatar_url(author.face()))
 }
 
@@ -62,18 +59,18 @@ async fn clone_attachments(
         .await
 }
 
-fn clone_embeds(embeds: &Vec<serenity::Embed>) -> Vec<serenity::CreateEmbed> {
+fn clone_embeds(embeds: &Vec<Embed>) -> Vec<CreateEmbed> {
     embeds
         .iter()
         .cloned()
-        .map(|emb| serenity::CreateEmbed::from(emb))
+        .map(|emb| CreateEmbed::from(emb))
         .collect::<Vec<_>>()
 }
 
 async fn find_wh(
-    ctx: &(impl serenity::CacheHttp + AsRef<serenity::Http>),
-    channel: serenity::ChannelId,
-) -> Result<serenity::Webhook, serenity::Error> {
+    ctx: &(impl CacheHttp + AsRef<Http>),
+    channel: ChannelId,
+) -> Result<Webhook, serenity::Error> {
     let webhooks = channel.webhooks(&ctx).await?;
     let webhook = webhooks.into_iter().find(|wh| {
         wh.application_id == ctx.http().application_id()
@@ -105,10 +102,7 @@ async fn construct_message(referenced_message: &Option<Box<Message>>, content: &
     cloned_content
 }
 
-async fn member_of(
-    ctx: &impl serenity::CacheHttp,
-    message: &Message,
-) -> Result<Member, serenity::Error> {
+async fn member_of(ctx: &impl CacheHttp, message: &Message) -> Result<Member, serenity::Error> {
     let member = message
         .member(&ctx)
         .await
@@ -118,7 +112,7 @@ async fn member_of(
 }
 
 pub async fn message_clone(
-    ctx: impl serenity::CacheHttp + AsRef<serenity::Http>,
+    ctx: impl CacheHttp + AsRef<Http>,
     message: &Message,
     destination: ChannelId,
     options: MessageCloneOptions,
@@ -137,12 +131,12 @@ pub async fn message_clone(
 
     let member = member.unwrap_or(member_of(&ctx, &message).await?);
 
-    let mut cloned_message = copy_user(serenity::ExecuteWebhook::new(), &member)?;
+    let mut cloned_message = copy_user(ExecuteWebhook::new(), &member)?;
 
     // create jump buttons
     if button {
-        cloned_message = cloned_message
-            .button(serenity::CreateButton::new_link(message.link()).label("Original Message"));
+        cloned_message =
+            cloned_message.button(CreateButton::new_link(message.link()).label("Original Message"));
     }
 
     let cloned_content = construct_message(&message.referenced_message, &message.content).await;
@@ -217,11 +211,9 @@ pub async fn register() {
                 .embeds(embeds);
 
             if had_button {
-                edit = edit.components(vec![serenity::CreateActionRow::Buttons(vec![
-                    serenity::CreateButton::new_link(
-                        message.id.link(message.channel_id, message.guild_id),
-                    )
-                    .label("Original Message"),
+                edit = edit.components(vec![CreateActionRow::Buttons(vec![
+                    CreateButton::new_link(message.id.link(message.channel_id, message.guild_id))
+                        .label("Original Message"),
                 ])]);
             }
 

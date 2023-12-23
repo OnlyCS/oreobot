@@ -1,4 +1,4 @@
-#![feature(error_generic_member_access, trace_macros, never_type, let_chains)]
+#![feature(error_generic_member_access, never_type, let_chains)]
 
 extern crate oreo_prelude;
 extern crate oreo_router;

@@ -19,4 +19,4 @@ features = ["serenity", "prisma", "user-settings", "nci", "log", "color"]
 
 [dependencies.oreo-proc-macros]
 path = "../proc-macros"
-features = ["wire"]
+features = ["wire", "from-prisma-error"]

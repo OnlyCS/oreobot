@@ -29,7 +29,7 @@ where
         self.callbacks.push(Arc::new(callback));
     }
 
-    pub async fn send(&mut self, event: T) -> Result<(), EventError> {
+    pub async fn send(&mut self, ctx: serenity::Context, event: T) -> Result<(), EventError> {
         let event_cl = event.clone();
 
         let results = future::join_all(
@@ -40,20 +40,36 @@ where
         )
         .await;
 
-        results
+        let handles = results
             .into_par_iter()
-            .for_each(move |result| match result {
-                Ok(_) => {}
+            .filter_map(move |result| match result {
+                Ok(_) => None,
                 Err(err) => match err {
                     EventError::UnwantedEvent => {
                         debug!(
                             "event callback: unwanted event: {:?}",
                             debug_truncated(&event_cl)
-                        )
+                        );
+
+                        Some(crate::error::handle(
+                            ctx.clone(),
+                            err.into(),
+                            nci::channels::LOGGING,
+                        ))
                     }
-                    _ => error!("event callback: {err}"),
+                    _ => {
+                        error!("event callback: {err}");
+                        None
+                    }
                 },
-            });
+            })
+            .collect::<Vec<_>>();
+
+        let results = future::join_all(handles).await;
+
+        for result in results {
+            result?;
+        }
 
         Ok(())
     }

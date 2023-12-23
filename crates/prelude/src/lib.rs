@@ -1,5 +1,3 @@
-#![feature(const_option, const_trait_impl)]
-
 #[cfg(feature = "color")]
 extern crate color_name;
 extern crate itertools;
@@ -74,13 +72,7 @@ pub use poise::serenity_prelude as serenity;
 pub use error::*;
 
 #[cfg(feature = "prisma")]
-pub use oreo_prisma::prelude::*;
-
-#[cfg(feature = "prisma")]
-pub use oreo_prisma::prisma_client_rust;
-
-#[cfg(feature = "prisma")]
-pub use oreo_prisma::prisma_error_convert;
+pub use oreo_prisma::{prelude::*, prisma_client_rust};
 
 #[cfg(feature = "log")]
 pub use log::{debug, error, info, trace, warn, SetLoggerError};

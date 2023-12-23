@@ -6,7 +6,7 @@ pub async fn impersonate(_: Context<'_>) -> Result<(), CommandError> {
 }
 
 #[poise::command(slash_command)]
-async fn set(ctx: Context<'_>, to: serenity::Member) -> Result<(), CommandError> {
+async fn set(ctx: Context<'_>, to: Member) -> Result<(), CommandError> {
     let mut cache = Client::<CacheServer>::new().await?;
 
     if to.user.bot {

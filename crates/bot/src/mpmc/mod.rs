@@ -16,7 +16,7 @@ lazy_static::lazy_static! {
 
 pub async fn send(event: MpmcData) -> Result<(), EventError> {
     let mut emitter = EMITTER.lock().await;
-    emitter.send(event).await
+    emitter.send(event.ctx.clone(), event).await
 }
 
 pub async fn on<Fut>(f: fn(serenity::Context, FullEvent, Data) -> Fut)

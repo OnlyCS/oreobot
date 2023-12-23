@@ -58,3 +58,9 @@ Oreo is designed to be as modular as possible, with a focus on extensibility. Th
     ```sh
     nu scripts/clean.nu
     ```
+
+## It seems every commit before last month has the same timestamp
+
+I reset the tree of the git repo to point to my original commit.
+Commits before the first used Smarty's codebase.
+I did not like this because Smarty's codebase is unrelated to Oreo's.

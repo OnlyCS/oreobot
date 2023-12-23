@@ -1,6 +1,5 @@
-use oreo_prelude::prisma_error::PrismaError;
-
 use crate::prelude::*;
+use oreo_proc_macros::FromPrismaError;
 use std::backtrace::Backtrace;
 
 #[derive(Error, Debug)]
@@ -81,7 +80,7 @@ pub enum MessageCloneError {
     NoComponents,
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum EventError {
     #[error("Serenity error: {error}")]
     Serenity {
@@ -107,7 +106,7 @@ pub enum EventError {
     #[error("Prisma error: {error}")]
     Prisma {
         #[from]
-        error: PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -122,6 +121,13 @@ pub enum EventError {
     NewsClone {
         #[from]
         error: NewsCloneError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error with starboard: {error}")]
+    StarboardError {
+        #[from]
+        error: StarboardError,
         backtrace: Backtrace,
     },
 
@@ -149,4 +155,22 @@ pub enum NewsCloneError {
     },
 }
 
-prisma_error_convert!(EventError);
+#[derive(Error, Debug)]
+pub enum StarboardError {
+    #[error("Error with logging server: {error}")]
+    LoggingServerError {
+        #[from]
+        error: RouterError<LoggingServer>,
+        backtrace: Backtrace,
+    },
+
+    #[error("Error cloning message: {error}")]
+    MessageClone {
+        #[from]
+        error: MessageCloneError,
+        backtrace: Backtrace,
+    },
+
+    #[error("Cannot star a message twice")]
+    DoubleStar,
+}

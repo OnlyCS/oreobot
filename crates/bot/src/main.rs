@@ -1,13 +1,4 @@
-#![feature(
-    let_chains,
-    tuple_trait,
-    unboxed_closures,
-    extract_if,
-    associated_type_defaults,
-    error_generic_member_access,
-    never_type,
-    const_for
-)]
+#![feature(let_chains, error_generic_member_access, never_type)]
 
 #[macro_use]
 extern crate dotenvy_macro;
@@ -45,6 +36,26 @@ async fn main() -> Result<!, BotServerError> {
         .options(poise::FrameworkOptions {
             commands: commands::all(),
             event_handler: mpmc::event::handler,
+            on_error: |err| {
+                Box::pin(async move {
+                    error!("Got poise error: {}", err);
+
+                    if let Err(handle_err) = match err {
+                        poise::FrameworkError::Command { error, ctx, .. } => {
+                            let reply = poise::CreateReply::default()
+                                .ephemeral(true)
+                                .components(vec![share::row()])
+                                .embed(error::build_embed(&error));
+
+                            /* goofy unwrap to prevent on_error from being called forever */
+                            ctx.send(reply).await.map(|_| ())
+                        }
+                        _ => poise::builtins::on_error(err).await,
+                    } {
+                        error!("Error while handling error: {}", handle_err);
+                    }
+                })
+            },
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {

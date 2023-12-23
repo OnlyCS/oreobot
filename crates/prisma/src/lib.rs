@@ -18,6 +18,7 @@ pub mod prelude {
     pub mod prisma {
         use super::*;
 
+        pub use crate::error::PrismaError as Error;
         pub use prisma_client_rust::{and, not, or};
 
         pub async fn create() -> Result<PrismaClient, prisma_client_rust::NewClientError> {
@@ -33,10 +34,6 @@ pub mod prelude {
                 user::Data as UserData, user_settings_data::Data as UserSettingsData,
             };
         }
-    }
-
-    pub mod prisma_error {
-        pub use crate::error::*;
     }
 
     pub trait DatabaseId {

@@ -2,7 +2,25 @@ use crate::prelude::*;
 
 const PIN_EMOJI: &str = "📌";
 
-pub async fn perform(ctx: &serenity::Context, message: Message) -> Result<(), MessageCloneError> {
+pub async fn perform(ctx: &serenity::Context, message: Message) -> Result<(), StarboardError> {
+    let mut logger = Client::<LoggingServer>::new().await?;
+
+    let LoggingResponse::AllMessageClonesOk(clones) =
+        logger.send(LoggingRequest::MessageCloneReadAll).await?
+    else {
+        bail!(RouterError::<LoggingServer>::InvalidResponse);
+    };
+
+    if clones
+        .into_values()
+        .filter(|clone| clone.reason == MessageCloneReason::Starboard)
+        .filter(|clone| clone.source_id == message.id.database_id())
+        .next()
+        .is_some()
+    {
+        bail!(StarboardError::DoubleStar)
+    }
+
     clone::message_clone(
         ctx,
         &message,

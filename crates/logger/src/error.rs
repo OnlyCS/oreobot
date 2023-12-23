@@ -1,8 +1,8 @@
 use crate::prelude::*;
-
+use oreo_proc_macros::FromPrismaError;
 use std::backtrace::Backtrace;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum MessageLogError {
     #[error("Problem with router: {error}")]
     Router {
@@ -23,17 +23,17 @@ pub enum MessageLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum CategoryLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -48,7 +48,7 @@ pub enum CategoryLogError {
     NotFound(serenity::ChannelId),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum ChannelLogError {
     #[error("Warning: Channel ({{ id: {0} }}) is a thread, skipping")]
     Thread(serenity::ChannelId),
@@ -56,7 +56,7 @@ pub enum ChannelLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -71,12 +71,12 @@ pub enum ChannelLogError {
     NotFound(serenity::ChannelId),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum InteractionLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -84,12 +84,12 @@ pub enum InteractionLogError {
     NotFound(serenity::InteractionId),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum MemberLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -114,12 +114,12 @@ pub enum MemberLogError {
     },
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum RoleLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -178,22 +178,22 @@ pub enum ReadyEventError {
     },
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum UserSettingsLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum MessageCloneLogError {
     #[error("Problem with database: {error}")]
     Database {
         #[from]
-        error: prisma_error::PrismaError,
+        error: prisma::Error,
         backtrace: Backtrace,
     },
 
@@ -290,14 +290,3 @@ pub enum LoggerError {
         backtrace: Backtrace,
     },
 }
-
-prisma_error_convert!(
-    CategoryLogError,
-    MessageLogError,
-    ChannelLogError,
-    InteractionLogError,
-    MemberLogError,
-    RoleLogError,
-    UserSettingsLogError,
-    MessageCloneLogError
-);

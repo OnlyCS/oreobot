@@ -25,6 +25,7 @@ pub mod channels {
     pub const CHAT: ChannelId = ChannelId::new(1014256055330549842);
     pub const NEWS: ChannelId = ChannelId::new(997661924546322472);
     pub const STARRED: ChannelId = ChannelId::new(1016113247662919760);
+    pub const LOGGING: ChannelId = ChannelId::new(1188138920937013319);
 }
 
 pub mod webhook {

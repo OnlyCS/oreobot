@@ -91,3 +91,32 @@ pub fn autocommand(_: TokenStream) -> TokenStream {
     }
     .into()
 }
+
+#[cfg(feature = "from-prisma-error")]
+#[proc_macro_derive(FromPrismaError)]
+pub fn from_prisma_error(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let err = input.ident;
+
+    quote::quote! {
+        impl From<prisma_client_rust::NewClientError> for #err {
+            fn from(value: prisma_client_rust::NewClientError) -> Self {
+                Self::from(prisma::Error::from(value))
+            }
+        }
+
+        impl From<prisma_client_rust::QueryError> for #err {
+            fn from(value: prisma_client_rust::QueryError) -> Self {
+                Self::from(prisma::Error::from(value))
+            }
+        }
+
+        impl From<prisma_client_rust::RelationNotFetchedError> for #err {
+            fn from(value: prisma_client_rust::RelationNotFetchedError) -> Self {
+                Self::from(prisma::Error::from(value))
+            }
+        }
+    }
+    .into()
+}
