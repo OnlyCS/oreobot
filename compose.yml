@@ -12,7 +12,6 @@ services:
     image: onlycs/oreobot:v2-logger
     environment:
       DATABASE_URL: "${DATABASE_URL}"
-      BOT_TOKEN: "${BOT_TOKEN}"
     networks:
       - oreonet
 
@@ -22,6 +21,9 @@ services:
     image: onlycs/oreobot:v2-bot
     networks:
       - oreonet
+    depends_on:
+      - logger
+      - cache
 
 networks:
   oreonet:
