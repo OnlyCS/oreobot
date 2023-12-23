@@ -1,6 +1,6 @@
 pub(crate) use crate::{
     error::*,
-    features::*,
+    features::{clone::MessageCloneOptions, *},
     mpmc,
     util::{
         embed::{self, EmbedStatus},

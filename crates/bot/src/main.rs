@@ -62,6 +62,7 @@ async fn main() -> Result<!, BotServerError> {
                 features::logger::register().await;
                 features::clone::register().await;
                 features::impersonate::register().await;
+                features::starboard::register().await;
 
                 #[cfg(not(feature = "smarty-integration"))]
                 features::news_clone::register().await;

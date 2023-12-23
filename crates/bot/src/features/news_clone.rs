@@ -17,7 +17,7 @@ pub async fn perform(ctx: serenity::Context, message: Message) -> Result<(), New
         &ctx,
         &message,
         nci::channels::CHAT,
-        clone::MessageCloneOptions {
+        MessageCloneOptions {
             reason: MessageCloneReason::NewsInChat,
             delete: eligible,
             ..Default::default()

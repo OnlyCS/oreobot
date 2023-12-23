@@ -24,7 +24,7 @@ pub async fn register() {
                 &ctx,
                 &message,
                 message.channel_id,
-                clone::MessageCloneOptions {
+                MessageCloneOptions {
                     reason: MessageCloneReason::Impersonation,
                     member: Some(ctx.http.get_member(nci::ID, impersonation).await?),
                     button: false,

@@ -105,6 +105,18 @@ async fn construct_message(referenced_message: &Option<Box<Message>>, content: &
     cloned_content
 }
 
+async fn member_of(
+    ctx: &impl serenity::CacheHttp,
+    message: &Message,
+) -> Result<Member, serenity::Error> {
+    let member = message
+        .member(&ctx)
+        .await
+        .unwrap_or(ctx.http().get_member(nci::ID, message.author.id).await?);
+
+    Ok(member)
+}
+
 pub async fn message_clone(
     ctx: impl serenity::CacheHttp + AsRef<serenity::Http>,
     message: &Message,
@@ -123,7 +135,8 @@ pub async fn message_clone(
         reason,
     } = options;
 
-    let member = member.unwrap_or(message.member(&ctx).await?);
+    let member = member.unwrap_or(member_of(&ctx, &message).await?);
+
     let mut cloned_message = copy_user(serenity::ExecuteWebhook::new(), &member)?;
 
     // create jump buttons

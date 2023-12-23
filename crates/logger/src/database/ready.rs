@@ -49,8 +49,6 @@ async fn roles(bot: &mut Client<BotServer>) -> Result<(), RoleLogError> {
 }
 
 async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
-    debug!("got here");
-
     let prisma = prisma::create().await?;
 
     let members = {
@@ -135,8 +133,6 @@ async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError>
         }
     }
 
-    debug!("checkpoint1");
-
     for id_i64 in prisma_categories {
         let id = serenity::ChannelId::new(id_i64 as u64);
 
@@ -144,8 +140,6 @@ async fn categories(bot: &mut Client<BotServer>) -> Result<(), CategoryLogError>
             super::category::delete(id).await?;
         }
     }
-
-    debug!("checkpoint2");
 
     Ok(())
 }
@@ -183,8 +177,6 @@ async fn channels(bot: &mut Client<BotServer>) -> Result<(), ChannelLogError> {
         }
     }
 
-    debug!("checkpoint3");
-
     for id_i64 in prisma_channels {
         let id = serenity::ChannelId::new(id_i64 as u64);
 
@@ -193,27 +185,14 @@ async fn channels(bot: &mut Client<BotServer>) -> Result<(), ChannelLogError> {
         }
     }
 
-    debug!("checkpoint4");
-
     Ok(())
 }
 
 pub async fn ready(bot: &mut Client<BotServer>) -> Result<(), ReadyEventError> {
     roles(bot).await?;
-
-    debug!("Roles done");
-
     members(bot).await?;
-
-    debug!("Members done");
-
     categories(bot).await?;
-
-    debug!("Categories done");
-
     channels(bot).await?;
-
-    debug!("Channels done");
 
     Ok(())
 }
