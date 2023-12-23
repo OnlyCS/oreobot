@@ -56,6 +56,8 @@ where
                     }
                 };
 
+                debug!("Got request: {}", string_truncated_dbg(&line));
+
                 let req = serde_json::from_str(&line).unwrap();
                 let res = serde_json::to_string(&((callback)(req, &mut cache).await)).unwrap();
                 drop(cache);
