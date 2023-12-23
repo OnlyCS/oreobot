@@ -28,11 +28,14 @@ jobs:
           version: "*"
 
       - name: Setup Rust Cache
-        id: target-cache
+        id: rust-cache
         uses: actions/cache@v3
         with:
-          key: target-cache-${{ runner.os }}
-          path: target
+          key: ${{ runner.os }}-rust-cache
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
 
       - name: Pre-build GHA Scripts
         run: |
@@ -49,7 +52,9 @@ jobs:
           RUSTC_WRAPPER: "sccache"
 
       - name: Run build script
-        run: nu scripts/build.nu --release
+        run: |
+          nu -c "sccache --show-stats"
+          nu scripts/build.nu --release
 
       - name: Login to docker hub
         run: docker login -u onlycs -p ${{ secrets.DOCKER_PASSWORD }}
