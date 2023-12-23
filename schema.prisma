@@ -159,8 +159,9 @@ model Interaction {
     custom_id    String?
 }
 
-model LoglessRoles {
-    id BigInt @id
+model LoglessRole {
+    id      BigInt  @id
+    deleted Boolean @default(false)
 }
 
 model UserSettingsData {

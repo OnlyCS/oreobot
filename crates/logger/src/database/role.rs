@@ -11,8 +11,8 @@ pub async fn log_check_error(role: impl Into<u64>) -> Result<(), RoleLogError> {
     // custom roles handled seperately
     if prisma::create()
         .await?
-        .logless_roles()
-        .find_unique(logless_roles::id::equals(role))
+        .logless_role()
+        .find_unique(logless_role::id::equals(role))
         .exec()
         .await?
         .is_some()
@@ -56,11 +56,7 @@ pub async fn set_blacklisted(role_id: serenity::RoleId) -> Result<(), RoleLogErr
         .exec()
         .await?;
 
-    prisma
-        .logless_roles()
-        .create(role_id, vec![])
-        .exec()
-        .await?;
+    prisma.logless_role().create(role_id, vec![]).exec().await?;
 
     Ok(())
 }
@@ -139,6 +135,21 @@ pub async fn delete(
         .update(
             role::id::equals(prisma_role.id),
             vec![role::deleted::set(true)],
+        )
+        .exec()
+        .await?;
+
+    Ok(())
+}
+
+pub async fn delete_blacklisted(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
+    let prisma = prisma::create().await?;
+
+    prisma
+        .logless_role()
+        .update(
+            logless_role::id::equals(role_id),
+            vec![logless_role::deleted::set(true)],
         )
         .exec()
         .await?;

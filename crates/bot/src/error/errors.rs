@@ -5,7 +5,7 @@ use std::backtrace::Backtrace;
 #[derive(Error, Debug)]
 pub enum BotServerError {
     #[error("Problem starting logger: {error}")]
-    Logger {
+    SetLogger {
         #[from]
         error: SetLoggerError,
         backtrace: Backtrace,
@@ -19,7 +19,7 @@ pub enum BotServerError {
     },
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, FromPrismaError)]
 pub enum CommandError {
     #[error("Serenity error: {error}")]
     Serenity {
@@ -36,14 +36,21 @@ pub enum CommandError {
     },
 
     #[error("Error starting server: {error}")]
-    Server {
+    StartServer {
         #[from]
         error: RouterError<BotServer>,
         backtrace: Backtrace,
     },
 
+    #[error("Prisma error: {error}")]
+    Prisma {
+        #[from]
+        error: prisma::Error,
+        backtrace: Backtrace,
+    },
+
     #[error("Event error: {error}")]
-    EventError {
+    Event {
         #[from]
         error: EventError,
         backtrace: Backtrace,
@@ -53,11 +60,37 @@ pub enum CommandError {
     IllegalArgument(String),
 
     #[error("Error communicating with cache server: {error}")]
-    CacheServerError {
+    CacheServer {
         #[from]
         error: RouterError<CacheServer>,
         backtrace: Backtrace,
     },
+
+    #[error("Error communicating with logging server: {error}")]
+    LoggerServer {
+        #[from]
+        error: RouterError<LoggingServer>,
+        backtrace: Backtrace,
+    },
+
+    #[error("Admin permissions are necessary to run this command")]
+    AdminRequired,
+
+    #[error("No color role for user: {0}")]
+    NoColorRole(String),
+
+    #[error("Error parsing color: {error}")]
+    ColorParse {
+        #[from]
+        error: ColorParseError,
+        backtrace: Backtrace,
+    },
+
+    #[error("This command can only be used in a guild")]
+    NotInGuild,
+
+    #[error("Role ({{ id: {0} }}) could not be found")]
+    RoleNotFound(RoleId),
 }
 
 #[derive(Error, Debug)]
@@ -70,7 +103,7 @@ pub enum MessageCloneError {
     },
 
     #[error("Logger error: {error}")]
-    Router {
+    LoggerServer {
         #[from]
         error: RouterError<LoggingServer>,
         backtrace: Backtrace,
@@ -90,14 +123,14 @@ pub enum EventError {
     },
 
     #[error("Error communicating with logging server: {error}")]
-    LoggingServerError {
+    LoggingServer {
         #[from]
         error: RouterError<LoggingServer>,
         backtrace: Backtrace,
     },
 
     #[error("Error communicating with cache server: {error}")]
-    CacheServerError {
+    CacheServer {
         #[from]
         error: RouterError<CacheServer>,
         backtrace: Backtrace,
@@ -125,7 +158,7 @@ pub enum EventError {
     },
 
     #[error("Error with starboard: {error}")]
-    StarboardError {
+    Starboard {
         #[from]
         error: StarboardError,
         backtrace: Backtrace,
@@ -158,7 +191,7 @@ pub enum NewsCloneError {
 #[derive(Error, Debug)]
 pub enum StarboardError {
     #[error("Error with logging server: {error}")]
-    LoggingServerError {
+    LoggingServer {
         #[from]
         error: RouterError<LoggingServer>,
         backtrace: Backtrace,

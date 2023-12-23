@@ -10,7 +10,7 @@ mod generated;
 #[cfg(not(feature = "bin"))]
 pub mod prelude {
     pub use super::generated::{
-        attachment, channel, channel_category, interaction, logless_roles, message, message_clone,
+        attachment, channel, channel_category, interaction, logless_role, message, message_clone,
         role, user, user_settings_data, ChannelType, InteractionType, MessageCloneReason,
         PrismaClient,
     };

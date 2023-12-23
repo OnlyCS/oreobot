@@ -5,6 +5,7 @@ pub async fn impersonate(_: Context<'_>) -> Result<(), CommandError> {
     Ok(())
 }
 
+/// Become someone else. Might be illegal. Who knows?
 #[poise::command(slash_command)]
 async fn set(ctx: Context<'_>, to: Member) -> Result<(), CommandError> {
     let mut cache = Client::<CacheServer>::new().await?;
@@ -42,6 +43,7 @@ async fn set(ctx: Context<'_>, to: Member) -> Result<(), CommandError> {
     Ok(())
 }
 
+/// Become yourself again.
 #[poise::command(slash_command)]
 async fn unset(ctx: Context<'_>) -> Result<(), CommandError> {
     let mut cache = Client::<CacheServer>::new().await?;

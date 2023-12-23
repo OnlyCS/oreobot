@@ -133,6 +133,22 @@ impl From<serenity::Color> for Color {
     }
 }
 
+impl TryFrom<String> for Color {
+    type Error = ColorParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_str(&value)
+    }
+}
+
+impl TryFrom<&String> for Color {
+    type Error = ColorParseError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
 impl FromStr for Color {
     type Err = ColorParseError;
 

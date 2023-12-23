@@ -28,6 +28,7 @@ pub enum LoggingRequest {
     RoleReadAll,
     RoleUpdate(Role),
     RoleDelete(RoleId),
+    RoleDeleteBlacklisted(RoleId),
 
     MemberCreate(Member),
     MemberRead(UserId),

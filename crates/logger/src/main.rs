@@ -52,6 +52,7 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
         RoleReadAll => role::all() => LoggingResponse::AllRolesOk(out),
         RoleUpdate(r) => role::update(r) => LoggingResponse::UpdateOk,
         RoleDelete(r) => role::delete(r, &mut bot) => LoggingResponse::UpdateOk,
+        RoleDeleteBlacklisted(r) => role::delete_blacklisted(r) => LoggingResponse::UpdateOk,
 
         // member
         MemberCreate(m) => member::create(m, &mut bot) => LoggingResponse::UpdateOk,
