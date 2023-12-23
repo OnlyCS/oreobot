@@ -5,7 +5,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), CommandError> {
     let sent = ctx.created_at().timestamp_millis();
     let now = serenity::Timestamp::now().timestamp_millis();
 
-    let latency = sent - now;
+    let latency = now - sent;
     let api_latency = ctx.ping().await.as_millis();
 
     let embed = embed::default(EmbedStatus::Success)
