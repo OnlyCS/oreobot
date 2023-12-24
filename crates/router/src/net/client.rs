@@ -40,6 +40,12 @@ where
 
         let response: Result<Meta::Response, Meta::Error> = serde_json::from_str(&line)?;
 
+        debug!(
+            "Completed client transaction: {{\n\trequest:{},\n\tresponse:{}\n}}",
+            debug_truncated(&request),
+            debug_truncated(&response)
+        );
+
         response.map_err(|err| RouterError::ServerError(err))
     }
 

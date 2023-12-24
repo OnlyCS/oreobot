@@ -93,7 +93,18 @@ pub async fn delete(
         && let Some(user) = prisma_role.users()?.first()
         && let uid = serenity::UserId::new(user.id as u64)
         && let BotResponse::UserExistsOk(true) = bot.send(BotRequest::UserExists(uid)).await?
-        && let BotResponse::CreateRoleOk(_) = bot.send(BotRequest::CreateColorRole(uid)).await?
+        && let custom_roles = prisma
+            .role()
+            .find_many(vec![role::kind::equals(RoleType::CustomRole)])
+            .exec()
+            .await?
+            .len() as u16
+        && let BotResponse::CreateRoleOk(_) = bot
+            .send(BotRequest::CreateColorRole {
+                user_id: uid,
+                custom_roles,
+            })
+            .await?
     {
         // delete the old role
         prisma
@@ -102,7 +113,7 @@ pub async fn delete(
             .exec()
             .await?;
 
-        // the new role should have been created in role::create()
+        // the new role should have been created in role::create
         return Ok(());
     }
 

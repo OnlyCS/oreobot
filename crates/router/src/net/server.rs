@@ -41,12 +41,16 @@ where
                     }
                 };
 
-                debug!("Got request: {}", string_truncated_dbg(&line));
-
                 let req = serde_json::from_str(&line).unwrap();
                 let res = serde_json::to_string(&((callback)(req).await)).unwrap();
 
-                send(&mut stream, res).await.unwrap();
+                send(&mut stream, &res).await.unwrap();
+
+                debug!(
+                    "Completed server transaction: {{\n\trequest: {},\n\tresponse: {}\n}}",
+                    string_truncated_dbg(line),
+                    string_truncated_dbg(res)
+                )
             }
         });
 

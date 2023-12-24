@@ -31,8 +31,19 @@ pub async fn join(
     }
 
     // create the user's color role
-    bot.send(BotRequest::CreateColorRole(member.user.id))
-        .await?;
+    // wants the number of custom roles
+    let custom_roles = prisma
+        .role()
+        .find_many(vec![role::kind::equals(RoleType::CustomRole)])
+        .exec()
+        .await?
+        .len() as u16;
+
+    bot.send(BotRequest::CreateColorRole {
+        user_id: member.user.id,
+        custom_roles,
+    })
+    .await?;
 
     // give the user their old roles back
     if let Some(old_user) = old_user {

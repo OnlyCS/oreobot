@@ -15,29 +15,18 @@ async fn server(req: BotRequest, ctx: &serenity::Context) -> Result<BotResponse,
 
             BotResponse::UpdateOk
         }
-        BotRequest::CreateColorRole(user_id) => {
-            let mut logger = Client::<LoggingServer>::new().await?;
-            let nci = ctx.http.get_guild(nci::ID).await?;
-
-            let custom_role_len = {
-                let LoggingResponse::AllRolesOk(roles) =
-                    logger.send(LoggingRequest::RoleReadAll).await?
-                else {
-                    bail!(RouterError::InvalidResponse)
-                };
-
-                roles
-                    .into_values()
-                    .filter(|data| data.kind == RoleType::CustomRole)
-                    .count() as u16
-            };
-
-            let role = nci
+        BotRequest::CreateColorRole {
+            user_id,
+            custom_roles,
+        } => {
+            let role = ctx
+                .http()
                 .create_role(
-                    &ctx,
-                    serenity::EditRole::default()
+                    nci::ID,
+                    &serenity::EditRole::default()
                         .name("color role")
-                        .position(custom_role_len + 1),
+                        .position(custom_roles + 1),
+                    Some("Oreo2: Create color role"),
                 )
                 .await?;
 

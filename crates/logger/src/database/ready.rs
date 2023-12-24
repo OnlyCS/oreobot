@@ -77,7 +77,26 @@ async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
 
             super::member::update(event, bot).await?;
         } else {
-            super::member::join(member.clone(), bot).await?;
+            let roles = &member.roles;
+
+            prisma
+                .user()
+                .create(
+                    member.user.id,
+                    &member.user.name,
+                    vec![
+                        user::roles::connect(
+                            roles
+                                .into_iter()
+                                .map(|r| role::id::equals(*r))
+                                .collect_vec(),
+                        ),
+                        user::display_name::set(member.user.global_name.as_ref().cloned()),
+                        user::nickname::set(member.nick.as_ref().cloned()),
+                    ],
+                )
+                .exec()
+                .await?;
         }
     }
 

@@ -25,7 +25,8 @@ impl From<RouterError<crate::LoggingServer>> for BotServerError {
 pub enum BotRequest {
     IsReady,
 
-    CreateColorRole(UserId),
+    CreateColorRole { user_id: UserId, custom_roles: u16 },
+
     AddRoleToUser(UserId, RoleId),
     GetRolesOfUser(UserId),
     RemoveRoleFromUser(UserId, RoleId),
