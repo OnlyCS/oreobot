@@ -11,9 +11,7 @@ pub async fn color(
     let mut logger = Client::<LoggingServer>::new().await?;
 
     // check if member is admin
-    let LoggingResponse::MemberOk(prisma::data::UserData {
-        admin: is_admin, ..
-    }) = logger
+    let LoggingResponse::MemberOk(prisma_member) = logger
         .send(LoggingRequest::MemberRead(ctx.author().id))
         .await?
     else {
@@ -21,7 +19,12 @@ pub async fn color(
     };
 
     // needs admin to update someone else
-    if member.is_some() && !is_admin {
+    if member.is_some()
+        && !prisma_member
+            .roles()?
+            .iter()
+            .any(|role| role.id == nci::roles::OVERRIDES.database_id())
+    {
         bail!(CommandError::AdminRequired);
     }
 
@@ -41,13 +44,13 @@ pub async fn color(
     let role_data = member_data
         .roles()?
         .into_iter()
-        .filter(|r| r.color_role)
+        .filter(|r| r.kind == RoleType::ColorRole)
         .next()
         .make_error(CommandError::NoColorRole(
             member_data
                 .nickname
                 .as_ref()
-                .unwrap_or(&member_data.username)
+                .unwrap_or(&member_data.name)
                 .clone(),
         ))?;
 
@@ -56,10 +59,7 @@ pub async fn color(
     // update role
     let mut new_name = &role_data.name;
     let mut new_color = Color::try_from(&role_data.color)?;
-    let mut edit = serenity::EditRole::default()
-        .hoist(true)
-        .position(10)
-        .mentionable(false);
+    let mut edit = serenity::EditRole::default();
 
     if let Some(color) = color {
         edit = edit.colour(color);

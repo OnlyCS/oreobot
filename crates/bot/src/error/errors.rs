@@ -3,7 +3,7 @@ use oreo_proc_macros::FromPrismaError;
 use std::backtrace::Backtrace;
 
 #[derive(Error, Debug)]
-pub enum BotServerError {
+pub enum BotError {
     #[error("Problem starting logger: {error}")]
     SetLogger {
         #[from]
@@ -85,12 +85,6 @@ pub enum CommandError {
         error: ColorParseError,
         backtrace: Backtrace,
     },
-
-    #[error("This command can only be used in a guild")]
-    NotInGuild,
-
-    #[error("Role ({{ id: {0} }}) could not be found")]
-    RoleNotFound(RoleId),
 }
 
 #[derive(Error, Debug)]

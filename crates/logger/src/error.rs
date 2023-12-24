@@ -130,12 +130,6 @@ pub enum RoleLogError {
         backtrace: Backtrace,
     },
 
-    #[error("Role ({{ id: {0} }}) is blacklisted")]
-    Blacklisted(serenity::RoleId),
-
-    #[error("Role ({{ id: {0} }}) is a custom role")]
-    CustomRole(serenity::RoleId),
-
     #[error("Role ({{ id: {0} }}) not found")]
     RoleNotFound(serenity::RoleId),
 

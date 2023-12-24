@@ -1,36 +1,37 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-pub async fn log_check_error(role: impl Into<u64>) -> Result<(), RoleLogError> {
-    let role = serenity::RoleId::new(role.into());
+/// assuming the role is not in the database...
+pub async fn infer_kind(role: &serenity::Role) -> Result<RoleType, RoleLogError> {
+    let prisma = prisma::create().await?;
 
-    if nci::roles::in_blacklist(role) {
-        bail!(RoleLogError::Blacklisted(role));
-    }
-
-    // custom roles handled seperately
-    if prisma::create()
-        .await?
-        .logless_role()
-        .find_unique(logless_role::id::equals(role))
-        .exec()
-        .await?
-        .is_some()
+    let kind = if role.tags.premium_subscriber {
+        RoleType::Booster
+    } else if role.name == "@everyone" || role.position == 0 {
+        RoleType::Everyone
+    } else if role.id == nci::roles::MEMBERS {
+        RoleType::MemberRole
+    } else if role.id == nci::roles::BOTS {
+        RoleType::BotRole
+    } else if role.id == nci::roles::OVERRIDES {
+        RoleType::AdminRole
+    } else if role.position as usize
+        >= 1 + prisma
+            .role()
+            .find_many(vec![role::kind::equals(RoleType::CustomRole)])
+            .exec()
+            .await?
+            .len()
     {
-        bail!(RoleLogError::CustomRole(role));
-    }
+        RoleType::ColorRole
+    } else {
+        RoleType::CustomRole
+    };
 
-    Ok(())
-}
-
-/// Returns false if log_check_error returns an error
-pub async fn log_check(role: impl Into<u64>) -> bool {
-    log_check_error(role).await.is_ok()
+    Ok(kind)
 }
 
 pub async fn create(role: serenity::Role) -> Result<(), RoleLogError> {
-    log_check_error(role.id).await?;
-
     let prisma = prisma::create().await?;
 
     prisma
@@ -39,7 +40,8 @@ pub async fn create(role: serenity::Role) -> Result<(), RoleLogError> {
             role.id,
             &role.name,
             Color::from(role.colour).to_raw_hex(),
-            vec![role::color_role::set(nci::roles::is_color_role(role.id))],
+            infer_kind(&role).await?,
+            vec![],
         )
         .exec()
         .await?;
@@ -47,23 +49,7 @@ pub async fn create(role: serenity::Role) -> Result<(), RoleLogError> {
     Ok(())
 }
 
-pub async fn set_blacklisted(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
-    let prisma = prisma::create().await?;
-
-    prisma
-        .role()
-        .delete(role::id::equals(role_id))
-        .exec()
-        .await?;
-
-    prisma.logless_role().create(role_id, vec![]).exec().await?;
-
-    Ok(())
-}
-
 pub async fn read(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, RoleLogError> {
-    log_check_error(role_id).await?;
-
     let prisma = prisma::create().await?;
 
     let role = prisma
@@ -78,8 +64,6 @@ pub async fn read(role_id: serenity::RoleId) -> Result<prisma::data::RoleData, R
 }
 
 pub async fn update(role: serenity::Role) -> Result<(), RoleLogError> {
-    log_check_error(role.id).await?;
-
     let prisma = prisma::create().await?;
 
     prisma
@@ -101,18 +85,15 @@ pub async fn delete(
     role_id: serenity::RoleId,
     bot: &mut Client<BotServer>,
 ) -> Result<(), RoleLogError> {
-    // custom roles are handled seperately
-    log_check_error(role_id).await?;
-
     let prisma = prisma::create().await?;
     let prisma_role = read(role_id).await?;
 
     // if role is a color role if the user exists
-    if nci::roles::is_color_role(role_id)
+    if prisma_role.kind == RoleType::ColorRole
         && let Some(user) = prisma_role.users()?.first()
         && let uid = serenity::UserId::new(user.id as u64)
         && let BotResponse::UserExistsOk(true) = bot.send(BotRequest::UserExists(uid)).await?
-        && let BotResponse::CreateRoleOk(role) = bot.send(BotRequest::CreateColorRole(uid)).await?
+        && let BotResponse::CreateRoleOk(_) = bot.send(BotRequest::CreateColorRole(uid)).await?
     {
         // delete the old role
         prisma
@@ -121,12 +102,8 @@ pub async fn delete(
             .exec()
             .await?;
 
-        // update the new role
-        prisma
-            .role()
-            .update(role::id::equals(role.id), vec![role::color_role::set(true)])
-            .exec()
-            .await?;
+        // the new role should have been created in role::create()
+        return Ok(());
     }
 
     // update the role in db to set removed
@@ -135,21 +112,6 @@ pub async fn delete(
         .update(
             role::id::equals(prisma_role.id),
             vec![role::deleted::set(true)],
-        )
-        .exec()
-        .await?;
-
-    Ok(())
-}
-
-pub async fn delete_blacklisted(role_id: serenity::RoleId) -> Result<(), RoleLogError> {
-    let prisma = prisma::create().await?;
-
-    prisma
-        .logless_role()
-        .update(
-            logless_role::id::equals(role_id),
-            vec![logless_role::deleted::set(true)],
         )
         .exec()
         .await?;

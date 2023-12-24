@@ -14,7 +14,11 @@ async fn add(
     add_to: Vec<Member>,
 ) -> Result<(), CommandError> {
     // create role
-    let role = serenity::EditRole::default().name(&name).colour(color);
+    let role = serenity::EditRole::default()
+        .name(&name)
+        .colour(color)
+        .position(2);
+
     let role = ctx
         .http()
         .create_role(nci::ID, &role, Some("Oreo2: command: /role custom add"))
@@ -48,13 +52,6 @@ async fn add(
 
     ctx.send(reply).await?;
 
-    // log: set custom
-    let mut logger = Client::<LoggingServer>::new().await?;
-
-    logger
-        .send(LoggingRequest::RoleSetBlacklisted(role.id))
-        .await?;
-
     Ok(())
 }
 
@@ -76,12 +73,6 @@ async fn remove(ctx: Context<'_>, mut role: Role) -> Result<(), CommandError> {
         .ephemeral(true);
 
     ctx.send(reply).await?;
-
-    let mut logger = Client::<LoggingServer>::new().await?;
-
-    logger
-        .send(LoggingRequest::RoleDeleteBlacklisted(role.id))
-        .await?;
 
     Ok(())
 }

@@ -1,14 +1,23 @@
 use crate::prelude::{serenity::*, *};
 
 #[derive(Error, Debug, Serialize, Deserialize)]
-pub enum BotError {
+pub enum BotServerError {
     #[error("Serenity error: {0}")]
     Serenity(String),
+
+    #[error("Error with logging server: {0}")]
+    LoggingServer(String),
 }
 
-impl From<serenity::Error> for BotError {
+impl From<serenity::Error> for BotServerError {
     fn from(value: serenity::Error) -> Self {
         Self::Serenity(value.to_string())
+    }
+}
+
+impl From<RouterError<crate::LoggingServer>> for BotServerError {
+    fn from(value: RouterError<crate::LoggingServer>) -> Self {
+        Self::LoggingServer(value.to_string())
     }
 }
 
@@ -65,7 +74,7 @@ pub struct BotServer;
 impl ServerMetadata for BotServer {
     type Request = BotRequest;
     type Response = BotResponse;
-    type Error = BotError;
+    type Error = BotServerError;
 
     const HOST: &'static str = "bot";
     const PORT: u16 = 9002;

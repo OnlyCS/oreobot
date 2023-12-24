@@ -37,32 +37,6 @@ pub mod nci;
 #[cfg(feature = "color")]
 mod color;
 
-#[cfg(feature = "user-settings")]
-mod user_settings {
-    use super::prisma;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[oreo_proc_macros::update_enum]
-    pub struct UserSettings {
-        pub pin_confirm: bool,
-    }
-
-    impl Default for UserSettings {
-        fn default() -> Self {
-            Self { pin_confirm: true }
-        }
-    }
-
-    impl From<prisma::data::UserSettingsData> for UserSettings {
-        fn from(value: prisma::data::UserSettingsData) -> Self {
-            Self {
-                pin_confirm: value.pin_confirm,
-            }
-        }
-    }
-}
-
 #[cfg(feature = "serenity")]
 pub use serenity_rs::all as serenity;
 
@@ -82,9 +56,6 @@ pub use simple_logger::SimpleLogger;
 
 #[cfg(feature = "color")]
 pub use color::{consts as colors, Color, ColorParseError};
-
-#[cfg(feature = "user-settings")]
-pub use user_settings::*;
 
 #[cfg(feature = "futures")]
 pub use futures::{future::BoxFuture, prelude::*};

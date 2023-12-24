@@ -36,10 +36,6 @@ async fn roles(bot: &mut Client<BotServer>) -> Result<(), RoleLogError> {
 
     // for every role in the guild
     for (id, role) in roles {
-        if !super::role::log_check(id).await {
-            continue;
-        }
-
         if !prisma_roles.contains(&id.into()) {
             super::role::create(role).await?;
         }
@@ -81,18 +77,15 @@ async fn members(bot: &mut Client<BotServer>) -> Result<(), MemberLogError> {
 
             super::member::update(event, bot).await?;
         } else {
-            super::member::create(member.clone(), bot).await?;
+            super::member::join(member.clone(), bot).await?;
         }
-
-        // get the user's settings so it will create if dne
-        super::user_settings::read(*id).await?;
     }
 
     for id_i64 in prisma_members {
         let id = serenity::UserId::new(id_i64 as u64);
 
         if !members.contains_key(&id) {
-            super::member::delete(id, bot).await?;
+            super::member::leave(id, bot).await?;
         }
     }
 

@@ -9,14 +9,6 @@ pub mod roles {
     pub const BOTS: RoleId = RoleId::new(813138438013452348);
     pub const BOOSTER: RoleId = RoleId::new(1022189509363904716);
     pub const EVERYONE: RoleId = RoleId::new(803315311663251537);
-
-    pub const fn is_color_role(role: RoleId) -> bool {
-        !matches!(role, OVERRIDES | MEMBERS | BOTS | BOOSTER | EVERYONE)
-    }
-
-    pub fn in_blacklist(role: impl Into<i64>) -> bool {
-        matches!(RoleId::new(role.into() as u64), EVERYONE | BOOSTER)
-    }
 }
 
 pub mod channels {

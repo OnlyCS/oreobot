@@ -20,11 +20,10 @@ mod prelude;
 mod server;
 mod util;
 
-use error::BotServerError;
 use prelude::*;
 
 #[tokio::main]
-async fn main() -> Result<!, BotServerError> {
+async fn main() -> Result<!, BotError> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Warn)
         .with_threads(true)

@@ -23,22 +23,15 @@ pub enum LoggingRequest {
     MessageDelete(MessageId),
 
     RoleCreate(Role),
-    RoleSetBlacklisted(RoleId),
     RoleRead(RoleId),
     RoleReadAll,
     RoleUpdate(Role),
     RoleDelete(RoleId),
-    RoleDeleteBlacklisted(RoleId),
 
     MemberCreate(Member),
     MemberRead(UserId),
     MemberUpdate(GuildMemberUpdateEvent),
     MemberDelete(UserId),
-
-    UserSettingsCreate(UserId, UserSettings),
-    UserSettingsRead(UserId),
-    UserSettingsReadAll,
-    UserSettingsUpdate(UserId, UpdateUserSettings),
 
     MessageCloneCreate {
         source: serenity::MessageId,
@@ -63,7 +56,6 @@ pub enum LoggingResponse {
     UpdateOk,
 
     AllRolesOk(HashMap<RoleId, prisma::data::RoleData>),
-    AllUserSettingsOk(HashMap<UserId, UserSettings>),
     AllNewsInChatOk(HashMap<MessageId, MessageId>),
     AllMessageClonesOk(HashMap<MessageId, prisma::data::MessageCloneData>),
 
@@ -74,7 +66,6 @@ pub enum LoggingResponse {
     CategoryOk(prisma::data::ChannelCategoryData),
     InteractionOk(prisma::data::InteractionData),
     NewsInChatOk(MessageId, MessageId),
-    UserSettingsOk(UserSettings),
     MessageCloneOk(prisma::data::MessageCloneData),
 }
 

@@ -10,9 +10,8 @@ mod generated;
 #[cfg(not(feature = "bin"))]
 pub mod prelude {
     pub use super::generated::{
-        attachment, channel, channel_category, interaction, logless_role, message, message_clone,
-        role, user, user_settings_data, ChannelType, InteractionType, MessageCloneReason,
-        PrismaClient,
+        attachment, channel, channel_category, interaction, message, message_clone, role, user,
+        ChannelType, InteractionType, MessageCloneReason, PrismaClient, RoleType,
     };
 
     pub mod prisma {
@@ -31,7 +30,7 @@ pub mod prelude {
                 channel_category::Data as ChannelCategoryData,
                 interaction::Data as InteractionData, message::Data as MessageData,
                 message_clone::Data as MessageCloneData, role::Data as RoleData,
-                user::Data as UserData, user_settings_data::Data as UserSettingsData,
+                user::Data as UserData,
             };
         }
     }

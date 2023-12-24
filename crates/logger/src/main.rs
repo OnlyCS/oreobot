@@ -8,9 +8,7 @@ mod database;
 mod error;
 mod prelude;
 
-use database::{
-    category, channel, interaction, member, message, message_clone, ready, role, user_settings,
-};
+use database::{category, channel, interaction, member, message, message_clone, ready, role};
 
 use oreo_proc_macros::wire;
 use prelude::*;
@@ -47,24 +45,17 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
 
         // role
         RoleCreate(r) => role::create(r) => LoggingResponse::UpdateOk,
-        RoleSetBlacklisted(r) => role::set_blacklisted(r) => LoggingResponse::UpdateOk,
         RoleRead(r) => role::read(r) => LoggingResponse::RoleOk(out),
         RoleReadAll => role::all() => LoggingResponse::AllRolesOk(out),
         RoleUpdate(r) => role::update(r) => LoggingResponse::UpdateOk,
         RoleDelete(r) => role::delete(r, &mut bot) => LoggingResponse::UpdateOk,
-        RoleDeleteBlacklisted(r) => role::delete_blacklisted(r) => LoggingResponse::UpdateOk,
 
         // member
-        MemberCreate(m) => member::create(m, &mut bot) => LoggingResponse::UpdateOk,
+        MemberCreate(m) => member::join(m, &mut bot) => LoggingResponse::UpdateOk,
         MemberRead(m) => member::read(m) => LoggingResponse::MemberOk(out),
         MemberUpdate(m) => member::update(m, &mut bot) => LoggingResponse::UpdateOk,
-        MemberDelete(m) => member::delete(m, &mut bot) => LoggingResponse::UpdateOk,
+        MemberDelete(m) => member::leave(m, &mut bot) => LoggingResponse::UpdateOk,
 
-        // user settings
-        UserSettingsCreate(u, s) => user_settings::create(u, s) => LoggingResponse::UpdateOk,
-        UserSettingsRead(u) => user_settings::read(u) => LoggingResponse::UserSettingsOk(out),
-        UserSettingsReadAll => user_settings::all() => LoggingResponse::AllUserSettingsOk(out),
-        UserSettingsUpdate(u, s) => user_settings::update(u, s) => LoggingResponse::UpdateOk,
 
         // message clone
         MessageCloneCreate { source, clone, destination, reason, update, update_delete }

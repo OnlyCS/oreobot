@@ -6,4 +6,3 @@ pub mod message;
 pub mod message_clone;
 pub mod ready;
 pub mod role;
-pub mod user_settings;

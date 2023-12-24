@@ -22,19 +22,25 @@ enum InteractionType {
     MessageComponent
 }
 
+enum RoleType {
+    Everyone
+    Booster
+    ColorRole
+    AdminRole
+    MemberRole
+    CustomRole
+    BotRole
+}
+
 model User {
-    id       BigInt  @id
-    username String
-    nickname String?
-    roles    Role[]
+    id           BigInt  @id
+    name         String
+    display_name String?
+    nickname     String?
 
-    admin    Boolean @default(false)
-    verified Boolean @default(false)
-    bot      Boolean @default(false)
-
+    roles        Role[]
     messages     Message[]
     interactions Interaction[]
-    settings     UserSettingsData?
 
     removed Boolean @default(false)
 }
@@ -44,8 +50,8 @@ model Role {
     name  String
     color String
 
-    users      User[]
-    color_role Boolean @default(false)
+    users User[]
+    kind  RoleType
 
     deleted Boolean @default(false)
 }
@@ -157,16 +163,4 @@ model Interaction {
     // custom id for all except for commands, which has extra data
     command_data CommandInteractionData?
     custom_id    String?
-}
-
-model LoglessRole {
-    id      BigInt  @id
-    deleted Boolean @default(false)
-}
-
-model UserSettingsData {
-    user    User   @relation(fields: [user_id], references: [id])
-    user_id BigInt @id
-
-    pin_confirm Boolean @default(true)
 }
