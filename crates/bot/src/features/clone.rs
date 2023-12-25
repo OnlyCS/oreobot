@@ -180,17 +180,14 @@ pub async fn register() {
             bail!(EventError::UnwantedEvent);
         };
 
-        let LoggingResponse::AllMessageClonesOk(list) =
-            logger.send(LoggingRequest::MessageCloneReadAll).await?
+        let LoggingResponse::MessageClonesOk(list) = logger
+            .send(LoggingRequest::MessageCloneRead { source: message.id })
+            .await?
         else {
             bail!(RouterError::<LoggingServer>::InvalidResponse)
         };
 
-        let to_update = list
-            .into_values()
-            .filter(|n| n.source_id == i64::from(message.id))
-            .filter(|n| n.update)
-            .collect_vec();
+        let to_update = list.into_values().filter(|n| n.update).collect_vec();
 
         for update in to_update {
             let channel = ChannelId::new(update.destination_id as u64);
@@ -235,17 +232,14 @@ pub async fn register() {
             bail!(EventError::UnwantedEvent);
         };
 
-        let LoggingResponse::AllMessageClonesOk(list) =
-            logger.send(LoggingRequest::MessageCloneReadAll).await?
+        let LoggingResponse::MessageClonesOk(list) = logger
+            .send(LoggingRequest::MessageCloneRead { source: id })
+            .await?
         else {
             bail!(RouterError::<LoggingServer>::InvalidResponse)
         };
 
-        let to_delete = list
-            .into_values()
-            .filter(|n| n.source_id == i64::from(id))
-            .filter(|n| n.update_delete)
-            .collect_vec();
+        let to_delete = list.into_values().filter(|n| n.update_delete).collect_vec();
 
         for delete in to_delete {
             let channel = ChannelId::new(delete.destination_id as u64);

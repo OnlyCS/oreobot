@@ -8,8 +8,8 @@ pub fn reformat_error(error: String) -> String {
         .split(":")
         .map(|s| s.trim())
         .enumerate()
-        .map(|(idx, s)| format!("{}{}:\n", "\t".repeat(idx), s))
-        .collect::<String>();
+        .map(|(idx, s)| format!("{}{}", " ".repeat(idx), s))
+        .join(":\n");
 
     format!("```\n{}\n```", split)
 }

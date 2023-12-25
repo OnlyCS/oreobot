@@ -5,8 +5,9 @@ const PIN_EMOJI: &str = "📌";
 pub async fn perform(ctx: &serenity::Context, message: Message) -> Result<(), StarboardError> {
     let mut logger = Client::<LoggingServer>::new().await?;
 
-    let LoggingResponse::AllMessageClonesOk(clones) =
-        logger.send(LoggingRequest::MessageCloneReadAll).await?
+    let LoggingResponse::MessageClonesOk(clones) = logger
+        .send(LoggingRequest::MessageCloneRead { source: message.id })
+        .await?
     else {
         bail!(RouterError::<LoggingServer>::InvalidResponse);
     };
@@ -14,7 +15,6 @@ pub async fn perform(ctx: &serenity::Context, message: Message) -> Result<(), St
     if clones
         .into_values()
         .filter(|clone| clone.reason == MessageCloneReason::Starboard)
-        .filter(|clone| clone.source_id == message.id.database_id())
         .next()
         .is_some()
     {

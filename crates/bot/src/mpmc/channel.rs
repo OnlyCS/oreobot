@@ -30,8 +30,6 @@ where
     }
 
     pub async fn send(&mut self, ctx: serenity::Context, event: T) -> Result<(), EventError> {
-        let event_cl = event.clone();
-
         let results = future::join_all(
             self.callbacks
                 .par_iter()

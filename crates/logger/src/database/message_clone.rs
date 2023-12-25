@@ -28,29 +28,13 @@ pub async fn create(
 }
 
 pub async fn read(
-    clone: serenity::MessageId,
-) -> Result<prisma::data::MessageCloneData, MessageCloneLogError> {
-    let prisma = prisma::create().await?;
-
-    let message_clone = prisma
-        .message_clone()
-        .find_unique(message_clone::id::equals(clone))
-        .with(message_clone::source::fetch())
-        .with(message_clone::destination::fetch())
-        .exec()
-        .await?
-        .make_error(MessageCloneLogError::NotFound(clone))?;
-
-    Ok(message_clone)
-}
-
-pub async fn all(
+    source: serenity::MessageId,
 ) -> Result<HashMap<serenity::MessageId, prisma::data::MessageCloneData>, MessageCloneLogError> {
     let prisma = prisma::create().await?;
 
     let message_clones = prisma
         .message_clone()
-        .find_many(vec![])
+        .find_many(vec![message_clone::source_id::equals(source)])
         .with(message_clone::source::fetch())
         .with(message_clone::destination::fetch())
         .exec()

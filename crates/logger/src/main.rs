@@ -61,8 +61,7 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
         MessageCloneCreate { source, clone, destination, reason, update, update_delete }
             => message_clone::create(source, clone, destination, reason, update, update_delete)
             => LoggingResponse::UpdateOk,
-        MessageCloneRead { clone } => message_clone::read(clone) => LoggingResponse::MessageCloneOk(out),
-        MessageCloneReadAll => message_clone::all() => LoggingResponse::AllMessageClonesOk(out),
+        MessageCloneRead { source } => message_clone::read(source) => LoggingResponse::MessageClonesOk(out),
 
         ReadyEvent => ready::ready(&mut bot) => LoggingResponse::UpdateOk
     }

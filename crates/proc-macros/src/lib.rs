@@ -77,6 +77,7 @@ pub fn autocommand(_: TokenStream) -> TokenStream {
         })
         .filter_map(|res| res.ok())
         .filter(|file| file != "mod")
+        .filter(|file| !file.contains("bak"))
         .map(|n| proc_macro2::Ident::new(&n, proc_macro2::Span::call_site()))
         .collect::<Vec<_>>();
 
