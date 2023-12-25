@@ -78,15 +78,15 @@ async fn modal_submit(interaction: serenity::ModalInteraction) -> Result<(), Int
 }
 
 pub async fn create(interaction: serenity::Interaction) -> Result<(), InteractionLogError> {
-    match interaction.kind() {
-        serenity::InteractionType::Command => {
-            command(interaction.command().unwrap()).await?;
+    match interaction {
+        serenity::Interaction::Command(interaction) => {
+            command(interaction).await?;
         }
-        serenity::InteractionType::Component => {
-            message_component(interaction.message_component().unwrap()).await?;
+        serenity::Interaction::Component(interaction) => {
+            message_component(interaction).await?;
         }
-        serenity::InteractionType::Modal => {
-            modal_submit(interaction.modal_submit().unwrap()).await?;
+        serenity::Interaction::Modal(interaction) => {
+            modal_submit(interaction).await?;
         }
         _ => {}
     };

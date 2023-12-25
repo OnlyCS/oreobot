@@ -1,10 +1,37 @@
-use crate::prelude::{serenity::*, *};
+use crate::prelude::{
+    serenity::{InteractionType, *},
+    *,
+};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(from = "Interaction")]
+pub struct OneToOneInteraction {
+    #[serde(rename = "type")]
+    kind: InteractionType,
+    #[serde(flatten)]
+    interaction: Interaction,
+}
+
+impl From<Interaction> for OneToOneInteraction {
+    fn from(interaction: Interaction) -> Self {
+        Self {
+            kind: interaction.kind(),
+            interaction,
+        }
+    }
+}
+
+impl From<OneToOneInteraction> for Interaction {
+    fn from(interaction: OneToOneInteraction) -> Self {
+        interaction.interaction
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoggingRequest {
     IsReady,
 
-    InteractionCreate(Interaction),
+    InteractionCreate(OneToOneInteraction),
     InteractionRead(InteractionId),
 
     CategoryCreate(GuildChannel),

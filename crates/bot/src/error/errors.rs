@@ -158,6 +158,13 @@ pub enum EventError {
         backtrace: Backtrace,
     },
 
+    #[error("Serde error: {error}")]
+    Serde {
+        #[from]
+        error: serde_json::Error,
+        backtrace: Backtrace,
+    },
+
     #[error("Unwanted Event")]
     UnwantedEvent,
 }

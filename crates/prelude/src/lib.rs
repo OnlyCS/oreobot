@@ -29,6 +29,7 @@ extern crate async_trait;
 #[cfg(feature = "futures")]
 extern crate futures;
 
+mod debug;
 mod error;
 
 #[cfg(feature = "nci")]
@@ -60,27 +61,6 @@ pub use color::{consts as colors, Color, ColorParseError};
 #[cfg(feature = "futures")]
 pub use futures::{future::BoxFuture, prelude::*};
 
+pub use debug::*;
 pub use itertools::Itertools;
 pub use std::collections::{HashMap, HashSet};
-
-pub fn debug_truncated(value: impl std::fmt::Debug) -> String {
-    let mut value = format!("{:?}", value);
-
-    if value.len() > 100 {
-        value.truncate(100);
-        value.push_str("...");
-    }
-
-    value
-}
-
-pub fn string_truncated_dbg(value: impl ToString) -> String {
-    let mut value = value.to_string();
-
-    if value.len() > 100 {
-        value.truncate(100);
-        value.push_str("...");
-    }
-
-    value
-}

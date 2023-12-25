@@ -22,7 +22,7 @@ async fn on(request: LoggingRequest) -> Result<LoggingResponse, LoggerError> {
         IsReady => _ => LoggingResponse::Ready,
 
         // interaction
-        InteractionCreate(i) => interaction::create(i) => LoggingResponse::UpdateOk,
+        InteractionCreate(i) => interaction::create(i.into()) => LoggingResponse::UpdateOk,
         InteractionRead(i) => interaction::read(i) => LoggingResponse::InteractionOk(out),
 
         // category

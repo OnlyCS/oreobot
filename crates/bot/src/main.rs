@@ -8,6 +8,7 @@ extern crate dotenvy;
 extern crate futures;
 extern crate oreo_prelude;
 extern crate poise;
+extern crate serde_json;
 extern crate thiserror;
 extern crate tokio;
 

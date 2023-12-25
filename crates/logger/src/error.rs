@@ -283,4 +283,11 @@ pub enum LoggerError {
         error: RouterError<BotServer>,
         backtrace: Backtrace,
     },
+
+    #[error("Serde error: {error}")]
+    Serde {
+        #[from]
+        error: serde_json::Error,
+        backtrace: Backtrace,
+    },
 }

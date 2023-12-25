@@ -10,7 +10,7 @@ pub async fn register() {
             logger,
 
             // interaction
-            InteractionCreate { interaction } => InteractionCreate(interaction),
+            InteractionCreate { interaction } => InteractionCreate(interaction.into()),
 
             // category
             ChannelCreate { channel } if channel.kind == ChannelType::Category => CategoryCreate(channel),

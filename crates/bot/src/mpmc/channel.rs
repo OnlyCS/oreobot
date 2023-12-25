@@ -45,14 +45,7 @@ where
             .filter_map(move |result| match result {
                 Ok(_) => None,
                 Err(err) => match err {
-                    EventError::UnwantedEvent => {
-                        debug!(
-                            "event callback: unwanted event: {:?}",
-                            debug_truncated(&event_cl)
-                        );
-
-                        None
-                    }
+                    EventError::UnwantedEvent => None,
                     _ => {
                         error!("event callback: {err}");
                         Some(crate::error::handle(

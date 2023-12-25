@@ -40,16 +40,19 @@ jobs:
 
       - name: Pre-build GHA Scripts
         run: |
-          echo RUSTC_WRAPPER=sccache >> $GITHUB_ENV
-          echo SCCACHE_GHA_ENABLED=true >> $GITHUB_ENV
-
           sudo ln -s /usr/local/bin/mold /usr/bin/mold
           echo "${{ secrets.DOTENV_V2 }}" > .env
           sccache --show-stats
+        env:
+          RUSTC_WRAPPER: "sccache"
+          SCCACHE_GHA_ENABLED: "true"
 
       - name: Run build script
         run: |
           nu scripts/build.nu --release
+        env:
+          RUSTC_WRAPPER: "sccache"
+          SCCACHE_GHA_ENABLED: "true"
 
       - name: Login to docker hub
         run: docker login -u onlycs -p ${{ secrets.DOCKER_PASSWORD }}
