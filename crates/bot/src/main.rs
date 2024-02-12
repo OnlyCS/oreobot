@@ -15,7 +15,6 @@ extern crate tokio;
 mod commands;
 mod error;
 mod features;
-mod integrations;
 mod mpmc;
 mod prelude;
 mod server;
@@ -69,17 +68,13 @@ async fn main() -> Result<!, BotError> {
 
                 poise::builtins::register_globally(&ctx, &framework.options().commands).await?;
 
-                features::share::register().await;
-                features::logger::register().await;
-                features::clone::register().await;
+                // features::share::register().await;
+                // features::logger::register().await;
+                // features::clone::register().await;
                 features::impersonate::register().await;
-                features::starboard::register().await;
-
-                #[cfg(not(feature = "smarty-integration"))]
-                features::news_clone::register().await;
-
-                #[cfg(feature = "smarty-integration")]
-                integrations::smarty::register().await;
+                // features::starboard::register().await;
+                // features::news_clone::register().await;
+                feature::antithumbs::register().await;
 
                 server::run(ctx).await?;
 

@@ -2,10 +2,6 @@
 	"yaml.schemas": {
 		"https://json.schemastore.org/github-workflow.json": "file:///c%3A/Users/angad/code/oreobot/.github/workflows/deploy.yml"
 	},
-	"rust-analyzer.linkedProjects": [
-		"./Cargo.toml",
-		"./Cargo.toml"
-	],
 	"rust-analyzer.showUnlinkedFileNotification": false,
 	"rust-analyzer.cargo.features": "all",
 }

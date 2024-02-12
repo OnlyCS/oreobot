@@ -131,7 +131,8 @@ pub async fn message_clone(
 
     let member = member.unwrap_or(member_of(&ctx, &message).await?);
 
-    let mut cloned_message = copy_user(ExecuteWebhook::new(), &member)?;
+    let mut cloned_message = copy_user(ExecuteWebhook::new(), &member)?
+        .allowed_mentions(serenity::CreateAllowedMentions::new());
 
     // create jump buttons
     if button {

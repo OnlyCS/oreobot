@@ -1,3 +1,4 @@
+pub mod antithumbs;
 pub mod clone;
 pub mod impersonate;
 pub mod logger;
